@@ -75,3 +75,9 @@ def test_retriever_failure_becomes_error_not_exception():
 def test_malformed_retriever_output():
     r = search_attractions("x", search_fn=lambda **k: [{"oops": 1}])
     assert r["ok"] is False
+
+
+def test_apply_cutoff_false_keeps_weak_matches():
+    fake = make_fake({None: [hit(1, 0.9), hit(2, DISTANCE_CUTOFF + 0.3)]})
+    r = search_attractions("x", apply_cutoff=False, search_fn=fake)
+    assert ids(r) == [1, 2] and r["dropped_too_far"] == 0

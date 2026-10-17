@@ -40,6 +40,7 @@ def search_attractions(
     category: Optional[str] = None,
     max_duration_hours: Optional[float] = None,
     top_k: int = 5,
+    apply_cutoff: bool = True,
     search_fn: Optional[Callable[..., List[Dict[str, Any]]]] = None,
 ) -> Dict[str, Any]:
     """Tool contract. Returns one of:
@@ -47,6 +48,8 @@ def search_attractions(
          "dropped_too_far": int, "unknown_ids": [ids not found in the raw data]}
         {"ok": False, "error": "human-readable reason"}
     results are sorted best match first. The query should be English for now.
+    apply_cutoff=False keeps weak matches (used when planning inside a named region,
+    where relevance should only ORDER the places, not remove them).
     """
     if not isinstance(query, str) or not query.strip():
         return _error("query must be a non-empty string")
@@ -109,7 +112,7 @@ def search_attractions(
     dropped_too_far = 0
     unknown_ids: List[int] = []
     for attraction_id, distance in sorted(best_distance.items(), key=lambda pair: pair[1]):
-        if distance > DISTANCE_CUTOFF:
+        if apply_cutoff and distance > DISTANCE_CUTOFF:
             dropped_too_far += 1
             continue
         attraction = get_attraction(attraction_id)
