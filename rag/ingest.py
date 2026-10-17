@@ -3,7 +3,7 @@ from pathlib import Path
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
-
+import shutil 
 from rag.config import RAW_DATA_PATH, CHROMA_DB_DIR, EMBEDDING_MODEL_NAME
 
 def load_attractions():
@@ -40,6 +40,8 @@ def build_vector_store():
 
         doc = Document(page_content=text_content, metadata=metadata)
         documents.append(doc)
+    if CHROMA_DB_DIR.exists():
+        shutil.rmtree(CHROMA_DB_DIR)
 
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
     vector_store = Chroma.from_documents(
