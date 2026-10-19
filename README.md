@@ -187,6 +187,23 @@ Latest results on a healthy index (30 rows, 30/30 attractions):
 
 Headline Hit@1 is 90.3%. Filter integrity: 0 violations. Duplicates in top-5: 0.
 
+### Comparing embedding models
+The model is read from the `RAG_EMBEDDING_MODEL` environment variable (default `all-MiniLM-L6-v2`). Ingest, the retriever and the evaluation all use it, and each non-default model gets its own index folder (`data/chroma_db_<model>/`), so indexes never mix and the default one is never overwritten.
+
+```powershell
+# PowerShell: build and evaluate a multilingual candidate
+$env:RAG_EMBEDDING_MODEL="paraphrase-multilingual-MiniLM-L12-v2"
+uv run python -m rag.ingest
+uv run python -m rag.eval --json multilingual.json
+Remove-Item Env:RAG_EMBEDDING_MODEL      # back to the default model
+```
+```bash
+# bash
+RAG_EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2 uv run python -m rag.ingest
+RAG_EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2 uv run python -m rag.eval --json multilingual.json
+```
+The report header prints the model used. Compare the **Arabic** slice (baseline Hit@3 50.0%) and the **headline** English numbers: a multilingual model is only worth adopting if Arabic improves without a clear drop in English. Models that need `query:` / `passage:` prefixes (the e5 family) are not supported by this switch.
+
 Findings:
 - English retrieval is strong. The one English miss is *"Step Pyramid and the Imhotep Museum"* (Saqqara).
 - Arabic retrieval with this English-only model is not usable directly. This is why the agent translates Arabic queries to English before searching.
@@ -295,7 +312,7 @@ Not covered by automated tests: real Gemini calls and real Chroma retrieval. Che
 
 - The entry point is `agents.planner.plan_trip(message)`, returning the dict described in section 5. The API contract for `/api/v1/chat` has not been agreed, so nothing here defines it.
 - Session memory is not implemented. Once it is, the function will need a session identifier or state object. This is to be agreed with Member 3.
-- `rag/retriever.py` creates a new embedding model object on every call, so each search (two for Cairo) reloads the model. This is acceptable for the CLI but will be slow behind an API. Caching the vector store in the retriever is the fix (Member 1's file).
+- `rag/retriever.py` builds the vector store once per process (`lru_cache`), so the embedding model is loaded on the first search only. After re-running ingest inside a running server, call `get_vector_store.cache_clear()` or restart.
 - Run from the repository root; `agents` and `rag` are not installed as packages.
 - The vector index must be built on the server with `uv run python -m rag.ingest`.
 - `GEMINI_API_KEY` must be supplied through the environment.

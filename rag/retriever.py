@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 from langchain_chroma import Chroma
@@ -5,7 +6,12 @@ from langchain_huggingface import HuggingFaceEmbeddings
 
 from rag.config import CHROMA_DB_DIR, EMBEDDING_MODEL_NAME, DEFAULT_TOP_K
 
+@lru_cache(maxsize=1)
 def get_vector_store():
+    """Built once per process: loading the embedding model on every search is slow.
+
+    After re-running ingest in the same process, call get_vector_store.cache_clear().
+    """
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
     return Chroma(
         persist_directory=str(CHROMA_DB_DIR),

@@ -27,7 +27,7 @@ import statistics
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional
 
-from rag.config import CHROMA_DB_DIR, RAW_DATA_PATH
+from rag.config import CHROMA_DB_DIR, EMBEDDING_MODEL_NAME, RAW_DATA_PATH
 
 KS = (1, 3, 5)
 MAX_K = max(KS)
@@ -333,6 +333,7 @@ def print_report(health: Optional[Dict[str, Any]], results: List[Dict[str, Any]]
                  summary: Dict[str, Any]) -> None:
     print("=" * 72)
     print("RehlaGuide RAG - retrieval evaluation")
+    print(f"Embedding model: {EMBEDDING_MODEL_NAME}")
     print("=" * 72)
 
     if health is not None:
@@ -398,7 +399,8 @@ def evaluate_retriever(search_fn: Optional[Callable[..., List[Dict[str, Any]]]] 
     summary = summarize(results)
     print_report(health, results, summary)
 
-    report = {"index_health": health, "summary": summary, "cases": results}
+    report = {"embedding_model": EMBEDDING_MODEL_NAME, "index_health": health,
+              "summary": summary, "cases": results}
     if json_path:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(report, f, ensure_ascii=False, indent=2)
