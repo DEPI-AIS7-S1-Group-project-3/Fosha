@@ -2,7 +2,7 @@
 
 An AI-powered travel assistant for Egypt (DEPI capstone). Given a request in Arabic or English such as *"3 days in Luxor, I love temples"*, it builds a day-by-day itinerary that respects opening hours, visit durations and travel time, and answers in the user's language.
 
-This README documents the **knowledge base and retrieval (Member 1)** and the **travel agent and itinerary engine (Member 2)**. The backend/API (Member 3) is not part of this branch yet.
+This README documents the **knowledge base and retrieval (Member 1)**, the **travel agent and itinerary engine (Member 2)** and the **backend API (Member 3)**.
 
 ---
 
@@ -17,7 +17,7 @@ This README documents the **knowledge base and retrieval (Member 1)** and the **
 | Gemini intent extraction and itinerary wording | Implemented |
 | Arabic / English support | Implemented (Arabic queries are translated to English for retrieval) |
 | Session memory and itinerary edits ("make day 2 lighter") | **Not implemented yet** |
-| Backend endpoint (`/api/v1/chat`) | **Not implemented yet** (contract to be agreed with Member 3) |
+| Backend API (FastAPI, `/api/v1/...`) | Implemented (see section 12) |
 
 ---
 
@@ -308,3 +308,57 @@ Not covered by automated tests: real Gemini calls and real Chroma retrieval. Che
 2. Day-trip travel time for far attractions.
 3. Better grouping of nearby places within a day.
 4. Integration with the backend once the `/api/v1/chat` contract is agreed.
+
+---
+
+## 12. Part 3 - Backend API (Member 3)
+
+```bash
+uv run uvicorn backend.main:app --reload     # from the repository root
+```
+Interactive docs: http://127.0.0.1:8000/docs
+
+### Endpoints (prefix `/api/v1`)
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/chat` | `{"message", "session_id"?}` -> agent reply + structured itinerary |
+| GET / DELETE | `/sessions/{id}` | Conversation history / end a session |
+| POST | `/itinerary` | Deterministic schedule from chosen ids (no LLM): `{"attraction_ids", "days", "first_day"?, "day_start"?, "day_end"?, "max_stops_per_day"?, "visitor_type"?}` |
+| GET | `/attractions` | List, filters: `region` ("Cairo" includes Giza), `category`, `q` |
+| GET | `/attractions/{id}` | Full details, structured hours, map location, data freshness warnings |
+| GET | `/attractions/{id}/opening?day=&start=` | Is it open for that visit? |
+| GET | `/regions`, `/categories` | Valid filter values |
+| GET | `/analytics` | Dashboard counters: queries, statuses, languages, top regions/attractions/interests, cache hit rate, avg latency |
+| GET | `/health` | Index present, vector store loaded, LLM key set |
+| DELETE | `/cache` | Clear cached answers (after a data update) |
+
+`/chat` response:
+```json
+{"session_id": "...", "status": "planned", "language": "en", "reply": "...",
+ "intent": {...}, "itinerary": {"days": [...], "unscheduled": [...], "warnings": [...]},
+ "missing": null, "used_fallback": false, "cached": false}
+```
+Send `session_id` back with the next message. If the agent asked a clarifying question (`needs_clarification`), the next message is combined with the original request, so "3 days" completes "Trip to Cairo".
+
+Every error has one shape: `{"error": {"code": "...", "message": "...", "details": ...}}`.
+
+| HTTP | code | When |
+|---|---|---|
+| 400 | `bad_request` | Unknown region/category/id, bad day or time |
+| 404 | `not_found` | Unknown attraction or session |
+| 422 | `validation_error` | Request body/query failed validation (`details` lists fields) |
+| 502 | `llm_unavailable` / `agent_error` | Gemini failed after retries |
+| 503 | `llm_not_configured` / `retrieval_unavailable` | Missing `GEMINI_API_KEY`, or vector index not built |
+
+### Design
+- `backend/services/chat.py` is the only place that calls `agents.planner.plan_trip`. Endpoints are sync functions, so FastAPI runs the blocking LLM call in its thread pool.
+- **Caching:** in-memory TTL + LRU cache keyed on the normalized message (case, punctuation, Arabic digits) plus today's date (the agent resolves "next Friday" against today). Only successful answers are cached. Swap `TTLCache` for Redis if we run several workers.
+- **Vector store:** `rag.retriever.get_vector_store()` reloads the embedding model on every call. The backend wraps it in an `lru_cache` at startup and warms it up (`backend/services/retrieval.py`), without changing `rag/`.
+- **Outdated data:** `/attractions/{id}` returns `freshness` with `stale` (older than `STALE_AFTER_DAYS`) and warnings for uncertain hours, 0 EGP prices and missing locations.
+- Analytics, sessions and cache are in memory and reset on restart.
+- Every response carries `X-Request-ID` and `X-Process-Time-Ms`.
+
+Settings (all optional, see `.env.example`): `CORS_ORIGINS`, `CACHE_TTL_SECONDS`, `CACHE_MAX_ENTRIES`, `SESSION_TTL_SECONDS`, `STALE_AFTER_DAYS`, `WARMUP_ON_STARTUP`.
+
+Tests: `tests/test_api.py` (the agent is replaced by a fake, no network needed).
