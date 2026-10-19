@@ -9,6 +9,18 @@ from pydantic import BaseModel, Field
 Status = Literal["planned", "needs_clarification", "unsupported_region", "out_of_scope", "no_results"]
 
 
+# ---------- errors (same shape for every endpoint, see backend/errors.py) ----------
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+    details: Optional[Any] = None
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail
+
+
 # ---------- chat ----------
 
 class ChatRequest(BaseModel):

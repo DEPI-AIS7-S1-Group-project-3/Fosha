@@ -18,6 +18,7 @@ from backend import __version__
 from backend.config import Settings, get_settings
 from backend.errors import register_error_handlers
 from backend.routers import attractions, chat, itinerary, system
+from backend.schemas import ErrorResponse
 from backend.services import retrieval
 from backend.services.analytics import Analytics
 from backend.services.cache import TTLCache
@@ -46,7 +47,8 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     app.state.settings = settings
     app.state.cache = cache
     app.state.analytics = analytics
-    app.state.chat_service = ChatService(cache, SessionStore(settings.session_ttl_seconds), analytics)
+    app.state.chat_service = ChatService(cache, SessionStore(settings.session_ttl_seconds), analytics,
+                                         timeout_seconds=settings.chat_timeout_seconds)
 
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins,
                        allow_credentials="*" not in settings.cors_origins,
@@ -66,8 +68,10 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         return response
 
     register_error_handlers(app)
+    # Document our error shape in /docs instead of FastAPI's default {"detail": ...}.
+    error_docs = {status: {"model": ErrorResponse} for status in (400, 404, 422, 500, 502, 503, 504)}
     for module in (chat, itinerary, attractions, system):
-        app.include_router(module.router, prefix=settings.api_prefix)
+        app.include_router(module.router, prefix=settings.api_prefix, responses=error_docs)
 
     @app.get("/", include_in_schema=False)
     def root() -> dict:

@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from agents.pricing import check_ticket_price
 from agents.scheduler import build_itinerary
 from backend.errors import bad_request
 from backend.schemas import ItineraryRequest, ItineraryResponse
+from backend.services.itinerary import add_ticket_prices
 
 router = APIRouter(tags=["itinerary"])
 
@@ -19,11 +19,5 @@ def create_itinerary(body: ItineraryRequest) -> dict:
     if not result["ok"]:
         raise bad_request(result["error"])
 
-    if body.visitor_type:
-        for day in result["days"]:
-            for stop in day["stops"]:
-                price = check_ticket_price(stop["attraction_id"], body.visitor_type)
-                if price["ok"]:
-                    stop["ticket_price_egp"] = price["price_egp"]
-                    stop["price_note"] = price["price_note"]
+    add_ticket_prices(result, body.visitor_type)
     return result

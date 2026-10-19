@@ -1,4 +1,7 @@
 """API tests. The agent is replaced by a fake plan function: no Gemini, no Chroma."""
+import threading
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -37,10 +40,11 @@ class FakePlanner:
         return self.responses(message) if callable(self.responses) else self.responses
 
 
-def make_client(plan_fn):
+def make_client(plan_fn, timeout_seconds=5):
     app = create_app(Settings(warmup_on_startup=False))
     state = app.state
-    state.chat_service = ChatService(state.cache, SessionStore(), state.analytics, plan_fn=plan_fn)
+    state.chat_service = ChatService(state.cache, SessionStore(), state.analytics, plan_fn=plan_fn,
+                                     timeout_seconds=timeout_seconds)
     return TestClient(app)
 
 
@@ -54,6 +58,13 @@ def test_chat_planned_returns_itinerary_and_session():
     assert body["status"] == "planned"
     assert body["itinerary"]["days"][0]["stops"][0]["name"] == "The Egyptian Museum"
     assert body["session_id"] and body["cached"] is False
+
+
+def test_chat_adds_ticket_prices_when_visitor_type_known():
+    planned = {**PLANNED, "intent": {**PLANNED["intent"], "visitor_type": "foreigner"}}
+    client = make_client(FakePlanner(planned))
+    stop = client.post("/api/v1/chat", json={"message": "x"}).json()["itinerary"]["days"][0]["stops"][0]
+    assert stop["ticket_price_egp"] == 550
 
 
 def test_repeated_query_is_served_from_cache():
@@ -98,6 +109,27 @@ def test_agent_errors_map_to_http_errors(error, status, code):
     client.post("/api/v1/chat", json={"message": "hi"})
     assert len(planner.calls) == 2
     assert client.get("/api/v1/analytics").json()["errors"] == 2
+
+
+def test_slow_agent_returns_504_and_late_answer_is_cached():
+    release = threading.Event()
+
+    def slow_planner(message):
+        release.wait(5)
+        return PLANNED
+
+    client = make_client(slow_planner, timeout_seconds=0.2)
+    r = client.post("/api/v1/chat", json={"message": "slow one"})
+    assert r.status_code == 504 and r.json()["error"]["code"] == "llm_timeout"
+    assert client.get("/api/v1/analytics").json()["errors"] == 1
+
+    release.set()  # the model finally answers in the background...
+    for _ in range(50):
+        if client.app.state.cache.stats()["entries"]:
+            break
+        time.sleep(0.02)
+    retry = client.post("/api/v1/chat", json={"message": "slow one"}).json()
+    assert retry["cached"] is True and retry["status"] == "planned"  # ...so the retry is instant
 
 
 def test_chat_validation_error_format():

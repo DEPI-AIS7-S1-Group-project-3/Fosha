@@ -40,6 +40,8 @@ class Settings:
     session_ttl_seconds: int = field(default_factory=lambda: _int("SESSION_TTL_SECONDS", 3600))
     stale_after_days: int = field(default_factory=lambda: _int("STALE_AFTER_DAYS", 180))
     max_message_chars: int = field(default_factory=lambda: _int("MAX_MESSAGE_CHARS", 2000))
+    # Give up waiting for the agent (Gemini) after this long and return 504.
+    chat_timeout_seconds: int = field(default_factory=lambda: _int("CHAT_TIMEOUT_SECONDS", 60))
     # Load the embedding model + Chroma at startup so the first request is not slow.
     warmup_on_startup: bool = field(default_factory=lambda: _bool("WARMUP_ON_STARTUP", True))
 

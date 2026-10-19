@@ -350,15 +350,18 @@ Every error has one shape: `{"error": {"code": "...", "message": "...", "details
 | 422 | `validation_error` | Request body/query failed validation (`details` lists fields) |
 | 502 | `llm_unavailable` / `agent_error` | Gemini failed after retries |
 | 503 | `llm_not_configured` / `retrieval_unavailable` | Missing `GEMINI_API_KEY`, or vector index not built |
+| 504 | `llm_timeout` | The agent did not answer within `CHAT_TIMEOUT_SECONDS` (default 60). If it answers later, the answer is cached, so a retry is instant |
 
 ### Design
 - `backend/services/chat.py` is the only place that calls `agents.planner.plan_trip`. Endpoints are sync functions, so FastAPI runs the blocking LLM call in its thread pool.
 - **Caching:** in-memory TTL + LRU cache keyed on the normalized message (case, punctuation, Arabic digits) plus today's date (the agent resolves "next Friday" against today). Only successful answers are cached. Swap `TTLCache` for Redis if we run several workers.
 - **Vector store:** `rag.retriever.get_vector_store()` reloads the embedding model on every call. The backend wraps it in an `lru_cache` at startup and warms it up (`backend/services/retrieval.py`), without changing `rag/`.
 - **Outdated data:** `/attractions/{id}` returns `freshness` with `stale` (older than `STALE_AFTER_DAYS`) and warnings for uncertain hours, 0 EGP prices and missing locations.
+- **Timeout:** `agents/llm.py` sets no network timeout, so a busy Gemini model can hang a call for minutes. The backend stops waiting after `CHAT_TIMEOUT_SECONDS` and returns 504.
+- **Model choice:** if `/chat` is slow or times out, the Gemini model may be overloaded. Try another one in `.env` (e.g. `GEMINI_MODEL=gemini-3.5-flash`) and restart the server.
 - Analytics, sessions and cache are in memory and reset on restart.
 - Every response carries `X-Request-ID` and `X-Process-Time-Ms`.
 
-Settings (all optional, see `.env.example`): `CORS_ORIGINS`, `CACHE_TTL_SECONDS`, `CACHE_MAX_ENTRIES`, `SESSION_TTL_SECONDS`, `STALE_AFTER_DAYS`, `WARMUP_ON_STARTUP`.
+Settings (all optional, see `.env.example`): `CHAT_TIMEOUT_SECONDS`, `CORS_ORIGINS`, `CACHE_TTL_SECONDS`, `CACHE_MAX_ENTRIES`, `SESSION_TTL_SECONDS`, `STALE_AFTER_DAYS`, `WARMUP_ON_STARTUP`.
 
 Tests: `tests/test_api.py` (the agent is replaced by a fake, no network needed).
