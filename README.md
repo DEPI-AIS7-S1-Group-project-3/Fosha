@@ -209,6 +209,22 @@ Findings:
 - Arabic retrieval with this English-only model is not usable directly. This is why the agent translates Arabic queries to English before searching.
 - There is almost no gap between the worst in-scope top-1 distance (1.372) and the best out-of-scope top-1 distance (1.391), so a "no result" distance cutoff is only a soft signal.
 
+### Arabic end-to-end evaluation - `agents/eval_e2e.py`
+`rag.eval` sends Arabic text straight to the retriever, but the product first lets Gemini turn the message into an English query. This script measures the real path with 23 requests (named places, descriptive and Egyptian-dialect phrasing, and region-in-message cases), each in Arabic and in English:
+
+| Path | What it does |
+|---|---|
+| `raw_ar` | Arabic message straight to the retriever (no LLM) |
+| `pipeline_ar` | Arabic message, Gemini intent, English query, retriever |
+| `pipeline_en` | English message through the same pipeline (the upper bound) |
+
+```bash
+uv run python -m agents.eval_e2e --validate        # check labels only (no key, no model)
+uv run python -m agents.eval_e2e                    # needs GEMINI_API_KEY and a built index
+uv run python -m agents.eval_e2e --no-english --delay 2 --json e2e.json
+```
+Read the **Arabic gap** line: if `pipeline_ar` is close to `pipeline_en`, Arabic already works through translation and a multilingual embedding model is not needed. The failure list shows the translated query for each miss, so you can see whether the translation or the retrieval is at fault. The report also counts messages Gemini did not classify as a trip request and wrong region extractions.
+
 ---
 
 ## 7. Part 2 - Agent and itinerary (Member 2)
@@ -287,7 +303,7 @@ The only file that talks to Gemini. It reads `GEMINI_API_KEY` and `GEMINI_MODEL`
 uv run pytest -q
 ```
 
-69 tests cover: data lookup and prices, opening-hours edge cases (window ends, split hours, weekday overrides, closed days, ISO dates), travel estimates, the scheduler (an independent checker re-validates every stop against hours, day bounds and travel gaps), the retrieval adapter (with a fake search function), intent extraction, the planner pipeline and reply guard, and the LLM retry logic. Gemini calls are mocked in all tests.
+82 tests cover: data lookup and prices, opening-hours edge cases (window ends, split hours, weekday overrides, closed days, ISO dates), travel estimates, the scheduler (an independent checker re-validates every stop against hours, day bounds and travel gaps), the retrieval adapter (with a fake search function), intent extraction, the planner pipeline and reply guard, and the LLM retry logic. Gemini calls are mocked in all tests.
 
 Not covered by automated tests: real Gemini calls and real Chroma retrieval. Check those manually with the commands in section 5.
 
