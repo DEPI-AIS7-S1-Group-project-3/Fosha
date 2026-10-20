@@ -2,6 +2,7 @@
 
     uv run uvicorn api.server:app --reload            # real Gemini + Chroma
     REHLA_DEMO=1 uv run uvicorn api.server:app        # offline demo, no key needed
+    REHLA_SEARCH=keyword uv run uvicorn api.server:app  # real Gemini, keyword search instead of Chroma
 
 Endpoints:
     POST /api/v1/chat       {"message": str}  -> plan_trip() result + UI extras
@@ -29,6 +30,9 @@ from api import analytics
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 DEMO = os.environ.get("REHLA_DEMO", "").lower() in ("1", "true", "yes")
+# Real Gemini with the demo keyword search: for machines without a Chroma index
+# (e.g. Intel Macs, where sentence-transformers can't be installed).
+KEYWORD_SEARCH = os.environ.get("REHLA_SEARCH", "").lower() == "keyword"
 CACHE_SIZE = 256
 # Only answers that do not depend on a model hiccup are worth repeating.
 CACHEABLE = {"planned", "needs_clarification", "unsupported_region", "out_of_scope", "no_results"}
@@ -96,12 +100,15 @@ def _run_pipeline(message: str) -> Dict[str, Any]:
     if DEMO:
         from api.demo import demo_llm, demo_search
         return plan_trip(message, llm=demo_llm, search_fn=demo_search)
+    if KEYWORD_SEARCH:
+        from api.demo import demo_search
+        return plan_trip(message, search_fn=demo_search)
     return plan_trip(message)
 
 
 @app.get("/api/v1/health")
 def health() -> Dict[str, Any]:
-    return {"ok": True, "demo": DEMO}
+    return {"ok": True, "demo": DEMO, "search": "keyword" if DEMO or KEYWORD_SEARCH else "vector"}
 
 
 @app.post("/api/v1/chat")

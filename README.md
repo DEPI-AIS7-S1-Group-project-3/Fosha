@@ -345,6 +345,7 @@ The traveller-facing product is called **Fosha** (فسحة, Egyptian Arabic for 
 ```bash
 uv run uvicorn api.server:app --reload             # real pipeline: needs GEMINI_API_KEY and the Chroma index
 REHLA_DEMO=1 uv run uvicorn api.server:app         # offline demo: no key, no embeddings
+REHLA_SEARCH=keyword uv run uvicorn api.server:app  # real Gemini, keyword search (no Chroma index needed)
 uv run python -m api.seed                          # optional: 400 sample events for the dashboard
 ```
 
