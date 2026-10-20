@@ -168,7 +168,6 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
   const targetRef = useRef<number | null>(null);
   const velocityRef = useRef<number>(0);
   const busyRef = useRef<boolean>(busy);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   busyRef.current = busy;
 
@@ -308,13 +307,6 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
 
   return (
     <div className="globe-wrap" ref={containerRef}>
-      {hoveredIndex !== null && LANDMARKS[hoveredIndex] && (
-        <div className="monument-hover-badge" dir={isAr ? 'rtl' : 'ltr'}>
-          <span className="badge-name">{isAr ? LANDMARKS[hoveredIndex].name_ar : LANDMARKS[hoveredIndex].name_en}</span>
-          <span className="badge-action">{isAr ? '• اضغط للرحلة' : '• Tap to visit'}</span>
-        </div>
-      )}
-
       <svg
         className="globe-svg"
         viewBox="-640 -700 1280 1280"
@@ -358,8 +350,6 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
                 role="button"
                 tabIndex={0}
                 style={{ cursor: 'pointer', pointerEvents: 'all' }}
-                onMouseEnter={() => setHoveredIndex(i)}
-                onMouseLeave={() => setHoveredIndex((prev) => (prev === i ? null : prev))}
                 onClick={(e) => {
                   e.stopPropagation();
                   selectLandmark(i, lm.region);
