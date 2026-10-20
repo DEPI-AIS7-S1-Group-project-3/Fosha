@@ -282,17 +282,41 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
         return done("needs_clarification", reply, missing=intent["missing"],
                     suggested_regions=regions_for_days(intent.get("days")))
 
+    REGION_SUPPLEMENTS = {
+        "South Sinai": ["Dahab", "Sharm El Sheikh"],
+        "Red Sea": ["Hurghada"],
+        "Matrouh": ["Siwa", "Marsa Matrouh"],
+    }
+
     if online:
         ranked = _rank_by_interest(online["places"], list(intent.get("interests") or [])
                                    + intent.get("search_query", "").split())
         candidate_ids = register_places(ranked)
     else:
         top_k = min(12, max(6, intent["days"] * 4))
-        found = search_attractions(intent["search_query"], region=intent["region"], top_k=top_k,
+        query = intent.get("search_query") or intent.get("region") or "attractions"
+        found = search_attractions(query, region=intent["region"], top_k=top_k,
                                   apply_cutoff=False, search_fn=search_fn)
         if not found["ok"]:
             return {"ok": False, "error": found["error"]}
         candidate_ids = [r["attraction"]["id"] for r in found["results"]]
+        region_name = intent.get("region") or ""
+        if region_name in REGION_SUPPLEMENTS and len(candidate_ids) < intent["days"] * 2:
+            needed = intent["days"] * 2 - len(candidate_ids)
+            for town in REGION_SUPPLEMENTS[region_name]:
+                if needed <= 0:
+                    break
+                lookup = (places_fn or (lambda name: find_places(name, llm=llm)))(town)
+                if lookup.get("ok") and lookup.get("places"):
+                    supp_ranked = _rank_by_interest(lookup["places"], list(intent.get("interests") or [])
+                                                    + query.split())
+                    added_ids = register_places(supp_ranked)
+                    for aid in added_ids:
+                        if aid not in candidate_ids:
+                            candidate_ids.append(aid)
+                            needed -= 1
+                            if needed <= 0:
+                                break
     if not candidate_ids:
         return done("no_results", _say("no_results", lang))
 

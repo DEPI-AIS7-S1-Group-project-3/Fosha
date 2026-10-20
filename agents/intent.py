@@ -11,8 +11,8 @@ LLMFn = Callable[..., Dict[str, Any]]
 
 
 def known_regions() -> List[str]:
-    """Regions that exist in the data. 'Cairo' also covers Giza (see retrieval_adapter)."""
-    return sorted({a.region for a in load_attractions().values()})
+    """Curated regions in the static dataset. 'Cairo' also covers Giza (see retrieval_adapter)."""
+    return sorted({a.region for a in load_attractions().values() if a.id < 100_000})
 
 
 def _system_prompt() -> str:
@@ -25,7 +25,7 @@ def _system_prompt() -> str:
         "  search_query: short ENGLISH description of what the user wants to see or do "
         '(translate from Arabic if needed), "" if they gave no preference\n'
         "  interests: list of short English words (e.g. [\"museums\", \"diving\"])\n"
-        f"  region: exactly one of {known_regions()} or null. Use \"Cairo\" for Cairo, Giza and the Pyramids area.\n"
+        f"  region: exactly one of {known_regions()} or null. Use \"Cairo\" for Cairo, Giza and the Pyramids area. Use \"South Sinai\" for South Sinai, Sinai, Sharm El Sheikh, and Saint Catherine. Use \"Red Sea\" for Hurghada and the Red Sea coast.\n"
         "  unsupported_region: if the user names another place in Egypt (any city, town or area not in "
         "that list, e.g. Port Said, Ismailia, Fayoum, Dahab), put its usual ENGLISH name here and set region "
         "to null; otherwise null\n"
@@ -48,12 +48,45 @@ def _parse_json(text: str) -> Optional[Dict[str, Any]]:
     return data if isinstance(data, dict) else None
 
 
+REGION_ALIASES: Dict[str, str] = {
+    "cairo": "Cairo",
+    "greater cairo": "Cairo",
+    "القاهرة": "Cairo",
+    "giza": "Cairo",
+    "الجيزة": "Cairo",
+    "south sinai": "South Sinai",
+    "south-sinai": "South Sinai",
+    "sinai": "South Sinai",
+    "south sinai governorate": "South Sinai",
+    "جنوب سيناء": "South Sinai",
+    "سيناء": "South Sinai",
+    "alexandria": "Alexandria",
+    "alex": "Alexandria",
+    "الإسكندرية": "Alexandria",
+    "اسكندرية": "Alexandria",
+    "luxor": "Luxor",
+    "الأقصر": "Luxor",
+    "الاقصر": "Luxor",
+    "aswan": "Aswan",
+    "أسوان": "Aswan",
+    "اسوان": "Aswan",
+    "red sea": "Red Sea",
+    "البحر الأحمر": "Red Sea",
+    "matrouh": "Matrouh",
+    "marsa matrouh": "Matrouh",
+    "مطروح": "Matrouh",
+    "مرسى مطروح": "Matrouh",
+    "new valley": "New Valley",
+    "الوادي الجديد": "New Valley",
+}
+
+
 def _canonical_region(value: Any) -> Optional[str]:
     if not value:
         return None
     key = str(value).strip().lower()
-    if key in ("cairo", "greater cairo"):
-        return "Cairo"
+    if key in REGION_ALIASES:
+        return REGION_ALIASES[key]
     for region in known_regions():
         if region.lower() == key:
             return region
@@ -72,7 +105,7 @@ def normalize_intent(raw: Dict[str, Any]) -> Dict[str, Any]:
     if days is not None and not 1 <= days <= 14:
         days = None
 
-    region = _canonical_region(raw.get("region"))
+    region = _canonical_region(raw.get("region")) or _canonical_region(raw.get("unsupported_region"))
     unsupported = None
     if region is None:
         named = raw.get("unsupported_region") or raw.get("region")

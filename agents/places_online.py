@@ -325,19 +325,26 @@ def find_places(place: str, fetch: Fetch = http_json, cache_path: Optional[Path]
         if city is None:
             result: Dict[str, Any] = {"ok": False, "reason": "not_found"}
         else:
-            page = wikivoyage_page(city.get("spellings") or [city["name"]], fetch)
+            spellings = list(city.get("spellings") or [city["name"]])
+            is_broad_region = key in ("south sinai", "sinai", "south sinai governorate", "جنوب سيناء", "سيناء") or (
+                city and city["name"].lower() in ("south sinai", "sinai")
+            )
+            if is_broad_region:
+                spellings += ["Dahab", "Sharm El Sheikh"]
+            page = wikivoyage_page(spellings, fetch)
             listings = parse_listings(page["wikitext"]) if page else []
             if len(listings) < 3 and page:  # small towns: activities count too
                 listings += parse_listings(page["wikitext"], kinds=("do",))
             extra = wikidata_details([l["wikidata"] for l in listings], fetch)
             places = []
+            max_dist = 160 if is_broad_region else MAX_DISTANCE_KM
             for item in listings:
                 wd = extra.get(item["wikidata"], {})
                 lat, lon = _float(item["lat"]) or wd.get("lat"), _float(item["long"]) or wd.get("lon")
                 approximate = lat is None or lon is None
                 if approximate:
                     lat, lon = city["lat"], city["lon"]
-                if haversine_km(lat, lon, city["lat"], city["lon"]) > MAX_DISTANCE_KM:
+                if haversine_km(lat, lon, city["lat"], city["lon"]) > max_dist:
                     continue
                 category = categorise(item["name"], item["content"])
                 places.append({

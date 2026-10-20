@@ -8,7 +8,7 @@ import { ChatModal } from './components/ChatModal';
 import { TripSheet } from './components/TripSheet';
 import { PrintItinerary } from './components/PrintItinerary';
 import { DashboardView } from './components/DashboardView';
-import { translate, I18N } from './i18n';
+import { translate, I18N, AR_NAMES } from './i18n';
 
 export const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(() => {
@@ -174,7 +174,8 @@ export const App: React.FC = () => {
 
   const handleGlobePick = (region: string, _landmarkIndex?: number) => {
     setTargetGlobeRegion(region);
-    const prompt = lang === 'ar' ? `رحلة ٣ أيام في ${region}` : `3 days in ${region}`;
+    const regionName = lang === 'ar' ? (AR_NAMES.regions[region] || region) : region;
+    const prompt = lang === 'ar' ? `رحلة 3 أيام في ${regionName}` : `3 days in ${region}`;
     handleSendMessage(prompt, true);
   };
 
