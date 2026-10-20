@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Language } from '../types';
 import { translate } from '../i18n';
 
@@ -19,9 +19,12 @@ const palm = (x: number, h: number, lean = 0) => `
   <path d="M${x} 0 C${x + lean * 0.3} ${-h * 0.4} ${x + lean * 0.7} ${-h * 0.75} ${x + lean} ${-h}" fill="none" stroke-width="7"/>
   <path transform="translate(${x + lean} ${-h})" fill="var(--palm)" d="M0 0 C-30 -14 -58 -2 -66 18 C-44 4 -20 2 0 0 C-14 -30 -44 -38 -60 -30 C-36 -22 -14 -14 0 0 C10 -32 40 -40 58 -30 C34 -24 14 -14 0 0 C26 -12 54 -2 64 18 C42 6 22 2 0 0Z"/>`;
 
-const LANDMARKS = [
+export const LANDMARKS = [
   {
+    id: 'alexandria',
     region: 'Alexandria',
+    name_ar: 'قلعة قايتباي · الإسكندرية',
+    name_en: 'Citadel of Qaitbay · Alexandria',
     svg: `
       <rect x="-118" y="-95" width="34" height="95" fill="${WHITE}"/>${crenels(-118, -95, 34, 9)}
       <rect x="84" y="-95" width="34" height="95" fill="${WHITE}"/>${crenels(84, -95, 34, 9)}
@@ -31,13 +34,19 @@ const LANDMARKS = [
       <rect x="-8" y="-128" width="16" height="26" fill="${INK}" stroke="none"/>`,
   },
   {
+    id: 'giza-pyramids',
     region: 'Cairo',
+    name_ar: 'أهرامات الجيزة',
+    name_en: 'Giza Pyramids',
     svg: `
       <path d="M-120 0 L-35 -165 L50 0Z" fill="${WHITE}"/><path d="M-35 -165 L50 0 L5 0Z" fill="${CORAL}"/>
       <path d="M30 0 L82 -100 L134 0Z" fill="${WHITE}"/><path d="M82 -100 L134 0 L104 0Z" fill="${CORAL}"/>`,
   },
   {
+    id: 'cairo-mosque',
     region: 'Cairo',
+    name_ar: 'مساجد القاهرة التاريخية',
+    name_en: 'Historic Cairo Mosque',
     svg: `
       <rect x="-120" y="-105" width="48" height="105" fill="${WALL}"/>
       <rect x="-108" y="-88" width="10" height="16" fill="${WHITE}"/><rect x="-92" y="-88" width="10" height="16" fill="${WHITE}"/>
@@ -50,7 +59,10 @@ const LANDMARKS = [
       <path d="M56 -190 L68 -222 L80 -190Z" fill="${CORAL}"/>`,
   },
   {
+    id: 'south-sinai',
     region: 'South Sinai',
+    name_ar: 'دير سانت كاترين · سيناء',
+    name_en: 'Saint Catherine & Sinai',
     svg: `
       <path d="M-125 0 L-45 -165 L5 -95 L48 -140 L125 0Z" fill="${CORAL}"/>
       <path d="M-45 -165 L-22 -118 L-45 -110 L-65 -124Z" fill="${WHITE}"/>
@@ -59,7 +71,10 @@ const LANDMARKS = [
       <path d="M-17 -112 V-96 M-24 -105 H-10" fill="none" stroke-width="4"/>`,
   },
   {
+    id: 'red-sea',
     region: 'Red Sea',
+    name_ar: 'شواطئ وشعاب البحر الأحمر',
+    name_en: 'Red Sea Reefs & Beaches',
     svg: `
       <path d="M-30 0 V-128" fill="none" stroke-width="6"/>
       <path d="M-115 -112 Q-30 -190 55 -112 Q34 -104 13 -112 Q-9 -104 -30 -112 Q-51 -104 -72 -112 Q-94 -104 -115 -112Z" fill="${CORAL}"/>
@@ -68,7 +83,10 @@ const LANDMARKS = [
       <path d="M116 -70 L138 -86 V-54Z" fill="${AZURE}"/><circle cx="62" cy="-72" r="4" fill="${INK}" stroke="none"/>`,
   },
   {
+    id: 'luxor',
     region: 'Luxor',
+    name_ar: 'معابد الأقصر والكرنك',
+    name_en: 'Karnak & Luxor Temples',
     svg: `
       <path d="M-160 0 L-154 -175 L-146 -192 L-138 -175 L-132 0Z" fill="${WHITE}"/>
       <path d="M-115 0 L-104 -140 L-42 -140 L-32 0Z" fill="${WALL}"/>
@@ -79,7 +97,10 @@ const LANDMARKS = [
       <path d="M-92 -112 H-56 M-90 -84 H-58 M54 -112 H90 M56 -84 H88" fill="none" stroke-width="4"/>`,
   },
   {
+    id: 'aswan-felucca',
     region: 'Aswan',
+    name_ar: 'فلوكة النيل · أسوان',
+    name_en: 'Nile Felucca in Aswan',
     svg: `
       <path d="M-95 -6 H95 L70 22 H-70Z" fill="${CORAL}"/>
       <path d="M0 -6 V-215" fill="none" stroke-width="6"/>
@@ -87,7 +108,10 @@ const LANDMARKS = [
       <path d="M-130 44 q16 -12 32 0 t32 0 M40 50 q16 -12 32 0 t32 0" fill="none" stroke="${WHITE}" stroke-width="5"/>`,
   },
   {
+    id: 'aswan-nubian',
     region: 'Aswan',
+    name_ar: 'القرية النوبية · أسوان',
+    name_en: 'Nubian Village in Aswan',
     svg: `
       <rect x="-118" y="-80" width="96" height="80" fill="${WHITE}"/>
       <path d="M-118 -80 A48 34 0 0 1 -22 -80Z" fill="${AZURE}"/>
@@ -98,7 +122,10 @@ const LANDMARKS = [
       <rect x="44" y="-38" width="22" height="38" fill="${AZURE}"/>`,
   },
   {
+    id: 'new-valley',
     region: 'New Valley',
+    name_ar: 'الصحراء البيضاء · الوادي الجديد',
+    name_en: 'White Desert Formations',
     svg: `
       <path d="M-40 0 C-30 -40 -46 -72 -30 -96 H18 C32 -72 18 -40 28 0Z" fill="${WHITE}"/>
       <path d="M-86 -94 C-86 -150 72 -150 72 -94 C40 -82 -50 -82 -86 -94Z" fill="${WHITE}"/>
@@ -106,7 +133,10 @@ const LANDMARKS = [
       <path d="M-130 0 C-110 -26 -84 -26 -64 0Z" fill="${WALL}"/>`,
   },
   {
+    id: 'siwa',
     region: 'Matrouh',
+    name_ar: 'واحة سيوة ونخيلها',
+    name_en: 'Siwa Oasis Palms',
     svg: `${palm(-80, 150, -24)}${palm(10, 190, 10)}${palm(90, 130, 26)}
       <path d="M-125 0 C-80 -30 -30 -30 0 0 C30 -26 80 -26 125 0Z" fill="${WALL}"/>`,
   },
@@ -119,7 +149,7 @@ const SPREAD = (30 * Math.PI) / 180;
 interface GlobeCanvasProps {
   lang: Language;
   busy: boolean;
-  onPick: (region: string) => void;
+  onPick: (region: string, landmarkIndex?: number) => void;
   targetRegion?: string | null;
   children?: React.ReactNode;
 }
@@ -138,15 +168,22 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
   const targetRef = useRef<number | null>(null);
   const velocityRef = useRef<number>(0);
   const busyRef = useRef<boolean>(busy);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   busyRef.current = busy;
+
+  const selectLandmark = (idx: number, region: string) => {
+    targetRef.current = -idx * STEP;
+    velocityRef.current = 0;
+    onPick(region, idx);
+  };
 
   useEffect(() => {
     if (!targetRegion) {
       targetRef.current = null;
       return;
     }
-    const idx = LANDMARKS.findIndex((lm) => lm.region === targetRegion);
+    const idx = LANDMARKS.findIndex((lm) => lm.region === targetRegion || lm.id === targetRegion);
     if (idx >= 0) {
       targetRef.current = -idx * STEP;
       velocityRef.current = 0;
@@ -161,14 +198,18 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
 
-      if (targetRef.current != null && !busyRef.current) {
+      if (targetRef.current != null) {
+        // Fast, smooth target alignment (~350ms)
         const diff = ((targetRef.current - angleRef.current + 540) % 360) - 180;
-        angleRef.current += diff * (1 - Math.exp(-dt * 2.2));
+        angleRef.current += diff * (1 - Math.exp(-dt * 7.0));
+        if (Math.abs(diff) < 0.15) {
+          angleRef.current = targetRef.current;
+        }
       } else {
-        const speed = busyRef.current ? 16 : 2.2;
+        const speed = busyRef.current ? 12 : 2.2;
         angleRef.current += (speed + velocityRef.current) * dt;
       }
-      velocityRef.current *= Math.exp(-dt * 2.2);
+      velocityRef.current *= Math.exp(-dt * 3.5);
 
       if (turnRef.current) {
         turnRef.current.setAttribute('transform', `rotate(${angleRef.current.toFixed(3)})`);
@@ -180,25 +221,51 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
     return () => cancelAnimationFrame(animId);
   }, []);
 
+  const downInfoRef = useRef<{
+    x: number;
+    y: number;
+    landmarkIdx: number | null;
+  }>({ x: 0, y: 0, landmarkIdx: null });
+  const isDraggingRef = useRef(false);
+
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     const svg = e.currentTarget;
-    svg.setPointerCapture(e.pointerId);
     targetRef.current = null;
 
+    const hit = (e.target as Element).closest?.('.landmark') as SVGElement | null;
+    const landmarkIdx = hit?.dataset.index != null ? Number(hit.dataset.index) : null;
+
+    downInfoRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+      landmarkIdx,
+    };
+    isDraggingRef.current = false;
+
     let lastX = e.clientX;
-    let moved = 0;
+    let totalMoved = 0;
     let lastT = performance.now();
 
     const handlePointerMove = (ev: PointerEvent) => {
       const dx = ev.clientX - lastX;
-      const now = performance.now();
-      const scale = 360 / (Math.PI * svg.getBoundingClientRect().width * 0.8);
-      angleRef.current += dx * scale;
-      velocityRef.current = (dx * scale) / Math.max(0.008, (now - lastT) / 1000);
-      velocityRef.current = Math.max(-400, Math.min(400, velocityRef.current));
-      moved += Math.abs(dx);
+      totalMoved += Math.abs(dx);
+
+      if (totalMoved > 8 && !isDraggingRef.current) {
+        isDraggingRef.current = true;
+        try {
+          svg.setPointerCapture(e.pointerId);
+        } catch {}
+      }
+
+      if (isDraggingRef.current) {
+        const now = performance.now();
+        const scale = 360 / (Math.PI * svg.getBoundingClientRect().width * 0.85);
+        angleRef.current += dx * scale;
+        velocityRef.current = (dx * scale) / Math.max(0.008, (now - lastT) / 1000);
+        velocityRef.current = Math.max(-350, Math.min(350, velocityRef.current));
+      }
       lastX = ev.clientX;
-      lastT = now;
+      lastT = performance.now();
     };
 
     const handlePointerUp = (ev: PointerEvent) => {
@@ -206,14 +273,25 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
       svg.removeEventListener('pointerup', handlePointerUp);
       svg.removeEventListener('pointercancel', handlePointerUp);
 
-      if (moved < 6) {
+      try {
+        if (svg.hasPointerCapture(e.pointerId)) {
+          svg.releasePointerCapture(e.pointerId);
+        }
+      } catch {}
+
+      if (totalMoved < 16) {
+        // Tap / Click without dragging
         velocityRef.current = 0;
-        const hit = document.elementsFromPoint(ev.clientX, ev.clientY).find((el) =>
-          el.closest?.('.landmark')
-        );
-        const lm = hit?.closest('.landmark') as HTMLElement | null;
-        if (lm?.dataset.region) {
-          onPick(lm.dataset.region);
+        let picked = downInfoRef.current.landmarkIdx;
+        if (picked == null) {
+          const pointHit = document.elementsFromPoint(ev.clientX, ev.clientY).find((el) => el.closest?.('.landmark'));
+          const lm = pointHit?.closest('.landmark') as SVGElement | null;
+          if (lm?.dataset.index != null) {
+            picked = Number(lm.dataset.index);
+          }
+        }
+        if (picked != null && LANDMARKS[picked]) {
+          selectLandmark(picked, LANDMARKS[picked].region);
         }
       }
     };
@@ -230,6 +308,13 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
 
   return (
     <div className="globe-wrap" ref={containerRef}>
+      {hoveredIndex !== null && LANDMARKS[hoveredIndex] && (
+        <div className="monument-hover-badge" dir={isAr ? 'rtl' : 'ltr'}>
+          <span className="badge-name">{isAr ? LANDMARKS[hoveredIndex].name_ar : LANDMARKS[hoveredIndex].name_en}</span>
+          <span className="badge-action">{isAr ? '• اضغط للرحلة' : '• Tap to visit'}</span>
+        </div>
+      )}
+
       <svg
         className="globe-svg"
         viewBox="-640 -700 1280 1280"
@@ -269,11 +354,18 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
                 className="landmark"
                 transform={`rotate(${i * STEP}) translate(0 ${-R + 4})`}
                 data-region={lm.region}
+                data-index={i}
                 role="button"
                 tabIndex={0}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', pointerEvents: 'all' }}
+                onMouseEnter={() => setHoveredIndex(i)}
+                onMouseLeave={() => setHoveredIndex((prev) => (prev === i ? null : prev))}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  selectLandmark(i, lm.region);
+                }}
                 dangerouslySetInnerHTML={{
-                  __html: `<rect x="-140" y="-230" width="280" height="250" fill="transparent" stroke="none"/>${lm.svg}`,
+                  __html: `<rect x="-150" y="-240" width="300" height="260" fill="transparent" stroke="none" pointer-events="all"/>${lm.svg}`,
                 }}
               />
             ))}

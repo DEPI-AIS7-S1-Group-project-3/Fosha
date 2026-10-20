@@ -172,7 +172,7 @@ export const App: React.FC = () => {
     handleSendMessage(landingInputValue, true);
   };
 
-  const handleGlobePick = (region: string) => {
+  const handleGlobePick = (region: string, _landmarkIndex?: number) => {
     setTargetGlobeRegion(region);
     const prompt = lang === 'ar' ? `رحلة ٣ أيام في ${region}` : `3 days in ${region}`;
     handleSendMessage(prompt, true);
@@ -259,6 +259,8 @@ export const App: React.FC = () => {
                     type="button"
                     className="chip"
                     onClick={() => handleChipClick(chip.msg)}
+                    onMouseEnter={() => setTargetGlobeRegion(chip.region)}
+                    onMouseLeave={() => setTargetGlobeRegion(null)}
                   >
                     {chip.label}
                   </button>

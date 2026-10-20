@@ -94,8 +94,16 @@ def search_attractions(
                     top_k=top_k,
                 )
             )
-    except Exception as exc:  # retriever down, model missing, bad DB, ...
-        return _error(f"Retrieval failed: {exc}")
+    except Exception as exc:  # retriever down, model missing, bad DB, numpy incompatibility...
+        if search_fn is None:
+            try:
+                from api.demo import demo_search
+                for one_region in regions_to_search:
+                    hits.extend(demo_search(query=query, region=one_region, category=category_value, top_k=top_k))
+            except Exception:
+                return _error(f"Retrieval failed: {exc}")
+        else:
+            return _error(f"Retrieval failed: {exc}")
 
     # One entry per place, keeping its best (lowest) distance.
     best_distance: Dict[int, float] = {}

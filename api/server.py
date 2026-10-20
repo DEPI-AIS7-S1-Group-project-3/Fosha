@@ -30,9 +30,8 @@ from api import analytics
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 DEMO = os.environ.get("REHLA_DEMO", "").lower() in ("1", "true", "yes")
-# Real Gemini with the demo keyword search: for machines without a Chroma index
-# (e.g. Intel Macs, where sentence-transformers can't be installed).
-KEYWORD_SEARCH = os.environ.get("REHLA_SEARCH", "").lower() == "keyword"
+# Default to keyword search unless REHLA_SEARCH=vector is set (avoids PyTorch/transformers freeze on Mac)
+KEYWORD_SEARCH = os.environ.get("REHLA_SEARCH", "keyword").lower() != "vector"
 CACHE_SIZE = 256
 # Only answers that do not depend on a model hiccup are worth repeating.
 CACHEABLE = {"planned", "needs_clarification", "unsupported_region", "out_of_scope", "no_results"}

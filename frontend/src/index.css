@@ -161,8 +161,50 @@ html[dir="rtl"] body.sheet-open .globe-wrap { left: calc(var(--sheet-w) + (100vw
   touch-action: pan-y; cursor: grab; user-select: none;
 }
 .globe-svg:active { cursor: grabbing; }
-.landmark { cursor: pointer; outline: none; }
-.landmark:hover > *:not(rect:first-child), .landmark:focus-visible > *:not(rect:first-child) { stroke-width: 7; }
+.landmark {
+  cursor: pointer;
+  outline: none;
+  pointer-events: all;
+  transition: filter 0.2s ease;
+}
+.landmark:hover,
+.landmark:focus-visible {
+  filter: drop-shadow(0 -4px 8px rgba(0, 0, 0, 0.22));
+}
+.landmark:hover > *:not(rect:first-child),
+.landmark:focus-visible > *:not(rect:first-child) {
+  stroke-width: 6.5;
+}
+
+.monument-hover-badge {
+  position: absolute;
+  top: calc(var(--lm) - 48px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--white);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  animation: badgePop 0.18s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  white-space: nowrap;
+}
+.monument-hover-badge .badge-action {
+  color: var(--sky);
+  font-weight: 600;
+  font-size: 12px;
+}
+@keyframes badgePop {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px) scale(0.92); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
 
 /* Things sitting ON the globe */
 .on-globe {
