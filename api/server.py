@@ -1,15 +1,14 @@
-"""HTTP API for the Fosha web UI (frontend/), and the static UI itself.
+"""HTTP API for the Fosha web UI, and the built UI itself (frontend/dist).
 
-    uv run uvicorn api.server:app --reload            # real Gemini + Chroma
-    REHLA_DEMO=1 uv run uvicorn api.server:app        # offline demo, no key needed
-    REHLA_SEARCH=keyword uv run uvicorn api.server:app  # real Gemini, keyword search instead of Chroma
+    uv run uvicorn api.server:app --reload              # real LLM (Groq/Gemini) + Chroma search
+    REHLA_SEARCH=keyword uv run uvicorn api.server:app  # real LLM, keyword search (no Chroma index)
+    REHLA_DEMO=1 uv run uvicorn api.server:app          # offline demo, no keys needed
 
 Endpoints:
-    POST /api/v1/chat       {"message": str}  -> plan_trip() result + UI extras
-    GET  /api/v1/analytics  ?days=7|30|0      -> dashboard aggregates (0 = all time)
-    GET  /api/v1/health                        -> {"ok": true, "demo": bool}
-    GET  /                                     -> traveller app (frontend/index.html)
-    GET  /dashboard                            -> insights dashboard (frontend/dashboard.html)
+    POST /api/v1/chat       {"message": str, "context"?: plan} -> plan_trip() result + UI extras
+    GET  /api/v1/analytics  ?days=7|30|0                       -> dashboard aggregates (0 = all time)
+    GET  /api/v1/health                                        -> {"ok": true, "demo": bool, "search": ...}
+    GET  /, /dashboard                                         -> React app (frontend/dist, `npm run build`)
 """
 import os
 import threading
@@ -19,7 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -143,22 +142,15 @@ def get_analytics(days: int = 7) -> Dict[str, Any]:
 
 
 DIST_DIR = FRONTEND_DIR / "dist"
-if DIST_DIR.exists() and (DIST_DIR / "index.html").exists():
-    if (DIST_DIR / "assets").exists():
-        app.mount("/assets", StaticFiles(directory=DIST_DIR / "assets"), name="assets")
-    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+if (DIST_DIR / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=DIST_DIR / "assets"), name="assets")
 
-    @app.get("/")
-    @app.get("/dashboard")
-    def serve_react_app() -> FileResponse:
+
+@app.get("/")
+@app.get("/dashboard")
+def serve_react_app() -> Any:
+    """The React app handles both routes; build it with `cd frontend && npm run build`."""
+    if (DIST_DIR / "index.html").exists():
         return FileResponse(DIST_DIR / "index.html")
-elif FRONTEND_DIR.exists():
-    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
-
-    @app.get("/")
-    def index() -> FileResponse:
-        return FileResponse(FRONTEND_DIR / "index.html")
-
-    @app.get("/dashboard")
-    def dashboard() -> FileResponse:
-        return FileResponse(FRONTEND_DIR / "dashboard.html")
+    return JSONResponse({"ok": False, "error": "Frontend not built: run `cd frontend && npm run build`."},
+                        status_code=503)
