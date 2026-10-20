@@ -15,7 +15,7 @@ from typing import Any, Callable, Dict, List, Optional
 from agents.intent import extract_intent, known_regions
 from agents.llm import generate
 from agents.pricing import check_ticket_price
-from agents.recommendations import format_clarification_message, get_recommendations
+from agents.recommendations import format_clarification_message, get_recommendations, regions_for_days
 from agents.retrieval_adapter import search_attractions
 from agents.scheduler import build_itinerary
 
@@ -162,7 +162,8 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
             language=lang,
             all_regions=regions,
         )
-        return done("needs_clarification", reply, missing=intent["missing"])
+        return done("needs_clarification", reply, missing=intent["missing"],
+                    suggested_regions=regions_for_days(intent.get("days")))
 
     top_k = min(12, max(6, intent["days"] * 4))
     found = search_attractions(intent["search_query"], region=intent["region"], top_k=top_k,

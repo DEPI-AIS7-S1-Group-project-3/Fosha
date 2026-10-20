@@ -88,6 +88,8 @@ export interface ChatResponse {
   intent?: Intent;
   itinerary?: Itinerary;
   missing?: string[];
+  /** Regions that fit the trip length, for the "where to?" buttons. */
+  suggested_regions?: string[];
   used_fallback?: boolean;
   cached?: boolean;
   response_ms?: number;

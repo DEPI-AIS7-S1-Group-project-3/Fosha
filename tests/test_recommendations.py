@@ -112,3 +112,22 @@ def test_arabic_output():
     assert any("الأزواج" in w for w in recs["hotels"][0]["why"])
     assert "ميزانية فاخرة" in recs["based_on"]
 
+
+def test_one_day_clarification_respects_what_was_said():
+    from agents.recommendations import format_clarification_message, regions_for_days
+    ar = format_clarification_message(["region"], days=1, travelers="group", language="ar")
+    assert "يوم واحد" in ar and "صحابك" in ar
+    assert "الميزانية" not in ar and "مين مسافر" not in ar  # no hotels for a day trip, so don't ask
+    assert "أسوان" not in ar
+    en = format_clarification_message(["region"], days=1, language="en")
+    assert "budget" not in en.lower() and "Aswan" not in en
+    assert regions_for_days(1) == ["Cairo", "Alexandria"]
+    assert "Red Sea" in regions_for_days(5) and len(regions_for_days(None)) == 6
+
+
+def test_multi_day_clarification_offers_personalisation_once():
+    from agents.recommendations import format_clarification_message
+    msg = format_clarification_message(["region"], days=4, language="ar")
+    assert "٤ أيام" in msg and "الميزانية" in msg
+    msg = format_clarification_message(["region"], days=4, budget="luxury", travelers="couple", language="en")
+    assert "budget" not in msg.lower() and "for two" in msg

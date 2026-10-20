@@ -44,7 +44,7 @@ def test_missing_days_asks_in_user_language():
     en = plan_trip("Luxor trip", make_llm({**BASE, "days": None}), fake_search)
     ar = plan_trip("رحلة", make_llm({**BASE, "days": None, "language": "ar"}), fake_search)
     assert en["status"] == "needs_clarification" and "How many days" in en["reply"]
-    assert ar["language"] == "ar" and "كم" in ar["reply"]
+    assert ar["language"] == "ar" and "كام يوم" in ar["reply"]
 
 
 def test_unsupported_region_and_out_of_scope():

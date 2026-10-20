@@ -250,27 +250,52 @@ def get_recommendations(
     return {"hotels": hotels, "transport": transport, "based_on": based_on}
 
 
+# Destinations that make sense for a trip of a given length (most suitable first).
+# Short trips stay where travel time doesn't eat the day.
+REGIONS_BY_LENGTH = [
+    (1, ["Cairo", "Alexandria"]),
+    (2, ["Cairo", "Alexandria", "Luxor", "Aswan"]),
+    (4, ["Luxor", "Aswan", "Cairo", "South Sinai", "Red Sea", "Alexandria"]),
+    (99, ["Cairo", "Luxor", "Aswan", "Red Sea", "South Sinai", "Alexandria"]),
+]
+REGION_AR = {"Cairo": "القاهرة", "Giza": "الجيزة", "Luxor": "الأقصر", "Aswan": "أسوان", "Alexandria": "الإسكندرية",
+             "South Sinai": "جنوب سيناء", "Red Sea": "البحر الأحمر", "Matrouh": "مطروح", "New Valley": "الوادي الجديد"}
+GROUP_AR = {"solo": "لوحدك", "couple": "مع شريكك", "family": "مع العيلة", "group": "مع صحابك"}
+GROUP_EN = {"solo": "solo", "couple": "for two", "family": "with the family", "group": "with friends"}
+
+
+def _n(value: int, ar: bool) -> str:
+    return str(value).translate(str.maketrans("0123456789", "٠١٢٣٤٥٦٧٨٩")) if ar else str(value)
+
+
+def regions_for_days(days: Optional[int]) -> List[str]:
+    """Regions worth suggesting for this trip length (all of them when the length is unknown)."""
+    if not days:
+        return REGIONS_BY_LENGTH[-1][1]
+    return next(regions for limit, regions in REGIONS_BY_LENGTH if days <= limit)
+
+
 def suggest_destinations_for_duration(days: Optional[int], language: str = "en") -> str:
-    """Suggest top Egyptian destinations that fit the given time span."""
+    """One sentence suggesting destinations that fit the time span."""
     ar = language == "ar"
-    if days is None:
-        if ar:
-            return "القاهرة (الأهرامات والتراث)، الإسكندرية (شاطئ المتوسط)، الأقصر (المعابد ووادي الملوك)، أسوان (النيل والقرى النوبية)، أو جنوب سيناء (شرم الشيخ)."
-        return "Cairo (Pyramids & Heritage), Alexandria (Mediterranean coast), Luxor (Valley of the Kings & Temples), Aswan (Nile & Nubian villages), or South Sinai (Sharm El Sheikh)."
-    
-    if days <= 2:
-        if ar:
-            return "لرحلة قصيرة (يوم أو يومين)، الخيار المثالي هو القاهرة (الأهرامات، المتحف المصري وخان الخليلي) أو الإسكندرية (كورنيش البحر المتوسط، قلعة قايتباي ومكتبة الإسكندرية)."
-        return "For a 1-2 day trip, the best destinations are Cairo (Pyramids, NMEC, Egyptian Museum) or Alexandria (Mediterranean Corniche, Qaitbay Citadel & Library)."
-    
+    if not days:
+        return ("القاهرة للأهرامات والمتاحف، الأقصر وأسوان للمعابد والنيل، أو البحر الأحمر وسيناء للبحر والغوص."
+                if ar else "Cairo for the Pyramids and museums, Luxor and Aswan for temples and the Nile, "
+                           "or the Red Sea and Sinai for beaches and diving.")
+    if days == 1:
+        return ("في يوم واحد أحسن اختيار القاهرة (الأهرامات والمتحف المصري وخان الخليلي) أو الإسكندرية "
+                "(قلعة قايتباي والمكتبة والكورنيش)." if ar else
+                "For a single day, Cairo (the Pyramids, the Egyptian Museum, Khan El Khalili) or Alexandria "
+                "(Qaitbay Citadel, the Library and the Corniche) work best.")
+    if days == 2:
+        return ("في يومين ينفع القاهرة أو الإسكندرية، أو الأقصر لو حابب المعابد." if ar else
+                "Two days suit Cairo or Alexandria, or Luxor if you love temples.")
     if days <= 4:
-        if ar:
-            return f"لرحلة مدتها {days} أيام، ننصح بزيارة الأقصر (معابد الكرنك والأقصر ومقابر وادي الملوك)، أو أسوان (معبد فيلة والسد العالي والقرية النوبية)، أو منتجعات جنوب سيناء (شرم الشيخ ومحمية رأس محمد)."
-        return f"For a {days}-day trip, top destinations with rich itineraries are Luxor (Karnak, Luxor Temple & Valley of the Kings), Aswan (Philae Temple & Nubian Island), or South Sinai (Sharm El Sheikh & Ras Mohamed)."
-    
-    if ar:
-        return f"لرحلة ممتدة ({days} أيام)، نوصي ببرنامج كلاسيكي يجمع بين القاهرة والأقصر، أو قضاء عطلة شاطئية وبحرية متكاملة في البحر الأحمر (الغردقة والجونة)."
-    return f"For an extended trip of {days} days, we recommend a grand tour combining Cairo & Luxor, or a coastal resort holiday along the Red Sea (Hurghada & El Gouna)."
+        return (f"في {_n(days, ar)} أيام ينفع الأقصر (الكرنك ووادي الملوك)، أسوان (فيلة والنوبة)، أو شرم الشيخ ورأس محمد."
+                if ar else f"{days} days suit Luxor (Karnak, Valley of the Kings), Aswan (Philae, Nubia), "
+                           "or Sharm El Sheikh and Ras Mohamed.")
+    return (f"في {_n(days, ar)} أيام تقدر تجمع القاهرة والأقصر، أو تاخد إجازة بحر في الغردقة والجونة." if ar else
+            f"With {days} days you can combine Cairo and Luxor, or take a beach break in Hurghada and El Gouna.")
 
 
 def format_clarification_message(
@@ -279,42 +304,41 @@ def format_clarification_message(
     budget: Optional[str] = None,
     travelers: Optional[Any] = None,
     language: str = "en",
-    all_regions: str = ""
+    all_regions: str = "",
 ) -> str:
-    """Build a natural, welcoming clarification prompt covering days, destination, budget, and travelers."""
+    """Ask only for what is still missing, acknowledging what the user already said.
+
+    Budget and group size only shape hotel/transport tips, which apply to trips of
+    2+ days, so a one-day trip is never asked about them.
+    """
     ar = language == "ar"
     parts: List[str] = []
 
-    # 1. Days / Time
-    if "days" in missing or days is None:
-        parts.append("كم يومًا لديك لهذه الرحلة؟" if ar else "How many days do you have for the trip?")
+    known = []
+    if days:
+        known.append(("يوم واحد" if days == 1 else "يومين" if days == 2 else f"{_n(days, ar)} أيام") if ar
+                     else ("one day" if days == 1 else f"{days} days"))
+    group = next(iter(traveler_types(travelers)), None)
+    if group:
+        known.append(GROUP_AR[group] if ar else GROUP_EN[group])
+    if known:
+        parts.append(f"تمام، {' '.join(known)}." if ar else f"Got it: {', '.join(known)}.")
 
-    # 2. Destination / Region
+    if "days" in missing:
+        parts.append("الرحلة كام يوم؟" if ar else "How many days do you have?")
     if "region" in missing:
-        if days:
-            suggestion = suggest_destinations_for_duration(days, language)
-            if ar:
-                parts.append(f"ما المدينة أو المنطقة التي تريد زيارتها؟ {suggestion} (المتاح: {all_regions}).")
-            else:
-                parts.append(f"Which city or area would you like to visit? {suggestion} (Available destinations: {all_regions}).")
-        else:
-            if ar:
-                parts.append(f"ما المدينة أو المنطقة التي تريد زيارتها؟ المتاح: {all_regions}.")
-            else:
-                parts.append(f"Which city or area would you like to visit? Available: {all_regions}.")
+        parts.append(("رايح فين؟ " if ar else "Where would you like to go? ")
+                     + suggest_destinations_for_duration(days, language))
 
-    # 3. Budget
-    if not budget:
-        if ar:
-            parts.append("ما مستوى الميزانية المفضل لديك؟ (اقتصادي، متوسط، أو فاخر).")
-        else:
-            parts.append("What is your preferred budget? (Economy, Moderate, or Luxury).")
-
-    # 4. Travelers
-    if not travelers:
-        if ar:
-            parts.append("كم عدد المسافرين معك؟ (مفرد، زوجان، عائلة، أو مجموعة).")
-        else:
-            parts.append("How many people are travelling? (Solo, Couple, Family, or Group).")
+    if days and days >= 2:
+        extras = []
+        if not budget:
+            extras.append("الميزانية (اقتصادي، متوسط، فاخر)" if ar else "your budget (economy, moderate or luxury)")
+        if not group:
+            extras.append("مين مسافر معاك" if ar else "who's travelling")
+        if extras:
+            joined = " و".join(extras) if ar else " and ".join(extras)
+            parts.append(f"ولو تحب تقولّي {joined}، هختار لك فنادق ومواصلات تناسبك." if ar
+                         else f"If you tell me {joined}, I'll pick hotels and transport to suit you.")
 
     return " ".join(parts)

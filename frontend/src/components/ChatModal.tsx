@@ -78,8 +78,11 @@ export const ChatModal: React.FC<ChatModalProps> = ({
       });
     }
 
+    // Only regions that fit the trip length (the backend decides, so text and buttons agree).
     if (missing.includes('region')) {
-      const regionNames = ['Cairo', 'Luxor', 'Aswan', 'Alexandria', 'South Sinai', 'Red Sea'];
+      const regionNames = res.suggested_regions?.length
+        ? res.suggested_regions
+        : ['Cairo', 'Luxor', 'Aswan', 'Alexandria', 'South Sinai', 'Red Sea'];
       groups.push({
         label: translate('which_region', lang),
         items: regionNames.map((r) => ({
@@ -89,14 +92,17 @@ export const ChatModal: React.FC<ChatModalProps> = ({
       });
     }
 
-    if (!intent.budget) {
+    // Budget and group size only shape hotel/transport tips, which need 2+ days.
+    const multiDay = !intent.days || intent.days >= 2;
+
+    if (multiDay && !intent.budget) {
       groups.push({
         label: translate('budget_label', lang),
         items: I18N[lang].budget_options,
       });
     }
 
-    if (!intent.travelers) {
+    if (multiDay && !intent.travelers) {
       groups.push({
         label: translate('travelers_label', lang),
         items: I18N[lang].travelers_options,

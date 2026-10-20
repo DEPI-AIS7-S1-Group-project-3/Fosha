@@ -103,7 +103,7 @@ def normalize_intent(raw: Dict[str, Any]) -> Dict[str, Any]:
         travelers = "couple"
     elif any(w in raw_trav for w in ("fam", "kid", "child", "عائل", "مع أولادي", "مع الأسرة")):
         travelers = "family"
-    elif any(w in raw_trav for w in ("group", "friend", "مجموع", "أصدقاء", "شلة")):
+    elif any(w in raw_trav for w in ("group", "friend", "مجموع", "أصدقاء", "اصدقاء", "صحاب", "أصحاب", "اصحاب", "شلة")):
         travelers = "group"
     elif raw_trav.isdigit():
         travelers = int(raw_trav)
