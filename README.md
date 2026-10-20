@@ -1,6 +1,6 @@
 # Fosha · فسحة
 
-**Your Egypt, your way.** Fosha (*فسحة*, Egyptian Arabic for "an outing") is an AI travel assistant for Egypt, built as the RehlaGuide DEPI capstone. Tell it, in Arabic or English, where you're going, for how long and what you love ("عايزة اطلع يوم مع صحابي. بورسعيد", "3 days in Luxor, I love temples, we're a couple") and it builds a day-by-day plan that respects opening hours, visit lengths and travel time, suggests where to stay and how to get around, and lets you change the plan by chatting.
+**Egypt, your way.** Fosha (*فسحة*, Egyptian Arabic for "an outing") is an AI travel assistant for Egypt, built as the RehlaGuide DEPI capstone. Tell it, in Arabic or English, where you're going, for how long and what you love ("عايزة اطلع يوم مع صحابي. بورسعيد", "3 days in Luxor, I love temples, we're a couple") and it builds a day-by-day plan that respects opening hours, visit lengths and travel time, suggests where to stay and how to get around, and lets you change the plan by chatting.
 
 ![Fosha: the landmark globe on the left, a 3-day Luxor plan on the right](docs/trip-sheet.png)
 
