@@ -1,10 +1,11 @@
 import React from 'react';
 import { ChatResponse, Language, Stop } from '../types';
-import { AR_NAMES, formatNumber, translate } from '../i18n';
+import { AR_NAMES, formatNumber, localDigits, localRecs, localText, translate } from '../i18n';
 
 /** The printable itinerary. Hidden on screen; when printing it is the only thing on
     the page (see `.print-doc` in index.css), so "Print" gives the whole trip, every
-    day and stop, instead of a picture of the window. */
+    day and stop, instead of a picture of the window. Only what is in the plan is
+    printed (no "not included" list or planner notes), all in the chosen language. */
 interface PrintItineraryProps {
   plan: ChatResponse | null;
   lang: Language;
@@ -30,13 +31,13 @@ export const PrintItinerary: React.FC<PrintItineraryProps> = ({ plan, lang }) =>
   const title = days.length === 1
     ? translate('one_day_in', lang, { place: areas })
     : translate('days_in', lang, { n: num(days.length), place: areas });
-  const recs = itinerary.recommendations;
+  const recs = localRecs(itinerary, lang);
   const sources = Array.from(new Set(days.flatMap((d) => d.stops.map((s) => s.source_url)).filter(Boolean))) as string[];
 
   return (
     <article className="print-doc" dir={isAr ? 'rtl' : 'ltr'} aria-hidden="true">
       <header className="print-head">
-        <div className="print-brand">Fosha · فسحة</div>
+        <div className="print-brand">{isAr ? 'فسحة' : 'Fosha'}</div>
         <h1>{title}</h1>
         <p className="print-meta">
           {new Date().toLocaleDateString(isAr ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -71,13 +72,13 @@ export const PrintItinerary: React.FC<PrintItineraryProps> = ({ plan, lang }) =>
                     </tr>
                   ) : null}
                   <tr>
-                    <td className="print-time">{s.start}–{s.end}</td>
+                    <td className="print-time">{localDigits(`${s.start}–${s.end}`, lang)}</td>
                     <td>
                       <strong>{name(s)}</strong>
                       {s.category ? <span className="print-cat"> · {category(s.category)}</span> : null}
-                      {s.description ? <div className="print-desc">{s.description}</div> : null}
-                      {s.hours_note ? <div className="print-note">🕒 {s.hours_note}</div> : null}
-                      {s.place_note ? <div className="print-note">📍 {s.place_note}</div> : null}
+                      {s.description ? <div className="print-desc">{localText(s, 'description', lang)}</div> : null}
+                      {s.hours_note ? <div className="print-note">🕒 {localText(s, 'hours_note', lang)}</div> : null}
+                      {s.place_note ? <div className="print-note">📍 {localText(s, 'place_note', lang)}</div> : null}
                     </td>
                     <td>{duration(s.duration_min)}</td>
                     <td>{price(s.price_foreigner_egp)}</td>
@@ -88,7 +89,9 @@ export const PrintItinerary: React.FC<PrintItineraryProps> = ({ plan, lang }) =>
             </tbody>
           </table>
           {day.warnings.length > 0 && (
-            <ul className="print-warnings">{day.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+            <ul className="print-warnings">
+              {(lang === 'ar' && day.warnings_ar?.length ? day.warnings_ar : day.warnings).map((w, i) => <li key={i}>{w}</li>)}
+            </ul>
           )}
         </section>
       ))}
@@ -125,15 +128,7 @@ export const PrintItinerary: React.FC<PrintItineraryProps> = ({ plan, lang }) =>
         </section>
       )}
 
-      {itinerary.unscheduled?.length > 0 && (
-        <section className="print-extra">
-          <h3>{translate('not_included', lang)}</h3>
-          <ul>{itinerary.unscheduled.map((u, i) => <li key={i}>{u.name}: {u.reason}</li>)}</ul>
-        </section>
-      )}
-
       <footer className="print-foot">
-        {itinerary.warnings.length > 0 && <p>{itinerary.warnings.join(' ')}</p>}
         <p>{translate('disclaimer', lang)}</p>
         {sources.length > 0 && <p className="print-sources">{isAr ? 'المصادر: ' : 'Sources: '}{sources.join(' · ')}</p>}
       </footer>

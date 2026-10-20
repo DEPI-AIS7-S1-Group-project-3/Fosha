@@ -1,209 +1,1219 @@
 {
-  "_comment": "Hotel areas and transport tips used by agents/recommendations.py. Tags are matched against the traveller's interests; budgets: economy|moderate|luxury; travelers: solo|couple|family|group. needs_any: attraction ids that must be in the plan for the tip to apply. Coordinates are area centres (approximate) used to rank areas by distance to the planned stops.",
+  "_comment": "Hotel areas and transport tips used by agents/recommendations.py. Tags are matched against the traveller's interests; budgets: economy|moderate|luxury; travelers: solo|couple|family|group. needs_any: attraction ids that must be in the plan for the tip to apply. Coordinates are area centres (approximate) used to rank areas by distance to the planned stops. examples_ar: Arabic for descriptive examples (hotel names in the Arabic form used in Egypt).",
   "hotels": [
     {
-      "id": "cairo-downtown", "region": "Cairo", "lat": 30.045, "lon": 31.238,
-      "name": {"en": "Downtown & Nile Corniche", "ar": "وسط البلد وكورنيش النيل"},
-      "desc": {"en": "Central and lively, close to the Egyptian Museum, Tahrir Square and classic cafés.", "ar": "موقع مركزي حيوي قريب من المتحف المصري وميدان التحرير والمقاهي التراثية."},
-      "examples": {"economy": "budget hotels and hostels around Talaat Harb Street", "moderate": "Steigenberger Hotel El Tahrir, Ramses Hilton", "luxury": "The Nile Ritz-Carlton"},
-      "tags": ["history", "museums", "culture", "food", "shopping", "nightlife"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["solo", "couple", "group"]
+      "id": "cairo-downtown",
+      "region": "Cairo",
+      "lat": 30.045,
+      "lon": 31.238,
+      "name": {
+        "en": "Downtown & Nile Corniche",
+        "ar": "وسط البلد وكورنيش النيل"
+      },
+      "desc": {
+        "en": "Central and lively, close to the Egyptian Museum, Tahrir Square and classic cafés.",
+        "ar": "موقع مركزي حيوي قريب من المتحف المصري وميدان التحرير والمقاهي التراثية."
+      },
+      "examples": {
+        "economy": "budget hotels and hostels around Talaat Harb Street",
+        "moderate": "Steigenberger Hotel El Tahrir, Ramses Hilton",
+        "luxury": "The Nile Ritz-Carlton"
+      },
+      "tags": [
+        "history",
+        "museums",
+        "culture",
+        "food",
+        "shopping",
+        "nightlife"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "group"
+      ],
+      "examples_ar": {
+        "economy": "فنادق ونُزل اقتصادية حوالين شارع طلعت حرب",
+        "moderate": "فندق شتيجنبرجر التحرير، رمسيس هيلتون",
+        "luxury": "فندق ريتز كارلتون النيل"
+      }
     },
     {
-      "id": "cairo-zamalek", "region": "Cairo", "lat": 30.061, "lon": 31.220,
-      "name": {"en": "Zamalek Island", "ar": "حي الزمالك"},
-      "desc": {"en": "A quiet, leafy island with art galleries, cafés and Nile views.", "ar": "جزيرة هادئة وخضراء فيها معارض فنية ومقاهي وإطلالات على النيل."},
-      "examples": {"moderate": "boutique hotels and guesthouses", "luxury": "Cairo Marriott Hotel & Omar Khayyam Casino"},
-      "tags": ["culture", "food", "nightlife", "relax", "nile", "romance"],
-      "budgets": ["moderate", "luxury"], "travelers": ["solo", "couple"]
+      "id": "cairo-zamalek",
+      "region": "Cairo",
+      "lat": 30.061,
+      "lon": 31.22,
+      "name": {
+        "en": "Zamalek Island",
+        "ar": "حي الزمالك"
+      },
+      "desc": {
+        "en": "A quiet, leafy island with art galleries, cafés and Nile views.",
+        "ar": "جزيرة هادئة وخضراء فيها معارض فنية ومقاهي وإطلالات على النيل."
+      },
+      "examples": {
+        "moderate": "boutique hotels and guesthouses",
+        "luxury": "Cairo Marriott Hotel & Omar Khayyam Casino"
+      },
+      "tags": [
+        "culture",
+        "food",
+        "nightlife",
+        "relax",
+        "nile",
+        "romance"
+      ],
+      "budgets": [
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple"
+      ],
+      "examples_ar": {
+        "moderate": "فنادق بوتيك وبيوت ضيافة",
+        "luxury": "فندق ماريوت القاهرة وكازينو عمر الخيام"
+      }
     },
     {
-      "id": "cairo-giza", "region": "Cairo", "lat": 29.985, "lon": 31.135,
-      "name": {"en": "Giza Pyramids area", "ar": "منطقة أهرامات الجيزة"},
-      "desc": {"en": "Wake up facing the Pyramids and reach the plateau before the crowds.", "ar": "اصحى على منظر الأهرامات ووصل للهضبة قبل الزحمة."},
-      "examples": {"economy": "small pyramid-view guesthouses in Nazlet El Semman", "moderate": "pyramid-view guesthouses with rooftop terraces", "luxury": "Marriott Mena House"},
-      "tags": ["history"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["family", "couple", "group"]
+      "id": "cairo-giza",
+      "region": "Cairo",
+      "lat": 29.985,
+      "lon": 31.135,
+      "name": {
+        "en": "Giza Pyramids area",
+        "ar": "منطقة أهرامات الجيزة"
+      },
+      "desc": {
+        "en": "Wake up facing the Pyramids and reach the plateau before the crowds.",
+        "ar": "اصحى على منظر الأهرامات ووصل للهضبة قبل الزحمة."
+      },
+      "examples": {
+        "economy": "small pyramid-view guesthouses in Nazlet El Semman",
+        "moderate": "pyramid-view guesthouses with rooftop terraces",
+        "luxury": "Marriott Mena House"
+      },
+      "tags": [
+        "history"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "family",
+        "couple",
+        "group"
+      ],
+      "examples_ar": {
+        "economy": "بيوت ضيافة صغيرة بتطل على الأهرامات في نزلة السمان",
+        "moderate": "بيوت ضيافة بتطل على الأهرامات وفيها روف",
+        "luxury": "فندق ماريوت مينا هاوس"
+      }
     },
     {
-      "id": "luxor-east", "region": "Luxor", "lat": 25.699, "lon": 32.639,
-      "name": {"en": "East Bank (town centre)", "ar": "البر الشرقي (وسط المدينة)"},
-      "desc": {"en": "Walk to Luxor Temple, the Corniche promenade, the souk and the train station.", "ar": "مشي لمعبد الأقصر والكورنيش والسوق ومحطة القطار."},
-      "examples": {"economy": "budget hotels near Luxor Temple and the station", "moderate": "Steigenberger Nile Palace", "luxury": "Sofitel Winter Palace"},
-      "tags": ["history", "culture", "food", "nile", "shopping"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["solo", "couple", "family", "group"]
+      "id": "luxor-east",
+      "region": "Luxor",
+      "lat": 25.699,
+      "lon": 32.639,
+      "name": {
+        "en": "East Bank (town centre)",
+        "ar": "البر الشرقي (وسط المدينة)"
+      },
+      "desc": {
+        "en": "Walk to Luxor Temple, the Corniche promenade, the souk and the train station.",
+        "ar": "مشي لمعبد الأقصر والكورنيش والسوق ومحطة القطار."
+      },
+      "examples": {
+        "economy": "budget hotels near Luxor Temple and the station",
+        "moderate": "Steigenberger Nile Palace",
+        "luxury": "Sofitel Winter Palace"
+      },
+      "tags": [
+        "history",
+        "culture",
+        "food",
+        "nile",
+        "shopping"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "family",
+        "group"
+      ],
+      "examples_ar": {
+        "economy": "فنادق اقتصادية قريبة من معبد الأقصر والمحطة",
+        "moderate": "فندق شتيجنبرجر نايل بالاس",
+        "luxury": "فندق سوفيتيل وينتر بالاس"
+      }
     },
     {
-      "id": "luxor-west", "region": "Luxor", "lat": 25.715, "lon": 32.615,
-      "name": {"en": "West Bank (Theban hills)", "ar": "البر الغربي"},
-      "desc": {"en": "Quiet countryside among sugarcane fields, minutes from the Valley of the Kings.", "ar": "ريف هادي وسط الغيطان، على بُعد دقايق من وادي الملوك."},
-      "examples": {"economy": "family-run guesthouses", "moderate": "eco-lodges with views of the Theban hills", "luxury": "Al Moudira Hotel"},
-      "tags": ["history", "relax", "nature", "romance"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["solo", "couple", "family"]
+      "id": "luxor-west",
+      "region": "Luxor",
+      "lat": 25.715,
+      "lon": 32.615,
+      "name": {
+        "en": "West Bank (Theban hills)",
+        "ar": "البر الغربي"
+      },
+      "desc": {
+        "en": "Quiet countryside among sugarcane fields, minutes from the Valley of the Kings.",
+        "ar": "ريف هادي وسط الغيطان، على بُعد دقايق من وادي الملوك."
+      },
+      "examples": {
+        "economy": "family-run guesthouses",
+        "moderate": "eco-lodges with views of the Theban hills",
+        "luxury": "Al Moudira Hotel"
+      },
+      "tags": [
+        "history",
+        "relax",
+        "nature",
+        "romance"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "family"
+      ],
+      "examples_ar": {
+        "economy": "بيوت ضيافة عائلية",
+        "moderate": "نُزل بيئية بتطل على جبال طيبة",
+        "luxury": "فندق المديرة"
+      }
     },
     {
-      "id": "aswan-islands", "region": "Aswan", "lat": 24.088, "lon": 32.885,
-      "name": {"en": "Elephantine Island & West Bank", "ar": "جزيرة إلفنتين وغرب أسوان"},
-      "desc": {"en": "Colourful Nubian guesthouses, home-cooked meals and calm river views.", "ar": "بيوت نوبية ملونة وأكل بيتي وإطلالات هادية على النيل."},
-      "examples": {"economy": "Nubian guesthouses", "moderate": "Nubian guesthouses with river terraces", "luxury": "Mövenpick Resort Aswan"},
-      "tags": ["culture", "nile", "relax", "romance", "food"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["solo", "couple", "family"]
+      "id": "aswan-islands",
+      "region": "Aswan",
+      "lat": 24.088,
+      "lon": 32.885,
+      "name": {
+        "en": "Elephantine Island & West Bank",
+        "ar": "جزيرة إلفنتين وغرب أسوان"
+      },
+      "desc": {
+        "en": "Colourful Nubian guesthouses, home-cooked meals and calm river views.",
+        "ar": "بيوت نوبية ملونة وأكل بيتي وإطلالات هادية على النيل."
+      },
+      "examples": {
+        "economy": "Nubian guesthouses",
+        "moderate": "Nubian guesthouses with river terraces",
+        "luxury": "Mövenpick Resort Aswan"
+      },
+      "tags": [
+        "culture",
+        "nile",
+        "relax",
+        "romance",
+        "food"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "family"
+      ],
+      "examples_ar": {
+        "economy": "بيوت ضيافة نوبية",
+        "moderate": "بيوت ضيافة نوبية بتراسات على النيل",
+        "luxury": "منتجع موفنبيك أسوان"
+      }
     },
     {
-      "id": "aswan-corniche", "region": "Aswan", "lat": 24.090, "lon": 32.899,
-      "name": {"en": "Aswan Corniche", "ar": "كورنيش أسوان"},
-      "desc": {"en": "Overlooks the granite islands and feluccas, close to the souk and boat landings.", "ar": "يطل على جزر الجرانيت والفلايك، قريب من السوق ومراسي المراكب."},
-      "examples": {"economy": "budget hotels on the Corniche", "moderate": "Basma Hotel", "luxury": "Sofitel Legend Old Cataract"},
-      "tags": ["nile", "history", "shopping", "museums"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["solo", "couple", "family", "group"]
+      "id": "aswan-corniche",
+      "region": "Aswan",
+      "lat": 24.09,
+      "lon": 32.899,
+      "name": {
+        "en": "Aswan Corniche",
+        "ar": "كورنيش أسوان"
+      },
+      "desc": {
+        "en": "Overlooks the granite islands and feluccas, close to the souk and boat landings.",
+        "ar": "يطل على جزر الجرانيت والفلايك، قريب من السوق ومراسي المراكب."
+      },
+      "examples": {
+        "economy": "budget hotels on the Corniche",
+        "moderate": "Basma Hotel",
+        "luxury": "Sofitel Legend Old Cataract"
+      },
+      "tags": [
+        "nile",
+        "history",
+        "shopping",
+        "museums"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "family",
+        "group"
+      ],
+      "examples_ar": {
+        "economy": "فنادق اقتصادية على الكورنيش",
+        "moderate": "فندق بسمة",
+        "luxury": "فندق سوفيتيل ليجند أولد كتراكت"
+      }
     },
     {
-      "id": "alex-corniche", "region": "Alexandria", "lat": 31.245, "lon": 29.965,
-      "name": {"en": "Corniche & Stanley Bay", "ar": "الكورنيش وخليج ستانلي"},
-      "desc": {"en": "Mediterranean views, sea breezes and seafood restaurants.", "ar": "إطلالة على البحر المتوسط ونسمة البحر ومطاعم السمك."},
-      "examples": {"economy": "Corniche-side budget hotels", "moderate": "sea-view mid-range hotels", "luxury": "Four Seasons Hotel Alexandria at San Stefano"},
-      "tags": ["beach", "food", "relax", "romance"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["couple", "family"]
+      "id": "alex-corniche",
+      "region": "Alexandria",
+      "lat": 31.245,
+      "lon": 29.965,
+      "name": {
+        "en": "Corniche & Stanley Bay",
+        "ar": "الكورنيش وخليج ستانلي"
+      },
+      "desc": {
+        "en": "Mediterranean views, sea breezes and seafood restaurants.",
+        "ar": "إطلالة على البحر المتوسط ونسمة البحر ومطاعم السمك."
+      },
+      "examples": {
+        "economy": "Corniche-side budget hotels",
+        "moderate": "sea-view mid-range hotels",
+        "luxury": "Four Seasons Hotel Alexandria at San Stefano"
+      },
+      "tags": [
+        "beach",
+        "food",
+        "relax",
+        "romance"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "couple",
+        "family"
+      ],
+      "examples_ar": {
+        "economy": "فنادق اقتصادية على الكورنيش",
+        "moderate": "فنادق متوسطة بتطل على البحر",
+        "luxury": "فندق فور سيزونز الإسكندرية بسان ستيفانو"
+      }
     },
     {
-      "id": "alex-raml", "region": "Alexandria", "lat": 31.200, "lon": 29.900,
-      "name": {"en": "Raml Station & Mansheya", "ar": "محطة الرمل والمنشية"},
-      "desc": {"en": "Belle-époque streets, walking distance to the Library, the Roman Theatre and old markets.", "ar": "شوارع كلاسيكية قريبة من المكتبة والمسرح الروماني والأسواق القديمة."},
-      "examples": {"economy": "classic budget hotels", "moderate": "Steigenberger Cecil Hotel"},
-      "tags": ["history", "museums", "culture", "food", "shopping"],
-      "budgets": ["economy", "moderate"], "travelers": ["solo", "couple", "group"]
+      "id": "alex-raml",
+      "region": "Alexandria",
+      "lat": 31.2,
+      "lon": 29.9,
+      "name": {
+        "en": "Raml Station & Mansheya",
+        "ar": "محطة الرمل والمنشية"
+      },
+      "desc": {
+        "en": "Belle-époque streets, walking distance to the Library, the Roman Theatre and old markets.",
+        "ar": "شوارع كلاسيكية قريبة من المكتبة والمسرح الروماني والأسواق القديمة."
+      },
+      "examples": {
+        "economy": "classic budget hotels",
+        "moderate": "Steigenberger Cecil Hotel"
+      },
+      "tags": [
+        "history",
+        "museums",
+        "culture",
+        "food",
+        "shopping"
+      ],
+      "budgets": [
+        "economy",
+        "moderate"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "group"
+      ],
+      "examples_ar": {
+        "economy": "فنادق اقتصادية كلاسيكية",
+        "moderate": "فندق شتيجنبرجر سيسيل"
+      }
     },
     {
-      "id": "sinai-sharm", "region": "South Sinai", "lat": 27.912, "lon": 34.329,
-      "name": {"en": "Naama Bay & Nabq (Sharm El Sheikh)", "ar": "خليج نعمة ونبق (شرم الشيخ)"},
-      "desc": {"en": "Beach resorts with house reefs, dive centres and evening promenades.", "ar": "منتجعات على البحر فيها شعاب مرجانية ومراكز غوص وممشى بالليل."},
-      "examples": {"economy": "3-star resorts a short walk from Naama Bay", "moderate": "all-inclusive family resorts", "luxury": "five-star beachfront resorts in Nabq"},
-      "tags": ["beach", "diving", "nightlife", "relax"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["couple", "family", "group"]
+      "id": "sinai-sharm",
+      "region": "South Sinai",
+      "lat": 27.912,
+      "lon": 34.329,
+      "name": {
+        "en": "Naama Bay & Nabq (Sharm El Sheikh)",
+        "ar": "خليج نعمة ونبق (شرم الشيخ)"
+      },
+      "desc": {
+        "en": "Beach resorts with house reefs, dive centres and evening promenades.",
+        "ar": "منتجعات على البحر فيها شعاب مرجانية ومراكز غوص وممشى بالليل."
+      },
+      "examples": {
+        "economy": "3-star resorts a short walk from Naama Bay",
+        "moderate": "all-inclusive family resorts",
+        "luxury": "five-star beachfront resorts in Nabq"
+      },
+      "tags": [
+        "beach",
+        "diving",
+        "nightlife",
+        "relax"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "couple",
+        "family",
+        "group"
+      ],
+      "examples_ar": {
+        "economy": "منتجعات ٣ نجوم قريبة من خليج نعمة",
+        "moderate": "منتجعات عائلية شاملة كل الوجبات",
+        "luxury": "منتجعات ٥ نجوم على البحر في نبق"
+      }
     },
     {
-      "id": "sinai-catherine", "region": "South Sinai", "lat": 28.556, "lon": 33.976,
-      "name": {"en": "Saint Catherine foothills", "ar": "سفح جبل سانت كاترين"},
-      "desc": {"en": "Mountain eco-lodges and Bedouin camps, ready for the Mount Sinai sunrise hike.", "ar": "نُزل جبلية ومخيمات بدوية جاهزة لطلعة شروق جبل موسى."},
-      "examples": {"economy": "Bedouin camps", "moderate": "mountain eco-lodges"},
-      "tags": ["nature", "history", "relax"],
-      "budgets": ["economy", "moderate"], "travelers": ["solo", "couple", "group"]
+      "id": "sinai-catherine",
+      "region": "South Sinai",
+      "lat": 28.556,
+      "lon": 33.976,
+      "name": {
+        "en": "Saint Catherine foothills",
+        "ar": "سفح جبل سانت كاترين"
+      },
+      "desc": {
+        "en": "Mountain eco-lodges and Bedouin camps, ready for the Mount Sinai sunrise hike.",
+        "ar": "نُزل جبلية ومخيمات بدوية جاهزة لطلعة شروق جبل موسى."
+      },
+      "examples": {
+        "economy": "Bedouin camps",
+        "moderate": "mountain eco-lodges"
+      },
+      "tags": [
+        "nature",
+        "history",
+        "relax"
+      ],
+      "budgets": [
+        "economy",
+        "moderate"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "group"
+      ],
+      "examples_ar": {
+        "economy": "مخيمات بدوية",
+        "moderate": "نُزل بيئية في الجبل"
+      }
     },
     {
-      "id": "redsea-gouna", "region": "Red Sea", "lat": 27.395, "lon": 33.678,
-      "name": {"en": "El Gouna", "ar": "الجونة"},
-      "desc": {"en": "A lagoon town with turquoise waterways, a marina and boutique hotels.", "ar": "مدينة بحيرات فيروزية فيها مارينا وفنادق بوتيك."},
-      "examples": {"moderate": "lagoon-side boutique hotels", "luxury": "five-star lagoon resorts"},
-      "tags": ["beach", "relax", "romance", "nightlife", "diving"],
-      "budgets": ["moderate", "luxury"], "travelers": ["couple", "family"]
+      "id": "redsea-gouna",
+      "region": "Red Sea",
+      "lat": 27.395,
+      "lon": 33.678,
+      "name": {
+        "en": "El Gouna",
+        "ar": "الجونة"
+      },
+      "desc": {
+        "en": "A lagoon town with turquoise waterways, a marina and boutique hotels.",
+        "ar": "مدينة بحيرات فيروزية فيها مارينا وفنادق بوتيك."
+      },
+      "examples": {
+        "moderate": "lagoon-side boutique hotels",
+        "luxury": "five-star lagoon resorts"
+      },
+      "tags": [
+        "beach",
+        "relax",
+        "romance",
+        "nightlife",
+        "diving"
+      ],
+      "budgets": [
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "couple",
+        "family"
+      ],
+      "examples_ar": {
+        "moderate": "فنادق بوتيك على البحيرات",
+        "luxury": "منتجعات ٥ نجوم على البحيرات"
+      }
     },
     {
-      "id": "redsea-hurghada", "region": "Red Sea", "lat": 27.200, "lon": 33.840,
-      "name": {"en": "Hurghada promenade (El Mamsha)", "ar": "ممشى الغردقة السياحي"},
-      "desc": {"en": "Family-friendly beach resorts with water parks, close to the boat marinas.", "ar": "منتجعات شاطئية مناسبة للعائلات فيها ألعاب مائية وقريبة من المراسي."},
-      "examples": {"economy": "3-star beach hotels", "moderate": "all-inclusive family resorts", "luxury": "five-star beach resorts"},
-      "tags": ["beach", "diving", "nightlife"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["family", "group", "solo"]
+      "id": "redsea-hurghada",
+      "region": "Red Sea",
+      "lat": 27.2,
+      "lon": 33.84,
+      "name": {
+        "en": "Hurghada promenade (El Mamsha)",
+        "ar": "ممشى الغردقة السياحي"
+      },
+      "desc": {
+        "en": "Family-friendly beach resorts with water parks, close to the boat marinas.",
+        "ar": "منتجعات شاطئية مناسبة للعائلات فيها ألعاب مائية وقريبة من المراسي."
+      },
+      "examples": {
+        "economy": "3-star beach hotels",
+        "moderate": "all-inclusive family resorts",
+        "luxury": "five-star beach resorts"
+      },
+      "tags": [
+        "beach",
+        "diving",
+        "nightlife"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "family",
+        "group",
+        "solo"
+      ],
+      "examples_ar": {
+        "economy": "فنادق ٣ نجوم على البحر",
+        "moderate": "منتجعات عائلية شاملة كل الوجبات",
+        "luxury": "منتجعات ٥ نجوم على البحر"
+      }
     },
     {
-      "id": "matrouh-siwa", "region": "Matrouh", "lat": 29.203, "lon": 25.519,
-      "name": {"en": "Siwa town & palm groves", "ar": "مدينة سيوة وبساتين النخيل"},
-      "desc": {"en": "Mud-brick eco-lodges among palm groves and salt lakes.", "ar": "نُزل بيئية من الطين وسط النخيل والبحيرات المالحة."},
-      "examples": {"economy": "simple guesthouses in town", "moderate": "palm-grove eco-lodges", "luxury": "Adrère Amellal"},
-      "tags": ["nature", "culture", "relax", "romance"],
-      "budgets": ["economy", "moderate", "luxury"], "travelers": ["solo", "couple"]
+      "id": "matrouh-siwa",
+      "region": "Matrouh",
+      "lat": 29.203,
+      "lon": 25.519,
+      "name": {
+        "en": "Siwa town & palm groves",
+        "ar": "مدينة سيوة وبساتين النخيل"
+      },
+      "desc": {
+        "en": "Mud-brick eco-lodges among palm groves and salt lakes.",
+        "ar": "نُزل بيئية من الطين وسط النخيل والبحيرات المالحة."
+      },
+      "examples": {
+        "economy": "simple guesthouses in town",
+        "moderate": "palm-grove eco-lodges",
+        "luxury": "Adrère Amellal"
+      },
+      "tags": [
+        "nature",
+        "culture",
+        "relax",
+        "romance"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple"
+      ],
+      "examples_ar": {
+        "economy": "بيوت ضيافة بسيطة في البلد",
+        "moderate": "نُزل بيئية وسط النخيل",
+        "luxury": "نُزل أدرير أمللال"
+      }
     },
     {
-      "id": "newvalley-camps", "region": "New Valley", "lat": 27.06, "lon": 27.97,
-      "name": {"en": "Farafra & White Desert camps", "ar": "الفرافرة ومخيمات الصحراء البيضاء"},
-      "desc": {"en": "Sleep under the stars at a desert camp, usually as part of a guided safari.", "ar": "نوم تحت النجوم في مخيم صحراوي، غالبًا ضمن رحلة سفاري بمرشد."},
-      "examples": {"economy": "shared safari camps", "moderate": "private safari camps"},
-      "tags": ["nature", "relax"],
-      "budgets": ["economy", "moderate"], "travelers": ["solo", "couple", "group"]
+      "id": "newvalley-camps",
+      "region": "New Valley",
+      "lat": 27.06,
+      "lon": 27.97,
+      "name": {
+        "en": "Farafra & White Desert camps",
+        "ar": "الفرافرة ومخيمات الصحراء البيضاء"
+      },
+      "desc": {
+        "en": "Sleep under the stars at a desert camp, usually as part of a guided safari.",
+        "ar": "نوم تحت النجوم في مخيم صحراوي، غالبًا ضمن رحلة سفاري بمرشد."
+      },
+      "examples": {
+        "economy": "shared safari camps",
+        "moderate": "private safari camps"
+      },
+      "tags": [
+        "nature",
+        "relax"
+      ],
+      "budgets": [
+        "economy",
+        "moderate"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "group"
+      ],
+      "examples_ar": {
+        "economy": "مخيمات سفاري مشتركة",
+        "moderate": "مخيمات سفاري خاصة"
+      }
     }
   ],
   "transport": [
-    {"id": "cairo-rideshare", "region": "Cairo", "tags": [], "budgets": ["economy", "moderate"], "travelers": ["solo", "couple"],
-     "mode": {"en": "Ride-hailing apps", "ar": "تطبيقات التوصيل"},
-     "desc": {"en": "Uber and Careem are cheap and easy across Greater Cairo.", "ar": "أوبر وكريم متوفرين ورخاص في القاهرة الكبرى."}},
-    {"id": "cairo-metro", "region": "Cairo", "tags": ["culture"], "budgets": ["economy"], "travelers": ["solo", "couple", "group"], "needs_any": [1, 3],
-     "mode": {"en": "Cairo Metro", "ar": "مترو القاهرة"},
-     "desc": {"en": "Line 1 links Downtown (Sadat) with Coptic Cairo (Mar Girgis) for a few pounds; avoid rush hour.", "ar": "الخط الأول بيوصل وسط البلد (السادات) بمصر القديمة (مار جرجس) بجنيهات قليلة؛ ابعد عن وقت الذروة."}},
-    {"id": "cairo-driver", "region": "Cairo", "tags": ["history"], "budgets": ["moderate", "luxury"], "travelers": ["family", "group", "couple"], "needs_any": [5, 6, 7, 8],
-     "mode": {"en": "Private car with driver", "ar": "عربية خاصة بسواق"},
-     "desc": {"en": "Hire an air-conditioned car for the day to combine Giza, Saqqara and Dahshur.", "ar": "أجّر عربية مكيفة لليوم كله عشان تجمع الجيزة وسقارة ودهشور."}},
-    {"id": "cairo-intercity", "region": "Cairo", "tags": [], "budgets": ["economy", "moderate", "luxury"], "travelers": [], "needs_areas": ["Luxor", "Aswan"],
-     "mode": {"en": "Cairo to Luxor / Aswan", "ar": "من القاهرة للأقصر وأسوان"},
-     "desc": {"en": "A one-hour EgyptAir flight, or the overnight sleeper train from Ramses Station.", "ar": "طيران داخلي ساعة واحدة، أو قطار النوم من محطة رمسيس."}},
-
-    {"id": "luxor-ferry", "region": "Luxor", "tags": ["nile", "culture"], "budgets": ["economy"], "travelers": ["solo", "couple", "group"], "needs_any": [11, 12, 14],
-     "mode": {"en": "Public Nile ferry", "ar": "المعدية النيلية"},
-     "desc": {"en": "The local ferry crosses between the East and West banks in about 5 minutes for a few pounds.", "ar": "المعدية بتعدي بين البر الشرقي والغربي في حوالي ٥ دقايق بجنيهات قليلة."}},
-    {"id": "luxor-westbank-car", "region": "Luxor", "tags": ["history"], "budgets": ["economy", "moderate", "luxury"], "travelers": ["family", "group", "couple", "solo"], "needs_any": [11, 12, 14],
-     "mode": {"en": "West Bank morning taxi", "ar": "تاكسي جولة البر الغربي"},
-     "desc": {"en": "Book an air-conditioned taxi for the morning loop: Valley of the Kings, Hatshepsut and the Colossi of Memnon.", "ar": "احجز تاكسي مكيف لجولة الصبح: وادي الملوك وحتشبسوت وتمثالي ممنون."}},
-    {"id": "luxor-balloon", "region": "Luxor", "tags": ["romance", "nature", "history"], "budgets": ["moderate", "luxury"], "travelers": ["couple", "family"], "needs_any": [11, 12, 14],
-     "mode": {"en": "Sunrise hot-air balloon", "ar": "منطاد الشروق"},
-     "desc": {"en": "Float over the West Bank temples at dawn; operators include hotel pick-up.", "ar": "اطلع فوق معابد البر الغربي مع الشروق؛ الشركات بتوفر توصيلة من الفندق."}},
-    {"id": "luxor-felucca", "region": "Luxor", "tags": ["nile", "relax", "romance"], "budgets": ["economy", "moderate", "luxury"], "travelers": ["couple", "family", "solo"],
-     "mode": {"en": "Sunset felucca", "ar": "فلوكة الغروب"},
-     "desc": {"en": "Rent a white-sail felucca for a calm 1-2 hour sail to Banana Island.", "ar": "أجّر فلوكة لساعة أو ساعتين لحد جزيرة الموز."}},
-    {"id": "luxor-arrival", "region": "Luxor", "tags": [], "budgets": ["economy", "moderate", "luxury"], "travelers": [], "arrival": true,
-     "mode": {"en": "Getting to Luxor", "ar": "الوصول للأقصر"},
-     "desc": {"en": "Fly from Cairo in about an hour, or take the overnight sleeper train.", "ar": "طيران من القاهرة حوالي ساعة، أو قطار النوم بالليل."}},
-
-    {"id": "aswan-boats", "region": "Aswan", "tags": ["nile"], "budgets": ["economy", "moderate", "luxury"], "travelers": ["solo", "couple", "family", "group"], "needs_any": [16],
-     "mode": {"en": "Motor boats", "ar": "اللانشات النيلية"},
-     "desc": {"en": "Boats are the everyday way to reach Philae and the islands; agree the price before boarding.", "ar": "المراكب هي الوسيلة اليومية لفيلة والجزر؛ اتفق على السعر قبل ما تركب."}},
-    {"id": "aswan-abusimbel", "region": "Aswan", "tags": ["history"], "budgets": ["economy", "moderate", "luxury"], "travelers": [], "needs_any": [17],
-     "mode": {"en": "Abu Simbel day trip", "ar": "رحلة أبو سمبل"},
-     "desc": {"en": "Leave before dawn on a shared tourist bus (about 3.5 hours each way) or take the short flight from Aswan.", "ar": "اطلع قبل الفجر بأتوبيس سياحي (حوالي ٣ ساعات ونص كل اتجاه) أو خد الطيارة القصيرة من أسوان."}},
-    {"id": "aswan-felucca", "region": "Aswan", "tags": ["nile", "relax", "romance"], "budgets": ["economy", "moderate", "luxury"], "travelers": ["couple", "solo", "family"],
-     "mode": {"en": "Felucca around the islands", "ar": "فلوكة حول الجزر"},
-     "desc": {"en": "Sail past Elephantine and Kitchener's Island in the late afternoon light.", "ar": "لف بالفلوكة حوالين إلفنتين وجزيرة النباتات وقت العصاري."}},
-    {"id": "aswan-arrival", "region": "Aswan", "tags": [], "budgets": ["economy", "moderate", "luxury"], "travelers": [], "arrival": true,
-     "mode": {"en": "Getting to Aswan", "ar": "الوصول لأسوان"},
-     "desc": {"en": "Fly from Cairo, or take the train from Luxor (about 3 hours) or Cairo (overnight).", "ar": "طيران من القاهرة، أو قطار من الأقصر (حوالي ٣ ساعات) أو من القاهرة (بالليل)."}},
-
-    {"id": "alex-tram", "region": "Alexandria", "tags": ["culture", "history"], "budgets": ["economy"], "travelers": ["solo", "couple"],
-     "mode": {"en": "Raml tram", "ar": "ترام الرمل"},
-     "desc": {"en": "The historic blue-and-yellow tram is a slow, cheap way to see the city.", "ar": "الترام التاريخي وسيلة بطيئة ورخيصة تتفرج بيها على المدينة."}},
-    {"id": "alex-corniche", "region": "Alexandria", "tags": [], "budgets": ["economy", "moderate", "luxury"], "travelers": ["solo", "couple", "family", "group"],
-     "mode": {"en": "Along the Corniche", "ar": "على طول الكورنيش"},
-     "desc": {"en": "Uber or the yellow-and-black taxis run the Corniche from Qaitbay Citadel to Montaza.", "ar": "أوبر أو التاكسي الأصفر والأسود على الكورنيش من قلعة قايتباي للمنتزه."}},
-    {"id": "alex-arrival", "region": "Alexandria", "tags": [], "budgets": ["economy", "moderate", "luxury"], "travelers": [], "arrival": true,
-     "mode": {"en": "Getting to Alexandria", "ar": "الوصول للإسكندرية"},
-     "desc": {"en": "Express trains from Cairo take about 2.5 hours; buses and private cars take the desert road.", "ar": "القطارات السريعة من القاهرة حوالي ساعتين ونص؛ والأتوبيسات والعربيات الخاصة على الطريق الصحراوي."}},
-
-    {"id": "sinai-dive-boat", "region": "South Sinai", "tags": ["diving", "beach", "nature"], "budgets": ["economy", "moderate", "luxury"], "travelers": ["solo", "couple", "group", "family"], "needs_any": [24],
-     "mode": {"en": "Dive and snorkel boats", "ar": "مراكب الغوص والسنوركل"},
-     "desc": {"en": "Daily boats leave Sharm's marinas for the Ras Mohamed reefs; book through your hotel's dive centre.", "ar": "مراكب يومية من مراسي شرم لشعاب رأس محمد؛ احجز من مركز الغوص في الفندق."}},
-    {"id": "sinai-4x4", "region": "South Sinai", "tags": ["nature", "history"], "budgets": ["economy", "moderate", "luxury"], "travelers": ["group", "solo", "couple"], "needs_any": [25],
-     "mode": {"en": "Saint Catherine by road", "ar": "سانت كاترين بالعربية"},
-     "desc": {"en": "About 2.5 hours from the coast; most visitors join an organised trip for the sunrise climb.", "ar": "حوالي ساعتين ونص من الساحل؛ أغلب الزوار بيطلعوا مع رحلة منظمة لطلعة الشروق."}},
-    {"id": "sinai-arrival", "region": "South Sinai", "tags": [], "budgets": ["economy", "moderate", "luxury"], "travelers": [], "arrival": true,
-     "mode": {"en": "Getting to Sharm El Sheikh", "ar": "الوصول لشرم الشيخ"},
-     "desc": {"en": "Fly into Sharm El Sheikh Airport (SSH); hotels arrange transfers.", "ar": "طيران لمطار شرم الشيخ؛ الفنادق بتوفر توصيلة."}},
-
-    {"id": "redsea-giftun", "region": "Red Sea", "tags": ["beach", "diving", "relax"], "budgets": ["economy", "moderate", "luxury"], "travelers": ["family", "couple", "group", "solo"], "needs_any": [27],
-     "mode": {"en": "Boat to Giftun Island", "ar": "مركب لجزيرة الجفتون"},
-     "desc": {"en": "Day boats leave Hurghada's marinas each morning with snorkelling stops on the way.", "ar": "مراكب يومية من مراسي الغردقة الصبح مع وقفات سنوركل في السكة."}},
-    {"id": "redsea-arrival", "region": "Red Sea", "tags": [], "budgets": ["economy", "moderate", "luxury"], "travelers": [], "arrival": true,
-     "mode": {"en": "Getting to Hurghada", "ar": "الوصول للغردقة"},
-     "desc": {"en": "Hurghada Airport (HRG) is about 15 minutes from town and 30 from El Gouna.", "ar": "مطار الغردقة حوالي ١٥ دقيقة من المدينة ونص ساعة من الجونة."}},
-
-    {"id": "siwa-bikes", "region": "Matrouh", "tags": ["nature", "culture", "relax"], "budgets": ["economy", "moderate"], "travelers": ["solo", "couple"],
-     "mode": {"en": "Bikes around the oasis", "ar": "عجل حوالين الواحة"},
-     "desc": {"en": "Rent a bicycle to reach Shali, the Oracle Temple and the springs at your own pace.", "ar": "أجّر عجلة وروح شالي ومعبد الوحي والعيون على راحتك."}},
-    {"id": "siwa-sandsea", "region": "Matrouh", "tags": ["nature"], "budgets": ["economy", "moderate", "luxury"], "travelers": ["group", "family", "couple"],
-     "mode": {"en": "Great Sand Sea 4x4", "ar": "رحلة ٤×٤ لبحر الرمال"},
-     "desc": {"en": "Afternoon 4x4 trips run to the dunes and hot springs, ending with sunset.", "ar": "رحلات ٤×٤ العصر للكثبان والعيون الساخنة وبتخلص مع الغروب."}},
-    {"id": "siwa-arrival", "region": "Matrouh", "tags": [], "budgets": ["economy", "moderate", "luxury"], "travelers": [], "arrival": true,
-     "mode": {"en": "Getting to Siwa", "ar": "الوصول لسيوة"},
-     "desc": {"en": "A long drive: buses run via Marsa Matrouh; from Cairo plan a full travel day.", "ar": "مشوار طويل: الأتوبيسات بتروح عن طريق مرسى مطروح؛ ومن القاهرة خصص يوم سفر كامل."}},
-
-    {"id": "newvalley-safari", "region": "New Valley", "tags": ["nature"], "budgets": ["economy", "moderate", "luxury"], "travelers": [], "arrival": true,
-     "mode": {"en": "Guided desert safari", "ar": "سفاري صحراوي بمرشد"},
-     "desc": {"en": "The White Desert is reached by 4x4 with a licensed guide, usually via Bahariya from Cairo.", "ar": "الصحراء البيضاء بتتوصل بعربية ٤×٤ مع مرشد مرخص، غالبًا عن طريق الواحات البحرية من القاهرة."}}
+    {
+      "id": "cairo-rideshare",
+      "region": "Cairo",
+      "tags": [],
+      "budgets": [
+        "economy",
+        "moderate"
+      ],
+      "travelers": [
+        "solo",
+        "couple"
+      ],
+      "mode": {
+        "en": "Ride-hailing apps",
+        "ar": "تطبيقات التوصيل"
+      },
+      "desc": {
+        "en": "Uber and Careem are cheap and easy across Greater Cairo.",
+        "ar": "أوبر وكريم متوفرين ورخاص في القاهرة الكبرى."
+      }
+    },
+    {
+      "id": "cairo-metro",
+      "region": "Cairo",
+      "tags": [
+        "culture"
+      ],
+      "budgets": [
+        "economy"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "group"
+      ],
+      "needs_any": [
+        1,
+        3
+      ],
+      "mode": {
+        "en": "Cairo Metro",
+        "ar": "مترو القاهرة"
+      },
+      "desc": {
+        "en": "Line 1 links Downtown (Sadat) with Coptic Cairo (Mar Girgis) for a few pounds; avoid rush hour.",
+        "ar": "الخط الأول بيوصل وسط البلد (السادات) بمصر القديمة (مار جرجس) بجنيهات قليلة؛ ابعد عن وقت الذروة."
+      }
+    },
+    {
+      "id": "cairo-driver",
+      "region": "Cairo",
+      "tags": [
+        "history"
+      ],
+      "budgets": [
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "family",
+        "group",
+        "couple"
+      ],
+      "needs_any": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "mode": {
+        "en": "Private car with driver",
+        "ar": "عربية خاصة بسواق"
+      },
+      "desc": {
+        "en": "Hire an air-conditioned car for the day to combine Giza, Saqqara and Dahshur.",
+        "ar": "أجّر عربية مكيفة لليوم كله عشان تجمع الجيزة وسقارة ودهشور."
+      }
+    },
+    {
+      "id": "cairo-intercity",
+      "region": "Cairo",
+      "tags": [],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [],
+      "needs_areas": [
+        "Luxor",
+        "Aswan"
+      ],
+      "mode": {
+        "en": "Cairo to Luxor / Aswan",
+        "ar": "من القاهرة للأقصر وأسوان"
+      },
+      "desc": {
+        "en": "A one-hour EgyptAir flight, or the overnight sleeper train from Ramses Station.",
+        "ar": "طيران داخلي ساعة واحدة، أو قطار النوم من محطة رمسيس."
+      }
+    },
+    {
+      "id": "luxor-ferry",
+      "region": "Luxor",
+      "tags": [
+        "nile",
+        "culture"
+      ],
+      "budgets": [
+        "economy"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "group"
+      ],
+      "needs_any": [
+        11,
+        12,
+        14
+      ],
+      "mode": {
+        "en": "Public Nile ferry",
+        "ar": "المعدية النيلية"
+      },
+      "desc": {
+        "en": "The local ferry crosses between the East and West banks in about 5 minutes for a few pounds.",
+        "ar": "المعدية بتعدي بين البر الشرقي والغربي في حوالي ٥ دقايق بجنيهات قليلة."
+      }
+    },
+    {
+      "id": "luxor-westbank-car",
+      "region": "Luxor",
+      "tags": [
+        "history"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "family",
+        "group",
+        "couple",
+        "solo"
+      ],
+      "needs_any": [
+        11,
+        12,
+        14
+      ],
+      "mode": {
+        "en": "West Bank morning taxi",
+        "ar": "تاكسي جولة البر الغربي"
+      },
+      "desc": {
+        "en": "Book an air-conditioned taxi for the morning loop: Valley of the Kings, Hatshepsut and the Colossi of Memnon.",
+        "ar": "احجز تاكسي مكيف لجولة الصبح: وادي الملوك وحتشبسوت وتمثالي ممنون."
+      }
+    },
+    {
+      "id": "luxor-balloon",
+      "region": "Luxor",
+      "tags": [
+        "romance",
+        "nature",
+        "history"
+      ],
+      "budgets": [
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "couple",
+        "family"
+      ],
+      "needs_any": [
+        11,
+        12,
+        14
+      ],
+      "mode": {
+        "en": "Sunrise hot-air balloon",
+        "ar": "منطاد الشروق"
+      },
+      "desc": {
+        "en": "Float over the West Bank temples at dawn; operators include hotel pick-up.",
+        "ar": "اطلع فوق معابد البر الغربي مع الشروق؛ الشركات بتوفر توصيلة من الفندق."
+      }
+    },
+    {
+      "id": "luxor-felucca",
+      "region": "Luxor",
+      "tags": [
+        "nile",
+        "relax",
+        "romance"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "couple",
+        "family",
+        "solo"
+      ],
+      "mode": {
+        "en": "Sunset felucca",
+        "ar": "فلوكة الغروب"
+      },
+      "desc": {
+        "en": "Rent a white-sail felucca for a calm 1-2 hour sail to Banana Island.",
+        "ar": "أجّر فلوكة لساعة أو ساعتين لحد جزيرة الموز."
+      }
+    },
+    {
+      "id": "luxor-arrival",
+      "region": "Luxor",
+      "tags": [],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [],
+      "arrival": true,
+      "mode": {
+        "en": "Getting to Luxor",
+        "ar": "الوصول للأقصر"
+      },
+      "desc": {
+        "en": "Fly from Cairo in about an hour, or take the overnight sleeper train.",
+        "ar": "طيران من القاهرة حوالي ساعة، أو قطار النوم بالليل."
+      }
+    },
+    {
+      "id": "aswan-boats",
+      "region": "Aswan",
+      "tags": [
+        "nile"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "family",
+        "group"
+      ],
+      "needs_any": [
+        16
+      ],
+      "mode": {
+        "en": "Motor boats",
+        "ar": "اللانشات النيلية"
+      },
+      "desc": {
+        "en": "Boats are the everyday way to reach Philae and the islands; agree the price before boarding.",
+        "ar": "المراكب هي الوسيلة اليومية لفيلة والجزر؛ اتفق على السعر قبل ما تركب."
+      }
+    },
+    {
+      "id": "aswan-abusimbel",
+      "region": "Aswan",
+      "tags": [
+        "history"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [],
+      "needs_any": [
+        17
+      ],
+      "mode": {
+        "en": "Abu Simbel day trip",
+        "ar": "رحلة أبو سمبل"
+      },
+      "desc": {
+        "en": "Leave before dawn on a shared tourist bus (about 3.5 hours each way) or take the short flight from Aswan.",
+        "ar": "اطلع قبل الفجر بأتوبيس سياحي (حوالي ٣ ساعات ونص كل اتجاه) أو خد الطيارة القصيرة من أسوان."
+      }
+    },
+    {
+      "id": "aswan-felucca",
+      "region": "Aswan",
+      "tags": [
+        "nile",
+        "relax",
+        "romance"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "couple",
+        "solo",
+        "family"
+      ],
+      "mode": {
+        "en": "Felucca around the islands",
+        "ar": "فلوكة حول الجزر"
+      },
+      "desc": {
+        "en": "Sail past Elephantine and Kitchener's Island in the late afternoon light.",
+        "ar": "لف بالفلوكة حوالين إلفنتين وجزيرة النباتات وقت العصاري."
+      }
+    },
+    {
+      "id": "aswan-arrival",
+      "region": "Aswan",
+      "tags": [],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [],
+      "arrival": true,
+      "mode": {
+        "en": "Getting to Aswan",
+        "ar": "الوصول لأسوان"
+      },
+      "desc": {
+        "en": "Fly from Cairo, or take the train from Luxor (about 3 hours) or Cairo (overnight).",
+        "ar": "طيران من القاهرة، أو قطار من الأقصر (حوالي ٣ ساعات) أو من القاهرة (بالليل)."
+      }
+    },
+    {
+      "id": "alex-tram",
+      "region": "Alexandria",
+      "tags": [
+        "culture",
+        "history"
+      ],
+      "budgets": [
+        "economy"
+      ],
+      "travelers": [
+        "solo",
+        "couple"
+      ],
+      "mode": {
+        "en": "Raml tram",
+        "ar": "ترام الرمل"
+      },
+      "desc": {
+        "en": "The historic blue-and-yellow tram is a slow, cheap way to see the city.",
+        "ar": "الترام التاريخي وسيلة بطيئة ورخيصة تتفرج بيها على المدينة."
+      }
+    },
+    {
+      "id": "alex-corniche",
+      "region": "Alexandria",
+      "tags": [],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "family",
+        "group"
+      ],
+      "mode": {
+        "en": "Along the Corniche",
+        "ar": "على طول الكورنيش"
+      },
+      "desc": {
+        "en": "Uber or the yellow-and-black taxis run the Corniche from Qaitbay Citadel to Montaza.",
+        "ar": "أوبر أو التاكسي الأصفر والأسود على الكورنيش من قلعة قايتباي للمنتزه."
+      }
+    },
+    {
+      "id": "alex-arrival",
+      "region": "Alexandria",
+      "tags": [],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [],
+      "arrival": true,
+      "mode": {
+        "en": "Getting to Alexandria",
+        "ar": "الوصول للإسكندرية"
+      },
+      "desc": {
+        "en": "Express trains from Cairo take about 2.5 hours; buses and private cars take the desert road.",
+        "ar": "القطارات السريعة من القاهرة حوالي ساعتين ونص؛ والأتوبيسات والعربيات الخاصة على الطريق الصحراوي."
+      }
+    },
+    {
+      "id": "sinai-dive-boat",
+      "region": "South Sinai",
+      "tags": [
+        "diving",
+        "beach",
+        "nature"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "solo",
+        "couple",
+        "group",
+        "family"
+      ],
+      "needs_any": [
+        24
+      ],
+      "mode": {
+        "en": "Dive and snorkel boats",
+        "ar": "مراكب الغوص والسنوركل"
+      },
+      "desc": {
+        "en": "Daily boats leave Sharm's marinas for the Ras Mohamed reefs; book through your hotel's dive centre.",
+        "ar": "مراكب يومية من مراسي شرم لشعاب رأس محمد؛ احجز من مركز الغوص في الفندق."
+      }
+    },
+    {
+      "id": "sinai-4x4",
+      "region": "South Sinai",
+      "tags": [
+        "nature",
+        "history"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "group",
+        "solo",
+        "couple"
+      ],
+      "needs_any": [
+        25
+      ],
+      "mode": {
+        "en": "Saint Catherine by road",
+        "ar": "سانت كاترين بالعربية"
+      },
+      "desc": {
+        "en": "About 2.5 hours from the coast; most visitors join an organised trip for the sunrise climb.",
+        "ar": "حوالي ساعتين ونص من الساحل؛ أغلب الزوار بيطلعوا مع رحلة منظمة لطلعة الشروق."
+      }
+    },
+    {
+      "id": "sinai-arrival",
+      "region": "South Sinai",
+      "tags": [],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [],
+      "arrival": true,
+      "mode": {
+        "en": "Getting to Sharm El Sheikh",
+        "ar": "الوصول لشرم الشيخ"
+      },
+      "desc": {
+        "en": "Fly into Sharm El Sheikh Airport (SSH); hotels arrange transfers.",
+        "ar": "طيران لمطار شرم الشيخ؛ الفنادق بتوفر توصيلة."
+      }
+    },
+    {
+      "id": "redsea-giftun",
+      "region": "Red Sea",
+      "tags": [
+        "beach",
+        "diving",
+        "relax"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "family",
+        "couple",
+        "group",
+        "solo"
+      ],
+      "needs_any": [
+        27
+      ],
+      "mode": {
+        "en": "Boat to Giftun Island",
+        "ar": "مركب لجزيرة الجفتون"
+      },
+      "desc": {
+        "en": "Day boats leave Hurghada's marinas each morning with snorkelling stops on the way.",
+        "ar": "مراكب يومية من مراسي الغردقة الصبح مع وقفات سنوركل في السكة."
+      }
+    },
+    {
+      "id": "redsea-arrival",
+      "region": "Red Sea",
+      "tags": [],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [],
+      "arrival": true,
+      "mode": {
+        "en": "Getting to Hurghada",
+        "ar": "الوصول للغردقة"
+      },
+      "desc": {
+        "en": "Hurghada Airport (HRG) is about 15 minutes from town and 30 from El Gouna.",
+        "ar": "مطار الغردقة حوالي ١٥ دقيقة من المدينة ونص ساعة من الجونة."
+      }
+    },
+    {
+      "id": "siwa-bikes",
+      "region": "Matrouh",
+      "tags": [
+        "nature",
+        "culture",
+        "relax"
+      ],
+      "budgets": [
+        "economy",
+        "moderate"
+      ],
+      "travelers": [
+        "solo",
+        "couple"
+      ],
+      "mode": {
+        "en": "Bikes around the oasis",
+        "ar": "عجل حوالين الواحة"
+      },
+      "desc": {
+        "en": "Rent a bicycle to reach Shali, the Oracle Temple and the springs at your own pace.",
+        "ar": "أجّر عجلة وروح شالي ومعبد الوحي والعيون على راحتك."
+      }
+    },
+    {
+      "id": "siwa-sandsea",
+      "region": "Matrouh",
+      "tags": [
+        "nature"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [
+        "group",
+        "family",
+        "couple"
+      ],
+      "mode": {
+        "en": "Great Sand Sea 4x4",
+        "ar": "رحلة ٤×٤ لبحر الرمال"
+      },
+      "desc": {
+        "en": "Afternoon 4x4 trips run to the dunes and hot springs, ending with sunset.",
+        "ar": "رحلات ٤×٤ العصر للكثبان والعيون الساخنة وبتخلص مع الغروب."
+      }
+    },
+    {
+      "id": "siwa-arrival",
+      "region": "Matrouh",
+      "tags": [],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [],
+      "arrival": true,
+      "mode": {
+        "en": "Getting to Siwa",
+        "ar": "الوصول لسيوة"
+      },
+      "desc": {
+        "en": "A long drive: buses run via Marsa Matrouh; from Cairo plan a full travel day.",
+        "ar": "مشوار طويل: الأتوبيسات بتروح عن طريق مرسى مطروح؛ ومن القاهرة خصص يوم سفر كامل."
+      }
+    },
+    {
+      "id": "newvalley-safari",
+      "region": "New Valley",
+      "tags": [
+        "nature"
+      ],
+      "budgets": [
+        "economy",
+        "moderate",
+        "luxury"
+      ],
+      "travelers": [],
+      "arrival": true,
+      "mode": {
+        "en": "Guided desert safari",
+        "ar": "سفاري صحراوي بمرشد"
+      },
+      "desc": {
+        "en": "The White Desert is reached by 4x4 with a licensed guide, usually via Bahariya from Cairo.",
+        "ar": "الصحراء البيضاء بتتوصل بعربية ٤×٤ مع مرشد مرخص، غالبًا عن طريق الواحات البحرية من القاهرة."
+      }
+    }
   ]
 }

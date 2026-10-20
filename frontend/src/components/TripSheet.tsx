@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Language, ChatResponse, Stop, HotelRecommendation, TransportRecommendation } from '../types';
-import { translate, AR_NAMES, formatNumber } from '../i18n';
+import { translate, AR_NAMES, formatNumber, localDigits, localText, localRecs } from '../i18n';
 
 interface TripSheetProps {
   isOpen: boolean;
@@ -70,7 +70,7 @@ export const TripSheet: React.FC<TripSheetProps> = ({
     return `${h ? `${formatNumber(h, lang)} ${translate('hrs', lang)} ` : ''}${m ? `${formatNumber(m, lang)} ${translate('mins', lang)}` : ''}`.trim() || `0 ${translate('mins', lang)}`;
   };
 
-  const recs = itinerary.recommendations;
+  const recs = localRecs(itinerary, lang);
   const hotels: HotelRecommendation[] = recs?.hotels || [];
   const transport: TransportRecommendation[] = recs?.transport || [];
 
@@ -153,7 +153,7 @@ export const TripSheet: React.FC<TripSheetProps> = ({
                   <div>
                     <div className="stop-name">{stopName}</div>
                     <div className="stop-timing">
-                      {stop.start && stop.end ? `${stop.start} - ${stop.end} · ` : ''}
+                      {stop.start && stop.end ? `${localDigits(`${stop.start} - ${stop.end}`, lang)} · ` : ''}
                       {formatNumber(stop.duration_min, lang)} {translate('mins', lang)}
                     </div>
                   </div>
@@ -166,14 +166,14 @@ export const TripSheet: React.FC<TripSheetProps> = ({
 
                 {isExpanded && (
                   <div className="stop-details">
-                    {stop.description && <p style={{ margin: "0 0 8px" }}>{stop.description}</p>}
+                    {stop.description && <p style={{ margin: "0 0 8px" }}>{localText(stop, 'description', lang)}</p>}
                     {stop.hours_note && (
                       <div style={{ color: "var(--ink-soft)", fontSize: "13px" }}>
-                        🕒 {stop.hours_note}
+                        🕒 {localText(stop, 'hours_note', lang)}
                       </div>
                     )}
                     {stop.place_note && (
-                      <div style={{ color: "var(--ink-soft)", fontSize: "13px" }}>📍 {stop.place_note}</div>
+                      <div style={{ color: "var(--ink-soft)", fontSize: "13px" }}>📍 {localText(stop, 'place_note', lang)}</div>
                     )}
                     {stop.source_url && (
                       <a className="stop-source" href={stop.source_url} target="_blank" rel="noopener noreferrer">

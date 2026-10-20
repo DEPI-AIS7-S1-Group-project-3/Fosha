@@ -20,6 +20,7 @@ fetched once. Every network call has a short timeout and failures return
 {"ok": False, "reason": "offline"} instead of raising.
 """
 import hashlib
+from functools import lru_cache
 import json
 import re
 import threading
@@ -374,7 +375,22 @@ def register_places(places: List[Dict[str, Any]]) -> List[int]:
 
 
 def arabic_name(attraction_id: int) -> Optional[str]:
-    return _arabic_names.get(attraction_id)
+    """Arabic name for a curated place (agents/data/arabic_names.json) or one found online."""
+    return _arabic_names.get(attraction_id) or _curated_arabic_names().get(attraction_id)
+
+
+@lru_cache(maxsize=1)
+def _curated_arabic_names() -> Dict[int, str]:
+    try:
+        data = json.loads((Path(__file__).resolve().parent / "data" / "arabic_names.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return {int(k): v for k, v in data.items()}
+
+
+def display_name(attraction_id: int, english: str, ar: bool) -> str:
+    """The name to show in text for the chosen language."""
+    return (arabic_name(attraction_id) if ar else None) or english
 
 
 def arabic_area(area: str) -> Optional[str]:

@@ -20,6 +20,10 @@ export interface Stop {
   price_egyptian_egp?: number | null;
   /** Arabic name for places found online (from Wikidata) */
   name_ar?: string | null;
+  /** Arabic copies of the English free text (agents/translate.py) */
+  description_ar?: string;
+  hours_note_ar?: string;
+  place_note_ar?: string;
   /** true when the place came from Wikivoyage rather than the curated dataset */
   from_web?: boolean;
   source_url?: string;
@@ -35,6 +39,8 @@ export interface DayPlan {
   weekday?: string | null;
   area: string;
   area_ar?: string | null;
+  warnings_ar?: string[];
+  notes_ar?: string[];
   stops: Stop[];
   warnings: string[];
   notes: string[];
@@ -66,7 +72,10 @@ export interface Itinerary {
   days: DayPlan[];
   not_included: Array<{ name: string; reason: string }>;
   warnings: string[];
-  unscheduled: Array<{ attraction_id: number; name: string; reason: string }>;
+  unscheduled: Array<{ attraction_id: number; name: string; reason: string; reason_ar?: string }>;
+  warnings_ar?: string[];
+  /** Hotel/transport picks in both languages; the UI shows the chosen one */
+  recommendations_by_lang?: { en: Recommendations; ar: Recommendations };
   recommendations?: Recommendations;
   prices_note?: string;
 }

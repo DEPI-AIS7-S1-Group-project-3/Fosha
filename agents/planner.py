@@ -16,7 +16,7 @@ from typing import Any, Callable, Dict, List, Optional
 from agents.editor import describe as describe_edit, edit_plan
 from agents.intent import extract_intent, known_regions
 from agents.llm import generate
-from agents.places_online import arabic_area, find_places, register_places
+from agents.places_online import arabic_area, display_name, find_places, register_places
 from agents.pricing import check_ticket_price
 from agents.recommendations import REGION_AR, format_clarification_message, get_recommendations, regions_for_days
 from agents.retrieval_adapter import search_attractions
@@ -52,7 +52,8 @@ def _payload(itinerary: Dict[str, Any], visitor_type: Optional[str]) -> Dict[str
     for day in itinerary["days"]:
         stops = []
         for stop in day["stops"]:
-            item = {k: stop[k] for k in ("name", "start", "end", "travel_from_previous_min", "hours_confidence")}
+            item = {k: stop[k] for k in ("attraction_id", "name", "start", "end", "travel_from_previous_min",
+                                         "hours_confidence")}
             if visitor_type:
                 price = check_ticket_price(stop["attraction_id"], visitor_type)
                 if price["ok"]:
@@ -160,7 +161,8 @@ def short_summary(payload: Dict[str, Any], language: str) -> str:
     ar = language == "ar"
     days = payload["days"]
     areas = list(dict.fromkeys(_area_ar(d["area"]) if ar else d["area"] for d in days))
-    names = [stop["name"] for d in days for stop in d["stops"]]
+    names = [display_name(stop["attraction_id"], stop["name"], ar) if "attraction_id" in stop else stop["name"]
+             for d in days for stop in d["stops"]]
     shown = "، ".join(names[:3]) if ar else ", ".join(names[:3])
     more = (f" و{len(names) - 3} أماكن تانية" if ar else f" and {len(names) - 3} more") if len(names) > 3 else ""
     n = len(days)
@@ -209,6 +211,20 @@ def _write_reply(payload: Dict[str, Any], language: str, llm: LLMFn) -> Dict[str
     return {"reply": short_summary(payload, language), "used_fallback": True}
 
 
+def _attach_recommendations(itinerary: Dict[str, Any], intent: Dict[str, Any], days: int, lang: str) -> None:
+    """Hotel/transport picks in both languages (deterministic and cheap), so the app can
+    show them in whichever language the user picks; `recommendations` is the reply's."""
+    by_lang = {
+        code: get_recommendations(
+            intent.get("region"), days, code,
+            interests=intent.get("interests"), search_query=intent.get("search_query"),
+            budget=intent.get("budget"), travelers=intent.get("travelers"), itinerary=itinerary)
+        for code in ("en", "ar")
+    }
+    itinerary["recommendations"] = by_lang[lang if lang in by_lang else "en"]
+    itinerary["recommendations_by_lang"] = by_lang
+
+
 def _rank_by_interest(places: List[Dict[str, Any]], words: List[str]) -> List[Dict[str, Any]]:
     """Places whose name/description/category mention the user's interests first (stable otherwise)."""
     words = [w.lower() for w in words if w and len(w) > 2]
@@ -241,10 +257,7 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
             if not edited["edited"]:
                 return {**base, "status": "edit_not_applied"}
             itinerary = edited["itinerary"]
-            itinerary["recommendations"] = get_recommendations(
-                intent.get("region"), len(itinerary["days"]), lang,
-                interests=intent.get("interests"), search_query=intent.get("search_query"),
-                budget=intent.get("budget"), travelers=intent.get("travelers"), itinerary=itinerary)
+            _attach_recommendations(itinerary, intent, len(itinerary["days"]), lang)
             return {**base, "status": "planned", "itinerary": itinerary, "used_fallback": False, "edited": True}
     extracted = extract_intent(message, llm)
     if not extracted["ok"]:
@@ -301,11 +314,7 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
     if not itinerary["ok"]:
         return {"ok": False, "error": itinerary["error"]}
 
-    itinerary["recommendations"] = get_recommendations(
-        intent["region"], intent["days"], lang,
-        interests=intent.get("interests"), search_query=intent.get("search_query"),
-        budget=intent.get("budget"), travelers=intent.get("travelers"), itinerary=itinerary,
-    )
+    _attach_recommendations(itinerary, intent, intent["days"], lang)
 
     payload = _payload(itinerary, intent["visitor_type"])
     written = _write_reply(payload, lang, llm)
