@@ -121,6 +121,7 @@ interface GlobeCanvasProps {
   busy: boolean;
   onPick: (region: string) => void;
   targetRegion?: string | null;
+  children?: React.ReactNode;
 }
 
 export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
@@ -128,6 +129,7 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
   busy,
   onPick,
   targetRegion,
+  children,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const turnRef = useRef<SVGGElement | null>(null);
@@ -229,7 +231,7 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
   return (
     <div className="globe-wrap" ref={containerRef}>
       <svg
-        className="globe-canvas"
+        className="globe-svg"
         viewBox="-640 -700 1280 1280"
         role="img"
         aria-label="Interactive Globe"
@@ -278,6 +280,7 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
           </g>
         </g>
       </svg>
+      {children}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Language, ChatResponse, Stop } from '../types';
+import { Language, ChatResponse, Stop, HotelRecommendation, TransportRecommendation } from '../types';
 import { translate, AR_NAMES, formatNumber } from '../i18n';
 
 interface TripSheetProps {
@@ -7,6 +7,7 @@ interface TripSheetProps {
   onClose: () => void;
   lang: Language;
   plan: ChatResponse | null;
+  onOpenChat: () => void;
 }
 
 export const TripSheet: React.FC<TripSheetProps> = ({
@@ -14,32 +15,35 @@ export const TripSheet: React.FC<TripSheetProps> = ({
   onClose,
   lang,
   plan,
+  onOpenChat,
 }) => {
   const [selectedDayIdx, setSelectedDayIdx] = useState(0);
   const [visitorType, setVisitorType] = useState<'foreigner' | 'egyptian'>('foreigner');
   const [expandedStops, setExpandedStops] = useState<Record<string, boolean>>({});
-
-  if (!isOpen) return null;
 
   const isAr = lang === 'ar';
   const itinerary = plan?.itinerary;
 
   if (!itinerary || !itinerary.days?.length) {
     return (
-      <div className="sheet-drawer" dir={isAr ? 'rtl' : 'ltr'}>
-        <div className="sheet-head">
-          <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em' }}>
-            {translate('nav_trip', lang)}
-          </span>
-          <button type="button" onClick={onClose} style={{ fontSize: '22px', fontWeight: 700 }}>
-            ×
-          </button>
+      <aside className="sheet" aria-label="Trip" aria-hidden={!isOpen}>
+        <div className="sheet-scroll">
+          <div className="sheet-top">
+            <span className="eyebrow">{translate('nav_trip', lang)}</span>
+            <button type="button" className="close" onClick={onClose} aria-label={translate('close', lang)}>
+              ×
+            </button>
+          </div>
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <h3 style={{ font: "400 32px/1 var(--font-display)", margin: "0 0 12px" }}>
+              {translate('no_plan_title', lang)}
+            </h3>
+            <p style={{ color: "var(--ink-soft)", fontSize: "15px" }}>
+              {translate('no_plan_body', lang)}
+            </p>
+          </div>
         </div>
-        <div className="sheet-body" style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <h3>{translate('no_plan_title', lang)}</h3>
-          <p>{translate('no_plan_body', lang)}</p>
-        </div>
-      </div>
+      </aside>
     );
   }
 
@@ -58,9 +62,6 @@ export const TripSheet: React.FC<TripSheetProps> = ({
   const dayTotalMinutes = currentDay.stops.reduce((acc, s) => acc + (s.duration_min || 0), 0);
   const dayTotalEgp = currentDay.stops.reduce((acc, s) => acc + getStopPrice(s), 0);
 
-  const tripTotalMinutes = days.flatMap((d) => d.stops).reduce((acc, s) => acc + (s.duration_min || 0), 0);
-  const tripTotalEgp = days.flatMap((d) => d.stops).reduce((acc, s) => acc + getStopPrice(s), 0);
-
   const formatHoursMins = (min: number) => {
     const h = Math.floor(min / 60);
     const m = min % 60;
@@ -68,27 +69,20 @@ export const TripSheet: React.FC<TripSheetProps> = ({
   };
 
   const recs = itinerary.recommendations;
-  const hotels = recs?.hotels || [];
-  const transport = recs?.transport || [];
+  const hotels: HotelRecommendation[] = recs?.hotels || [];
+  const transport: TransportRecommendation[] = recs?.transport || [];
 
   return (
-    <div className="sheet-drawer" dir={isAr ? 'rtl' : 'ltr'}>
-      <div className="sheet-head">
-        <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', fontSize: '13px' }}>
-          {translate('nav_trip', lang)}
-        </span>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{ fontSize: '24px', fontWeight: 700, padding: '0 8px' }}
-          aria-label={translate('close', lang)}
-        >
-          ×
-        </button>
-      </div>
+    <aside className="sheet" aria-label="Trip" aria-hidden={!isOpen}>
+      <div className="sheet-scroll">
+        <div className="sheet-top">
+          <span className="eyebrow">{translate('nav_trip', lang)}</span>
+          <button type="button" className="close" onClick={onClose} aria-label={translate('close', lang)}>
+            ×
+          </button>
+        </div>
 
-      <div className="sheet-body">
-        <h2 className="sheet-title">
+        <h2 className="trip-title">
           {days.length === 1
             ? translate('one_day_in', lang, { place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area : days[0].area })
             : translate('days_in', lang, {
@@ -97,19 +91,22 @@ export const TripSheet: React.FC<TripSheetProps> = ({
               })}
         </h2>
 
-        <div className="sheet-meta">
+        <div className="trip-meta">
           <span>{translate('prices_for', lang)}:</span>
-          <div className="visitor-toggle-group">
+          <div className="visitor-toggle">
             <button
               type="button"
-              className={`visitor-btn ${visitorType === 'foreigner' ? 'active' : ''}`}
+              className="text-btn"
+              aria-pressed={visitorType === 'foreigner'}
               onClick={() => setVisitorType('foreigner')}
             >
               {translate('foreigner', lang)}
             </button>
+            <span className="sep" aria-hidden="true" style={{ margin: "0 4px" }} />
             <button
               type="button"
-              className={`visitor-btn ${visitorType === 'egyptian' ? 'active' : ''}`}
+              className="text-btn"
+              aria-pressed={visitorType === 'egyptian'}
               onClick={() => setVisitorType('egyptian')}
             >
               {translate('egyptian', lang)}
@@ -122,7 +119,8 @@ export const TripSheet: React.FC<TripSheetProps> = ({
             <button
               key={i}
               type="button"
-              className={`day-tab ${selectedDayIdx === i ? 'active' : ''}`}
+              className="text-btn"
+              aria-selected={selectedDayIdx === i}
               onClick={() => setSelectedDayIdx(i)}
             >
               {translate('day', lang)} {formatNumber(d.day, lang)}
@@ -130,52 +128,45 @@ export const TripSheet: React.FC<TripSheetProps> = ({
           ))}
         </div>
 
-        <div className="day-summary-row">
-          <span>
+        <div className="day-head">
+          <h3>
             {isAr ? AR_NAMES.regions[currentDay.area] || currentDay.area : currentDay.area}
             {currentDay.weekday ? ` · ${isAr ? AR_NAMES.weekdays[currentDay.weekday.toLowerCase()] || currentDay.weekday : currentDay.weekday}` : ''}
-          </span>
-          <span style={{ fontSize: '13px', color: '#555' }}>
+          </h3>
+          <span>
             {formatHoursMins(dayTotalMinutes)} · {formatNumber(dayTotalEgp, lang)} {translate('egp', lang)}
           </span>
         </div>
 
-        {/* Stops list */}
-        <ul className="stops-list">
-          {currentDay.stops.map((s, idx) => {
-            const stopKey = `${selectedDayIdx}-${idx}`;
-            const isOpen = !!expandedStops[stopKey];
-            const p = getStopPrice(s);
+        <ul className="stops">
+          {currentDay.stops.map((stop, i) => {
+            const key = `${selectedDayIdx}-${i}`;
+            const isExpanded = expandedStops[key];
+            const price = getStopPrice(stop);
+            const stopName = isAr ? AR_NAMES.places[stop.attraction_id] || stop.name : stop.name;
 
             return (
-              <li key={stopKey} className="stop-item">
-                <div className="stop-header" onClick={() => toggleStop(stopKey)}>
-                  <div className="stop-left">
-                    <span className="stop-badge">{formatNumber(idx + 1, lang)}</span>
-                    <div>
-                      <div className="stop-name-text">
-                        {isAr ? AR_NAMES.places[s.attraction_id] || s.name : s.name}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
-                        {s.start}–{s.end} · {p ? `${formatNumber(p, lang)} ${translate('egp', lang)}` : translate('free', lang)}
-                      </div>
+              <li key={i} className="stop-card">
+                <div className="stop-header" onClick={() => toggleStop(key)} role="button" tabIndex={0}>
+                  <div>
+                    <div className="stop-name">{stopName}</div>
+                    <div className="stop-timing">
+                      {stop.start && stop.end ? `${stop.start} - ${stop.end} · ` : ''}
+                      {formatNumber(stop.duration_min, lang)} {translate('mins', lang)}
                     </div>
                   </div>
-                  <span style={{ fontSize: '14px', transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>
-                    ▼
-                  </span>
+                  <div className="stop-price">
+                    {price > 0 ? `${formatNumber(price, lang)} ${translate('egp', lang)}` : translate('free', lang)}
+                  </div>
                 </div>
 
-                {isOpen && (
-                  <div className="stop-details-body">
-                    {s.description && <p style={{ margin: '0 0 8px' }}>{s.description}</p>}
-                    {s.hours_note && <p style={{ margin: '0 0 6px', color: '#777' }}>ⓘ {s.hours_note}</p>}
-                    {s.source_url && (
-                      <p style={{ margin: '6px 0 0', fontSize: '12px' }}>
-                        <a href={s.source_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--azure)' }}>
-                          {translate('source', lang)} ↗
-                        </a>
-                      </p>
+                {isExpanded && (
+                  <div className="stop-details">
+                    {stop.description && <p style={{ margin: "0 0 8px" }}>{stop.description}</p>}
+                    {stop.hours_note && (
+                      <div style={{ color: "var(--ink-soft)", fontSize: "13px" }}>
+                        🕒 {stop.hours_note}
+                      </div>
                     )}
                   </div>
                 )}
@@ -184,13 +175,16 @@ export const TripSheet: React.FC<TripSheetProps> = ({
           })}
         </ul>
 
-        {/* Multi-Day Recommendations Card */}
+        {/* Multi-Day Trip Accommodation & Transport Guide Card */}
         {(hotels.length > 0 || transport.length > 0) && (
-          <div className="recs-card">
-            <span className="recs-badge">{translate('recs_badge', lang)}</span>
+          <div className="multi-day-card">
+            <span className="multi-day-badge">
+              {isAr ? 'نصائح الرحلات متعددة الأيام' : 'Multi-Day Trip Guide'}
+            </span>
+
             {hotels.length > 0 && (
-              <div className="recs-group">
-                <h4>🏨 {translate('recs_hotels', lang)}</h4>
+              <div className="multi-day-section">
+                <h4>🏨 {isAr ? 'خيارات الإقامة المقترحة' : 'Suggested Hotel Bases'}</h4>
                 <ul>
                   {hotels.map((h, i) => (
                     <li key={i}>
@@ -200,13 +194,14 @@ export const TripSheet: React.FC<TripSheetProps> = ({
                 </ul>
               </div>
             )}
+
             {transport.length > 0 && (
-              <div className="recs-group">
-                <h4>🚗 {translate('recs_transport', lang)}</h4>
+              <div className="multi-day-section">
+                <h4>🚆 {isAr ? 'خيارات التنقل المقترحة' : 'Suggested Transport Ways'}</h4>
                 <ul>
-                  {transport.map((tr, i) => (
+                  {transport.map((t, i) => (
                     <li key={i}>
-                      <strong>{tr.mode}:</strong> {tr.desc}
+                      <strong>{t.mode}:</strong> {t.desc}
                     </li>
                   ))}
                 </ul>
@@ -214,32 +209,19 @@ export const TripSheet: React.FC<TripSheetProps> = ({
             )}
           </div>
         )}
-
-        {/* Good to know */}
-        {(currentDay.warnings?.length > 0 || itinerary.warnings?.length > 0) && (
-          <div style={{ marginTop: '20px', background: '#fff9db', border: '1.5px solid var(--ink)', padding: '14px', borderRadius: '6px' }}>
-            <h4 style={{ margin: '0 0 8px', fontSize: '14px' }}>{translate('good_to_know', lang)}</h4>
-            <ul style={{ margin: 0, paddingInlineStart: '18px', fontSize: '13px' }}>
-              {[...currentDay.warnings, ...itinerary.warnings].map((w, i) => (
-                <li key={i} style={{ marginBottom: '4px' }}>{w}</li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
 
       <div className="sheet-foot">
-        <div>
-          <strong>{translate('trip_total', lang)}:</strong> {formatHoursMins(tripTotalMinutes)} · {formatNumber(tripTotalEgp, lang)} {translate('egp', lang)}
-        </div>
-        <button
-          type="button"
-          className="print-btn"
-          onClick={() => window.print()}
-        >
+        <button type="button" className="sheet-chat-btn" onClick={onOpenChat}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          <span>{isAr ? 'محادثة وتعديل الخطة' : 'Chat & Tweak Trip'}</span>
+        </button>
+        <button type="button" className="text-btn" onClick={() => window.print()}>
           {translate('print', lang)}
         </button>
       </div>
-    </div>
+    </aside>
   );
 };
