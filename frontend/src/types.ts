@@ -88,7 +88,9 @@ export interface Intent {
 
 export interface ChatResponse {
   ok: boolean;
-  status: 'planned' | 'needs_clarification' | 'unsupported_region' | 'out_of_scope' | 'no_results';
+  status: 'planned' | 'needs_clarification' | 'unsupported_region' | 'out_of_scope' | 'no_results' | 'edit_not_applied';
+  /** true when this plan is an edit of the previous one */
+  edited?: boolean;
   language: Language;
   reply: string;
   intent?: Intent;

@@ -22,15 +22,21 @@ def fake_search(query, region=None, category=None, max_duration=None, top_k=5):
 
 
 def test_happy_path_uses_llm_reply_when_faithful():
-    r = plan_trip("1 day in Luxor", make_llm(BASE), fake_search)
+    r = plan_trip("1 day in Luxor", make_llm(BASE, lambda p: "Two great temples await you in Luxor."), fake_search)
     assert r["ok"] and r["status"] == "planned" and r["used_fallback"] is False
     assert r["itinerary"]["days"][0]["stops"]
 
 
-def test_unfaithful_reply_falls_back_to_plain_text_with_real_times():
-    r = plan_trip("1 day in Luxor", make_llm(BASE, lambda p: "Enjoy Egypt!"), fake_search)
-    first = r["itinerary"]["days"][0]["stops"][0]
-    assert r["used_fallback"] is True and first["start"] in r["reply"]
+def test_short_reply_without_facts_is_accepted():
+    r = plan_trip("1 day in Luxor", make_llm(BASE, lambda p: "A lovely temple day in Luxor!"), fake_search)
+    assert r["used_fallback"] is False and r["reply"] == "A lovely temple day in Luxor!"
+
+
+def test_reply_inventing_a_time_or_price_falls_back_to_a_short_summary():
+    for invented in ("Start at Karnak at 07:15.", "Tickets are only 99 EGP!", "x" * 800, "| a | table |"):
+        r = plan_trip("1 day in Luxor", make_llm(BASE, lambda p, t=invented: t), fake_search)
+        first = r["itinerary"]["days"][0]["stops"][0]
+        assert r["used_fallback"] is True and first["name"] in r["reply"] and len(r["reply"]) < 300
 
 
 def test_llm_failure_in_wording_step_falls_back():
@@ -70,15 +76,15 @@ def test_intent_failure_is_an_error():
     assert plan_trip("x", lambda *a, **k: {"ok": False, "error": "quota"}, fake_search)["ok"] is False
 
 
-def test_prices_only_when_visitor_type_known():
+def test_writer_gets_place_names_but_no_times_or_prices():
     seen = {}
     def spy(prompt):
         seen["p"] = prompt
-        return prompt
-    plan_trip("x", make_llm(BASE, spy), fake_search)
-    assert "ticket_price_egp" not in seen["p"]
-    plan_trip("x", make_llm({**BASE, "visitor_type": "foreigner"}, spy), fake_search)
-    assert "ticket_price_egp" in seen["p"]
+        return "ok"
+    r = plan_trip("x", make_llm({**BASE, "visitor_type": "foreigner"}, spy), fake_search)
+    first = r["itinerary"]["days"][0]["stops"][0]
+    assert first["name"] in seen["p"]
+    assert first["start"] not in seen["p"] and "ticket_price_egp" not in seen["p"] and "EGP" not in seen["p"]
 
 
 def test_guard_rejects_missing_time_and_missing_price_and_accepts_arabic_digits():

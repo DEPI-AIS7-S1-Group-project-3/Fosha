@@ -240,3 +240,61 @@ def build_itinerary(
         global_warnings.append("No travel date given: only places open every day of the week were used.")
 
     return {"ok": True, "days": plan_days, "unscheduled": unscheduled, "warnings": global_warnings}
+
+def time_day(ordered_ids: List[int], day_number: int, area: str, first_day: Optional[str] = None,
+             day_start: str = "09:00", day_end: str = "18:00") -> Dict[str, Any]:
+    """Re-time one day in a fixed order (used when the user edits a plan: "put X after Y").
+
+    Same hard rules as build_itinerary: travel time between stops, opening windows on
+    the weekday(s) the day can fall on, at most MAX_WAIT_MIN of waiting, and the
+    day window. Stops that no longer fit are returned in `dropped` with a reason
+    instead of being silently squeezed in.
+    """
+    first_index = DAYS.index(resolve_day(first_day)) if first_day and resolve_day(first_day) else None
+    keys = list(DAYS) if first_index is None else [DAYS[(first_index + day_number - 1) % 7]]
+    start_min, end_min = to_minutes(day_start), to_minutes(day_end)
+    hours, locations = load_hours(), load_locations()
+    clock, previous = start_min, None
+    stops: List[Dict[str, Any]] = []
+    warnings: List[str] = []
+    dropped: List[Dict[str, Any]] = []
+    for attraction_id in ordered_ids:
+        attraction = get_attraction(attraction_id)
+        if attraction is None:
+            continue
+        travel = 0
+        if previous is not None:
+            trip = calculate_travel_time(previous, attraction_id)
+            if not trip["ok"] or trip["long_distance"]:
+                dropped.append({"attraction_id": attraction_id, "name": attraction.name,
+                                "reason": "Too far from the previous stop for the same day."})
+                continue
+            travel = trip["minutes"]
+        arrival = clock + travel
+        start = _earliest_start(attraction_id, keys, arrival, end_min, attraction.duration_min)
+        if start is None or start - arrival > MAX_WAIT_MIN:
+            dropped.append({"attraction_id": attraction_id, "name": attraction.name,
+                            "reason": f"Doesn't fit in the day ({day_start}-{day_end}) at that point, "
+                                      "or isn't open then."})
+            continue
+        record = hours.get(attraction_id, {})
+        stops.append({
+            "attraction_id": attraction_id, "name": attraction.name,
+            "start": to_text(start), "end": to_text(start + attraction.duration_min),
+            "duration_min": attraction.duration_min,
+            "travel_from_previous_min": travel if previous is not None else None,
+            "wait_min": start - arrival,
+            "hours_confidence": record.get("confidence", "unknown"),
+            "hours_note": record.get("note", ""),
+            "place_note": locations.get(attraction_id, {}).get("note", ""),
+        })
+        if record.get("confidence") != "listed":
+            warnings.append(f"Opening hours for {attraction.name} are not fully confirmed "
+                            f"({record.get('note') or 'no details'}). Check before you go.")
+        clock, previous = start + attraction.duration_min, attraction_id
+    return {
+        "day": {"day": day_number, "weekday": keys[0] if first_index is not None else None, "area": area,
+                "stops": stops, "warnings": warnings,
+                "notes": [f"{s['name']}: {s['place_note']}" for s in stops if s["place_note"]]},
+        "dropped": dropped,
+    }

@@ -100,7 +100,16 @@ export const App: React.FC = () => {
       const res = await fetch('/api/v1/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: fullMessage }),
+        // Send the current plan along so "put X after Y" edits it instead of starting over
+        body: JSON.stringify({
+          message: fullMessage,
+          context: plan?.itinerary && !pendingClarificationPrompt
+            ? {
+                intent: plan.intent,
+                days: plan.itinerary.days.map((d) => d.stops.map((s) => s.attraction_id)),
+              }
+            : undefined,
+        }),
       });
 
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);

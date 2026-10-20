@@ -129,51 +129,33 @@ def _extract(message: str) -> Dict[str, Any]:
 AR_WEEKDAYS = dict(zip(["mon", "tue", "wed", "thu", "fri", "sat", "sun"], DAYS_AR))
 
 
-def _write(payload: Dict[str, Any], language: str) -> str:
-    """Template wording. Contains every time and price, so the guard accepts it."""
+def _write(brief: Dict[str, Any], language: str) -> str:
+    """Template wording for the short reply (the trip sheet shows the timetable)."""
     ar = language == "ar"
-    lines = ["إليك برنامج رحلتك:" if ar else "Here's your itinerary:"]
-    for day in payload["days"]:
-        weekday = day.get("weekday")
-        if ar:
-            area_ar = AREA_AR.get(day["area"]) or arabic_area(day["area"]) or day["area"]
-            head = f"اليوم {day['day']} - {area_ar}" + (f" ({AR_WEEKDAYS.get(weekday, weekday)})" if weekday else "")
-        else:
-            head = f"Day {day['day']} - {day['area']}" + (f" ({weekday.title()})" if weekday else "")
-        lines += ["", f"**{head}**"]
-        for stop in day["stops"]:
-            price = ""
-            if "ticket_price_egp" in stop:
-                price = (f" - تذكرة {stop['ticket_price_egp']:g} جنيه" if ar
-                         else f" - ticket {stop['ticket_price_egp']:g} EGP")
-            lines.append(f"- {stop['start']}-{stop['end']} {stop['name']}{price}")
-
-    recs = payload.get("recommendations")
-    if recs:
-        hotels = recs.get("hotels", [])
-        if hotels:
-            lines += ["", "**🏨 فنادق ومناطق إقامة مقترحة:**" if ar else "**🏨 Recommended Accommodation:**"]
-            for h in hotels:
-                example = (f" (مثل {h['example']})" if ar else f" (e.g. {h['example']})") if h.get("example") else ""
-                why = f" _{' · '.join(h['why'])}_" if h.get("why") else ""
-                lines.append(f"- **{h['area']}**: {h['desc']}{example}{why}")
-        transport = recs.get("transport", [])
-        if transport:
-            lines += ["", "**🚗 وسائل النقل والانتقالات:**" if ar else "**🚗 Transport Options:**"]
-            for t in transport:
-                why = f" _{' · '.join(t['why'])}_" if t.get("why") else ""
-                lines.append(f"- **{t['mode']}**: {t['desc']}{why}")
-
-    lines += ["", "أوقات التنقل تقديرية، تأكد من المواعيد قبل الذهاب." if ar
-              else "Travel times are estimates; confirm hours before you go."]
-    return "\n".join(lines)
+    days = brief["days"]
+    places = [p for d in days for p in d["places"]]
+    areas = list(dict.fromkeys((d.get("area_ar") or d["area"]) if ar else d["area"] for d in days))
+    n = len(days)
+    if ar:
+        length = "يوم" if n == 1 else "يومين" if n == 2 else f"{n} أيام"
+        text = f"يلا بينا! جهزت لك {length} في {' و'.join(areas)}، هتبدأ بـ{places[0]}" + (
+            f" وكمان {places[1]}." if len(places) > 1 else ".")
+        if brief.get("some_opening_hours_unconfirmed"):
+            text += " بس اتأكد من مواعيد الفتح قبل ما تروح."
+    else:
+        length = "a day" if n == 1 else f"{n} days"
+        text = f"Here's {length} in {' & '.join(areas)}, starting with {places[0]}" + (
+            f" and {places[1]}." if len(places) > 1 else ".")
+        if brief.get("some_opening_hours_unconfirmed"):
+            text += " Check opening hours before you go."
+    return text
 
 
 def demo_llm(prompt: str, system: Optional[str] = None, json_mode: bool = False) -> Dict[str, Any]:
     if json_mode:
         return {"ok": True, "text": json.dumps(_extract(prompt), ensure_ascii=False), "model": "demo"}
     data = json.loads(prompt.split("DATA:\n", 1)[1])
-    language = "ar" if "in Arabic" in prompt else "en"
+    language = "ar" if "Egyptian colloquial Arabic" in prompt else "en"
     return {"ok": True, "text": _write(data, language), "model": "demo"}
 
 

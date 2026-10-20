@@ -38,7 +38,7 @@ NOMINATIM = "https://nominatim.openstreetmap.org/search"
 WIKIVOYAGE = "https://en.wikivoyage.org/w/api.php"
 WIKIDATA = "https://www.wikidata.org/w/api.php"
 CACHE_PATH = Path(__file__).resolve().parent.parent / "data" / "places_cache.json"
-CACHE_VERSION = 2          # bump when the stored record format changes; older entries are refetched
+CACHE_VERSION = 5          # bump when the stored record format changes; older entries are refetched
 DYNAMIC_ID_START = 100_000
 MAX_DISTANCE_KM = 40      # listings farther than this from the town centre are dropped
 TIMEOUT_S = 8
@@ -256,7 +256,35 @@ def wikidata_details(qids: List[str], fetch: Fetch = http_json) -> Dict[str, Dic
     return out
 
 
-def find_places(place: str, fetch: Fetch = http_json, cache_path: Optional[Path] = None) -> Dict[str, Any]:
+def translate_names(names: List[str], llm: Callable[..., Dict[str, Any]]) -> Dict[str, str]:
+    """Arabic names for places Wikidata has no Arabic label for: one small LLM call per town,
+    stored in the cache. Only names are translated; no facts come from the model."""
+    if not names:
+        return {}
+    prompt = ("Translate these Egyptian place names into Arabic, literally. Translate only the words that are "
+              "there: never add saints, people, dedications or descriptions that are not in the English name "
+              "(e.g. 'Port Said Military Museum' -> 'متحف بورسعيد الحربي', 'Cathedral of the Holy Virgin' -> "
+              "'كاتدرائية العذراء'). Use the usual Egyptian Coptic form for saints' names (Saint Bishoy -> الأنبا بيشوي). "
+              "Reply with one JSON object mapping each English name exactly as given to its Arabic name.\n"
+              + json.dumps(names, ensure_ascii=False))
+    result = llm(prompt, system=None, json_mode=True)
+    try:
+        data = json.loads(result.get("text") or "{}") if result.get("ok") else {}
+    except ValueError:
+        return {}
+    # Models sometimes tweak the key (case, accents, spacing): match on a normalised form.
+    norm = lambda text: re.sub(r"[^a-z0-9]", "", text.lower())
+    by_norm = {norm(n): n for n in names}
+    out = {}
+    for key, value in data.items():
+        name = key if key in names else by_norm.get(norm(str(key)))
+        if name and isinstance(value, str) and re.search(r"[\u0600-\u06FF]", value):
+            out[name] = value.strip()
+    return out
+
+
+def find_places(place: str, fetch: Fetch = http_json, cache_path: Optional[Path] = None,
+                llm: Optional[Callable[..., Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Look up visitor attractions for any place in Egypt.
 
     Returns {"ok": True, "city": {...}, "places": [record, ...], "source": url}
@@ -298,6 +326,11 @@ def find_places(place: str, fetch: Fetch = http_json, cache_path: Optional[Path]
                     "approximate_location": approximate,
                     "source_url": f"https://en.wikivoyage.org/wiki/{urllib.parse.quote(page['title'].replace(' ', '_'))}",
                 })
+            if places and llm is not None:
+                missing = [p["name"] for p in places if not p["name_ar"]]
+                arabic = translate_names(missing, llm)
+                for p in places:
+                    p["name_ar"] = p["name_ar"] or arabic.get(p["name"])
             result = ({"ok": True, "city": city, "places": places} if places
                       else {"ok": False, "reason": "no_listings", "city": city})
     except Exception:  # network down, rate limited, unexpected payload

@@ -43,6 +43,8 @@ app = FastAPI(title="Fosha API (RehlaGuide)", version="0.2.0")
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=2000)
+    # The plan the user currently has, so "put X after Y" edits it (the server keeps no session)
+    context: Optional[Dict[str, Any]] = None
 
 
 class ResponseCache:
@@ -100,14 +102,14 @@ def _enrich(itinerary: Dict[str, Any]) -> Dict[str, Any]:
     return itinerary
 
 
-def _run_pipeline(message: str) -> Dict[str, Any]:
+def _run_pipeline(message: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if DEMO:
         from api.demo import demo_llm, demo_search
-        return plan_trip(message, llm=demo_llm, search_fn=demo_search)
+        return plan_trip(message, llm=demo_llm, search_fn=demo_search, context=context)
     if KEYWORD_SEARCH:
         from api.demo import demo_search
-        return plan_trip(message, search_fn=demo_search)
-    return plan_trip(message)
+        return plan_trip(message, search_fn=demo_search, context=context)
+    return plan_trip(message, context=context)
 
 
 @app.get("/api/v1/health")
@@ -118,16 +120,17 @@ def health() -> Dict[str, Any]:
 @app.post("/api/v1/chat")
 def chat(request: ChatRequest) -> Dict[str, Any]:
     started = time.perf_counter()
-    result = cache.get(request.message)
+    # Edits depend on the plan sent along, so they are never answered from the cache.
+    result = None if request.context else cache.get(request.message)
     cached = result is not None
     if result is None:
         try:
-            result = _run_pipeline(request.message)
+            result = _run_pipeline(request.message, request.context)
         except Exception as exc:  # plan_trip should not raise; this is a last line of defence
             result = {"ok": False, "error": f"Unexpected error: {exc}"}
         if result.get("ok") and result.get("itinerary"):
             _enrich(result["itinerary"])
-        if result.get("ok") and result.get("status") in CACHEABLE:
+        if result.get("ok") and result.get("status") in CACHEABLE and not request.context:
             cache.put(request.message, result)
     response_ms = round((time.perf_counter() - started) * 1000)
     analytics.record_event(result, cached=cached, response_ms=response_ms)

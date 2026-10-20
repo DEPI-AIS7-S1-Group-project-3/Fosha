@@ -9,14 +9,16 @@ Run a manual check:  uv run python -m agents.planner "3 days in Luxor, I love te
 """
 import json
 import math
+import re
 import sys
 from typing import Any, Callable, Dict, List, Optional
 
+from agents.editor import describe as describe_edit, edit_plan
 from agents.intent import extract_intent, known_regions
 from agents.llm import generate
-from agents.places_online import find_places, register_places
+from agents.places_online import arabic_area, find_places, register_places
 from agents.pricing import check_ticket_price
-from agents.recommendations import format_clarification_message, get_recommendations, regions_for_days
+from agents.recommendations import REGION_AR, format_clarification_message, get_recommendations, regions_for_days
 from agents.retrieval_adapter import search_attractions
 from agents.scheduler import build_itinerary
 
@@ -123,21 +125,85 @@ def reply_is_faithful(reply: str, payload: Dict[str, Any]) -> bool:
     return True
 
 
+_TIME = re.compile(r"\b([01]?\d|2[0-3]):([0-5]\d)\b")
+_MONEY = re.compile(r"(\d+(?:\.\d+)?)\s*(?:EGP|LE|L\.E|£E|جنيه|ج\.م)|(?:EGP|LE|£E)\s*(\d+(?:\.\d+)?)", re.I)
+MAX_REPLY_CHARS = 700
+
+
+def reply_invents_nothing(reply: str, payload: Dict[str, Any]) -> bool:
+    """Guard for the short reply: it may leave facts out (the trip sheet shows the full
+    timetable), but every time and price it does mention must be a real one, and it
+    must stay short and free of tables."""
+    text = reply.translate(_ARABIC_DIGITS).replace(",", "")
+    if len(text) > MAX_REPLY_CHARS or "|" in text:
+        return False
+    stops = [stop for day in payload["days"] for stop in day["stops"]]
+    times = {stop[k] for stop in stops for k in ("start", "end")}
+    for h, m in _TIME.findall(text):
+        if f"{int(h):02d}:{m}" not in times:
+            return False
+    prices = {float(stop["ticket_price_egp"]) for stop in stops if "ticket_price_egp" in stop}
+    for a, b in _MONEY.findall(text):
+        if float(a or b) not in prices:
+            return False
+    return True
+
+
+def _area_ar(area: str) -> str:
+    return {**REGION_AR, "Greater Cairo": "القاهرة الكبرى"}.get(area) or arabic_area(area) or area
+
+
+def short_summary(payload: Dict[str, Any], language: str) -> str:
+    """Deterministic fallback: one or two lines; the trip sheet carries the details."""
+    ar = language == "ar"
+    days = payload["days"]
+    areas = list(dict.fromkeys(_area_ar(d["area"]) if ar else d["area"] for d in days))
+    names = [stop["name"] for d in days for stop in d["stops"]]
+    shown = "، ".join(names[:3]) if ar else ", ".join(names[:3])
+    more = (f" و{len(names) - 3} أماكن تانية" if ar else f" and {len(names) - 3} more") if len(names) > 3 else ""
+    n = len(days)
+    if ar:
+        length = "يوم" if n == 1 else "يومين" if n == 2 else f"{n} أيام"
+        line = f"تمام! ده برنامج {length} في {' و'.join(areas)}: {shown}{more}. المواعيد والتفاصيل في البرنامج تحت 👇"
+        check = " اتأكد من مواعيد الفتح قبل ما تروح."
+    else:
+        length = "a day" if n == 1 else f"{n} days"
+        line = f"Here's {length} in {' & '.join(areas)}: {shown}{more}. Times and details are in your plan below 👇"
+        check = " Check opening hours before you go."
+    uncertain = any(stop.get("hours_confidence") != "listed" for d in days for stop in d["stops"])
+    return line + (check if uncertain else "")
+
+
 def _write_reply(payload: Dict[str, Any], language: str, llm: LLMFn) -> Dict[str, Any]:
-    name = "Arabic" if language == "ar" else "English"
+    """A short, warm reply. The full timetable lives in the trip sheet, so the model only
+    gets names (no times or prices to copy or garble), and the guard rejects anything
+    that invents a time or price, runs long, or uses a table."""
+    ar = language == "ar"
+    brief = {
+        "days": [{"day": d["day"], "area": d["area"], **({"area_ar": _area_ar(d["area"])} if ar else {}),
+                  "places": [stop["name"] for stop in d["stops"]]} for d in payload["days"]],
+        "some_opening_hours_unconfirmed": any(stop.get("hours_confidence") != "listed"
+                                              for d in payload["days"] for stop in d["stops"]),
+    }
+    recs = payload.get("recommendations") or {}
+    if recs.get("hotels"):
+        top = recs["hotels"][0]
+        brief["top_hotel_area"] = {"area": top["area"], "why": (top.get("why") or [""])[0]}
+    voice = ("Egyptian colloquial Arabic (العامية المصرية), warm and casual, like a friend from Cairo"
+             if ar else "friendly, natural English")
     prompt = (
-        f"Write the itinerary below as a friendly, clear travel plan in {name}.\n"
-        "Rules: use ONLY the data given. Keep every place name, time and price exactly as given "
-        "(use the 24-hour HH:MM times as written). Do not add attractions, opening hours, prices or tips "
-        "that are not in the data. Mention warnings and not-included places only when those lists are "
-        "non-empty, and never mention field names such as not_included. Say travel times are estimates. If prices_note is present, say it once; do not repeat it per stop. "
-        "If recommendations are present, offer them as suggestions picked for this traveller: for each one say "
-        "briefly why it fits, using only its 'why' reasons, and name example hotels only as given in 'example'.\n\nDATA:\n" + json.dumps(payload, ensure_ascii=False, indent=1)
+        f"Write a short reply in {voice} introducing this trip plan. 2 to 4 sentences, under 60 words.\n"
+        "The app already shows the full timetable, so do NOT list times, prices, travel times, warnings or "
+        "places that were left out. Name the area and two or three highlights from 'places' "
+        "(in Arabic script if writing Arabic). If some_opening_hours_unconfirmed is true, end with one short "
+        "reminder to check opening hours. If top_hotel_area is present, mention it in one short clause "
+        "with its reason. Use only these facts. No headings, tables or bullet lists.\n\nDATA:\n"
+        + json.dumps(brief, ensure_ascii=False)
     )
     result = llm(prompt, system=None, json_mode=False)
-    if result.get("ok") and reply_is_faithful(result["text"], payload):
+    if result.get("ok") and reply_invents_nothing(result["text"], payload):
         return {"reply": result["text"].strip(), "used_fallback": False}
-    return {"reply": render_plain(payload), "used_fallback": True}
+    return {"reply": short_summary(payload, language), "used_fallback": True}
 
 
 def _rank_by_interest(places: List[Dict[str, Any]], words: List[str]) -> List[Dict[str, Any]]:
@@ -150,13 +216,33 @@ def _rank_by_interest(places: List[Dict[str, Any]], words: List[str]) -> List[Di
 
 
 def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[..., Any]] = None,
-              places_fn: Optional[Callable[[str], Dict[str, Any]]] = None) -> Dict[str, Any]:
+              places_fn: Optional[Callable[[str], Dict[str, Any]]] = None,
+              context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Returns {"ok": False, "error": ...} or {"ok": True, "status": ..., "language": ..., "reply": ...}.
     status: planned | needs_clarification | unsupported_region | out_of_scope | no_results
 
     A place outside the curated regions is looked up online (agents/places_online.py);
     `places_fn` replaces that lookup in tests.
+
+    `context` is the plan the user currently has ({"intent": ..., "days": [[ids], ...]});
+    with it, a message like "put X after Y" edits that plan (agents/editor.py) instead
+    of starting over. status "edit_not_applied" = it was an edit but nothing matched.
     """
+    if context and context.get("days"):
+        edited = edit_plan(message, context, llm, places_fn)
+        if edited is not None:
+            intent = context.get("intent") or {}
+            lang = "ar" if any("\u0600" <= ch <= "\u06ff" for ch in message) else intent.get("language", "en")
+            base = {"ok": True, "language": lang, "intent": intent,
+                    "reply": describe_edit(edited["summary"], lang)}
+            if not edited["edited"]:
+                return {**base, "status": "edit_not_applied"}
+            itinerary = edited["itinerary"]
+            itinerary["recommendations"] = get_recommendations(
+                intent.get("region"), len(itinerary["days"]), lang,
+                interests=intent.get("interests"), search_query=intent.get("search_query"),
+                budget=intent.get("budget"), travelers=intent.get("travelers"), itinerary=itinerary)
+            return {**base, "status": "planned", "itinerary": itinerary, "used_fallback": False, "edited": True}
     extracted = extract_intent(message, llm)
     if not extracted["ok"]:
         return {"ok": False, "error": extracted["error"]}
@@ -172,7 +258,7 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
     online = None
     if intent["unsupported_region"]:
         place = intent["unsupported_region"]
-        online = (places_fn or find_places)(place)
+        online = (places_fn or (lambda name: find_places(name, llm=llm)))(place)
         if not online["ok"]:
             city = online.get("city") or {}
             label = (city.get("name_ar") if lang == "ar" else city.get("name")) or place

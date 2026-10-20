@@ -90,11 +90,13 @@ uv run python -m rag.ingest      # build the vector index (required once, see no
 cp .env.example .env             # then put your own key in .env
 ```
 
-`.env`:
+`.env` (at least one key; Groq is tried first, Gemini is the backup):
 ```
-GEMINI_API_KEY=your-key-here
-GEMINI_MODEL=gemini-3.8-flash
+GROQ_API_KEY=your-groq-key        # https://console.groq.com
+GEMINI_API_KEY=your-gemini-key    # https://aistudio.google.com/apikey
+GEMINI_MODEL=gemini-3-flash-preview
 ```
+Why Groq first: in testing (Oct 2026) Groq's `openai/gpt-oss-120b` understood our real Arabic/English requests 6/6 correctly in under a second, while Gemini calls took 7-12s and the free tier ran out of daily quota. Each provider's models are tried in order and a model that is out of quota or overloaded is skipped at once (`agents/llm.py`; override with `LLM_PROVIDERS`, `GROQ_MODEL`, `GROQ_FALLBACK_MODELS`, `GEMINI_MODEL`, `GEMINI_FALLBACK_MODELS`).
 
 Notes:
 - `.env` is gitignored. **Never commit it, and never put a real key in `.env.example`.**
@@ -293,6 +295,11 @@ The curated dataset covers the regions on the globe. When a user names any other
 3. **Wikidata** fills in missing coordinates and Arabic names.
 
 Found places are registered next to the curated ones (ids from 100000), so the scheduler applies the same rules. Nothing is guessed: unlisted hours default to a daytime window marked "check before you go", unlisted prices stay unknown ("Price not listed"), and listings without coordinates are placed at the town centre and flagged as approximate. Results are cached in `data/places_cache.json` (gitignored). If the place isn't in Egypt, has no listings, or the sources are unreachable, the user gets a clear message instead of an error.
+
+### 7.6d Short replies and editing the plan (`planner.py`, `editor.py`)
+- **Replies are 2-4 sentences** (Egyptian Arabic or English) naming the highlights; the trip sheet shows the full timetable. The writer gets place names only, and a guard rejects any reply that mentions a time or price that isn't in the schedule, runs long, or uses a table, falling back to a one-line template.
+- **Editing:** the app sends the current plan with each message. The model decides what to change only by referring to ids of real places in the plan's area ("add [id] after [id]", "remove [id]", "make it N days"); `scheduler.time_day` re-times the edited day with the usual rules and reports any stop that no longer fits instead of squeezing it in. A request for a different trip is planned from scratch.
+- Found places without an Arabic label on Wikidata get a literal Arabic translation (one model call per town, cached); no facts come from the model.
 
 ### 7.7 LLM wrapper (`llm.py`)
 The only file that talks to Gemini. It reads `GEMINI_API_KEY` and `GEMINI_MODEL`, returns an error dict instead of raising, and retries temporary errors (503, 429, timeouts) up to three times with a short wait. Everything else receives the LLM as a function argument, which is why tests run without internet or a key.
