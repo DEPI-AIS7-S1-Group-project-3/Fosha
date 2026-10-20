@@ -34,7 +34,7 @@
       <svg viewBox="-220 -220 440 440" aria-hidden="true">
         <defs><path id="orb-path" d="M0,-182 A182,182 0 1,1 0,182 A182,182 0 1,1 0,-182"/></defs>
         <circle r="215" fill="var(--azure)"/>
-        <g><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="60s" repeatCount="indefinite"/><text fill="var(--white)" text-anchor="middle" font-family="${ar ? "Almarai" : "Changa One"}" font-size="${ar ? 20 : 21}" letter-spacing="2">
+        <g><animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="60s" repeatCount="indefinite"/><text fill="var(--white)" text-anchor="middle" font-family="${ar ? "Lalezar" : "Changa One"}" font-size="${ar ? 24 : 21}" letter-spacing="2">
           <textPath href="#orb-path" startOffset="50%">${esc(orbit.repeat(ar ? 5 : 4))}</textPath></text></g>
       </svg>
       <div class="orb-center"><div class="big" data-count="${cur.total_queries}">0</div>

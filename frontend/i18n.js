@@ -2,7 +2,7 @@
 // plus Arabic names for the data the backend returns (regions, categories, places).
 window.I18N = {
   en: {
-    brand: "Fosha", brand_alt: "- فسحه",
+    brand: "Fosha", brand_alt: "فسحة",
     tagline: "Your Egypt, your way",
     orbit: "YOUR EGYPT, YOUR WAY",
     nav_plan: "Plan", nav_trip: "My trip", new_trip: "New trip",
@@ -85,7 +85,7 @@ window.I18N = {
     load_error: "Couldn't load analytics.",
   },
   ar: {
-    brand: "فسحه", brand_alt: "- Fosha",
+    brand: "فسحة", brand_alt: "Fosha",
     tagline: "مصر على مزاجك",
     orbit: "مصر على مزاجك",
     nav_plan: "خطّط", nav_trip: "رحلتي", new_trip: "رحلة جديدة",
@@ -102,10 +102,10 @@ window.I18N = {
     ],
     globe_hint: "دوس على أي معلم وابدأ منه",
     globe_prefill: "٣ أيام في {region}",
-    chat_title: "مساعد فسحه",
+    chat_title: "مساعد فسحة",
     chat_status: "متصل · جاهز لتخطيط رحلتك",
     back_to_globe: "الرجوع للمعالم",
-    ai: "فسحه", you: "أنت",
+    ai: "فسحة", you: "أنت",
     thinking: ["بندوّر على الأماكن…", "بنراجع مواعيد الفتح…", "بنرسم المسار…", "بنكتب برنامجك…"],
     how_many_days: "كام يوم؟", which_region: "رايح فين؟",
     day_options: [["يوم واحد", "يوم واحد"], ["يومين", "يومين"], ["٣ أيام", "3 أيام"], ["٥ أيام", "5 أيام"]],
@@ -148,7 +148,7 @@ window.I18N = {
     start: "خطّط رحلة",
     hrs: "س", mins: "د",
     dash_title: "المؤشرات",
-    dash_sub: "المسافرين بيسألوا فسحه عن إيه، وبترد بسرعة قد إيه.",
+    dash_sub: "المسافرين بيسألوا فسحة عن إيه، وبترد بسرعة قد إيه.",
     r7: "٧ أيام", r30: "٣٠ يوم", rall: "كل الفترات", refresh: "تحديث",
     dash_orbit: "سؤال • آخر {n} يوم • ",
     dash_orbit_all: "سؤال • كل الفترات • ",
@@ -163,7 +163,7 @@ window.I18N = {
     english: "الإنجليزية", arabic: "العربية",
     no_data_title: "لسه مفيش أسئلة",
     no_data_body: "الأرقام بتظهر لما المسافرين يبدأوا يسألوا. للعرض التجريبي شغّل: uv run python -m api.seed",
-    open_app: "افتح فسحه",
+    open_app: "افتح فسحة",
     load_error: "معرفتش أحمّل الإحصائيات.",
   },
 };

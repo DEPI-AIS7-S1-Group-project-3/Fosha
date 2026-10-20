@@ -45,7 +45,7 @@ export const App: React.FC = () => {
     localStorage.setItem('fosha_lang', lang);
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.title = lang === 'ar' ? 'فسحه - Fosha' : 'Fosha - فسحه';
+    document.title = lang === 'ar' ? 'فسحة · Fosha' : 'Fosha · فسحة';
   }, [lang]);
 
   useEffect(() => {

@@ -30,15 +30,15 @@ export const Header: React.FC<HeaderProps> = ({
         onClick={onOpenPlan}
         role="button"
         tabIndex={0}
-        aria-label="Fosha - فسحه"
+        aria-label="Fosha · فسحة"
       >
         {isAr ? (
           <>
-            <span className="wordmark-ar" style={{ fontFamily: "'Almarai', sans-serif", fontSize: '26px', fontWeight: 800 }}>
-              فسحه
+            <span className="wordmark-ar">
+              فسحة
             </span>
             <span className="wordmark-sep">·</span>
-            <span className="wordmark-main" style={{ fontSize: '24px' }}>
+            <span className="wordmark-main">
               Fosha
             </span>
           </>
@@ -46,8 +46,8 @@ export const Header: React.FC<HeaderProps> = ({
           <>
             <span className="wordmark-main">Fosha</span>
             <span className="wordmark-sep">·</span>
-            <span className="wordmark-ar" style={{ fontFamily: "'Almarai', sans-serif", fontSize: '22px', fontWeight: 700 }}>
-              فسحه
+            <span className="wordmark-ar">
+              فسحة
             </span>
           </>
         )}
@@ -92,7 +92,6 @@ export const Header: React.FC<HeaderProps> = ({
           className="text-btn"
           aria-pressed={lang === 'ar'}
           onClick={() => onSetLang('ar')}
-          style={{ fontFamily: "'Almarai', sans-serif" }}
         >
           ع
         </button>

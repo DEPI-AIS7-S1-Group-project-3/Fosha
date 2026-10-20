@@ -29,8 +29,8 @@
   --header-h: 68px;
 }
 html[lang="ar"] {
-  --font-display: 'Almarai', 'Changa One', ui-sans-serif, system-ui, sans-serif;
-  --font-ui: 'Almarai', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Lalezar', 'Changa One', ui-sans-serif, system-ui, sans-serif;
+  --font-ui: 'Cairo', Arial, ui-sans-serif, system-ui, sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -56,22 +56,22 @@ a { color: inherit; }
   background: var(--sky);
 }
 .wordmark { display: inline-flex; align-items: baseline; gap: 8px; text-decoration: none; justify-self: start; }
-.wordmark-main { font: 700 28px/1 'Changa One', 'Almarai', sans-serif; }
-html[lang="ar"] .wordmark-main { font-family: 'Almarai', sans-serif; font-size: 28px; font-weight: 800; }
-.wordmark-alt { font: 400 18px/1 'Almarai', 'Changa One', sans-serif; opacity: .75; }
-html[lang="ar"] .wordmark-alt { font-family: 'Changa One', 'Almarai', sans-serif; }
+.wordmark-main { font: 400 30px/1 'Changa One', 'Lalezar', sans-serif; }
+html[lang="ar"] .wordmark-main { font-family: 'Lalezar', sans-serif; font-size: 32px; }
+.wordmark-alt { font: 400 16px/1 'Lalezar', 'Changa One', sans-serif; opacity: .7; }
+html[lang="ar"] .wordmark-alt { font-family: 'Changa One', sans-serif; }
 .wordmark-dot { width: 14px; height: 14px; border-radius: var(--radius-globe); background: var(--azure); align-self: center; }
 
 .nav { display: flex; }
 .nav a, .nav button, .text-btn {
   position: relative;
   padding: var(--s10) var(--s20);
-  font: 400 14px/1.43 Arial, 'Almarai', sans-serif;
+  font: 400 14px/1.43 Arial, 'Cairo', sans-serif;
   text-transform: uppercase;
   text-decoration: none;
   letter-spacing: .02em;
 }
-html[lang="ar"] .nav a, html[lang="ar"] .nav button, html[lang="ar"] .text-btn { font-family: 'Almarai', sans-serif; font-weight: 700; }
+html[lang="ar"] .nav a, html[lang="ar"] .nav button, html[lang="ar"] .text-btn { font-family: 'Cairo', sans-serif; font-weight: 700; }
 .nav [aria-current="page"]::after, .text-btn[aria-pressed="true"]::after {
   content: ""; position: absolute; left: calc(50% - 10px); bottom: 4px;
   width: 20px; border-bottom: 2px solid var(--ink);
@@ -85,12 +85,12 @@ html[lang="ar"] .nav a, html[lang="ar"] .nav button, html[lang="ar"] .text-btn {
   display: inline-flex; align-items: center; gap: 10px;
   border: 2px solid var(--ink);
   padding: 11px 18px;
-  font: 400 13px/1 Arial, 'Almarai', sans-serif;
+  font: 400 13px/1 Arial, 'Cairo', sans-serif;
   text-transform: uppercase; letter-spacing: .06em;
   text-decoration: none;
   transition: background .2s var(--ease), color .2s var(--ease);
 }
-html[lang="ar"] .btn { font-weight: 700; font-family: 'Almarai', sans-serif; letter-spacing: 0; }
+html[lang="ar"] .btn { font-weight: 700; font-family: 'Cairo', sans-serif; letter-spacing: 0; }
 .btn:hover { background: var(--ink); color: var(--sky); }
 .btn .arrow { transition: transform .25s var(--ease); }
 .btn:hover .arrow { transform: translateX(4px); }

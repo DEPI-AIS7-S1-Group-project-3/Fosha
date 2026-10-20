@@ -39,7 +39,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ lang }) => {
     <div className="dashboard-page" dir={isAr ? 'rtl' : 'ltr'}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 style={{ margin: '0 0 6px', fontSize: '32px' }}>{translate('dash_title', lang)}</h1>
+          <h1>{translate('dash_title', lang)}</h1>
           <p style={{ margin: 0, color: '#555' }}>{translate('dash_sub', lang)}</p>
         </div>
 

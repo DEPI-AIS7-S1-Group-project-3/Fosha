@@ -53,7 +53,7 @@
   });
   function paintGlobeText() {
     const ar = Fosha.isAr();
-    globe.setText(t("orbit"), ar ? "Almarai" : "Changa One", ar ? 40 : 38);
+    globe.setText(t("orbit"), ar ? "Lalezar" : "Changa One", ar ? 50 : 38);
     globe.setLabels((r) => region(r));
   }
 

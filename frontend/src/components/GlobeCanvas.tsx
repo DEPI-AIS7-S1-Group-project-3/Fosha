@@ -225,8 +225,8 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
 
   const isAr = lang === 'ar';
   const ribbonText = translate('orbit', lang);
-  const ribbonFont = isAr ? 'Almarai' : 'Changa One';
-  const ribbonSize = isAr ? 40 : 38;
+  const ribbonFont = isAr ? 'Lalezar' : 'Changa One';
+  const ribbonSize = isAr ? 50 : 38;
 
   return (
     <div className="globe-wrap" ref={containerRef}>
@@ -249,7 +249,7 @@ export const GlobeCanvas: React.FC<GlobeCanvasProps> = ({
           textAnchor="middle"
           fontFamily={ribbonFont}
           fontSize={ribbonSize}
-          letterSpacing="2"
+          letterSpacing="1"
         >
           <textPath href="#react-arc-path" startOffset="50%" ref={textPathRef}>
             {ribbonText}

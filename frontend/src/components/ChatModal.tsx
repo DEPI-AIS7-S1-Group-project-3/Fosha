@@ -65,7 +65,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   };
 
   const isAr = lang === 'ar';
-  const lastMsg = messages[messages.length - 1];
 
   const renderClarificationChips = (res: ChatResponse) => {
     const missing = res.missing || [];
@@ -138,24 +137,27 @@ export const ChatModal: React.FC<ChatModalProps> = ({
 
     return (
       <div className="plan-card">
-        <div className="plan-card-eyebrow">{translate('plan_ready', lang)}</div>
-        <div className="plan-card-title">
+        <div className="eyebrow">{translate('plan_ready', lang)}</div>
+        <h3 className="plan-card-title">
           {days.length === 1
-            ? translate('one_day_in', lang, { place: days[0].area })
-            : translate('days_in', lang, { n: formatNumber(days.length, lang), place: days[0].area })}
-        </div>
+            ? translate('one_day_in', lang, { place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area : days[0].area })
+            : translate('days_in', lang, {
+                n: formatNumber(days.length, lang),
+                place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area : days[0].area,
+              })}
+        </h3>
 
-        <ul className="plan-card-days">
+        <ul className="plan-days">
           {days.map((d, i) => (
             <li key={i}>
-              <strong>{translate('day', lang)} {formatNumber(d.day, lang)}: </strong>
-              <span>{d.stops.map((s) => s.name).join(' · ')}</span>
+              <b>{translate('day', lang)} {formatNumber(d.day, lang)}: </b>
+              <span>{d.stops.map((s) => isAr ? AR_NAMES.places[s.attraction_id] || s.name : s.name).join(' · ')}</span>
             </li>
           ))}
         </ul>
 
         {(hotelArea || transportMode) && (
-          <div className="plan-recs-tag">
+          <div className="plan-recs-summary">
             {hotelArea && <span>🏨 {hotelArea}</span>}
             {transportMode && <span>🚗 {transportMode}</span>}
           </div>
@@ -163,10 +165,12 @@ export const ChatModal: React.FC<ChatModalProps> = ({
 
         <button
           type="button"
-          className="open-sheet-btn"
+          className="btn"
           onClick={onOpenTripSheet}
+          style={{ width: '100%', justifyContent: 'center' }}
         >
-          {translate('open_plan', lang)} →
+          <span>{translate('open_plan', lang)}</span>
+          <span className="arrow">→</span>
         </button>
       </div>
     );
@@ -195,7 +199,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
             {messages.length > 0 && (
               <button
                 type="button"
-                className="chat-action-btn"
+                className="chat-new-trip"
                 onClick={onNewTrip}
               >
                 {translate('new_trip', lang)}
@@ -213,58 +217,60 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         </header>
 
         <div className="chat-modal-body" ref={scrollRef}>
-          {messages.length === 0 && (
-            <div className="msg ai">
-              <div className="msg-who">{translate('ai', lang)}</div>
-              <div>{translate('hero_sub', lang)}</div>
-              <div className="quick-groups" style={{ marginTop: '14px' }}>
-                <div className="quick-group-label">{translate('try_instead', lang)}</div>
-                <div className="quick-chips">
-                  {I18N[lang].chips.map((c, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className="quick-chip"
-                      onClick={() => handleChipClick(c.msg)}
-                    >
-                      {c.label}
-                    </button>
-                  ))}
+          <div className="thread">
+            {messages.length === 0 && (
+              <div className="msg ai">
+                <div className="who">{translate('ai', lang)}</div>
+                <div className="text">{translate('hero_sub', lang)}</div>
+                <div className="quick-groups" style={{ marginTop: '16px' }}>
+                  <div className="quick-group-label">{translate('try_instead', lang)}</div>
+                  <div className="quick-chips">
+                    {I18N[lang].chips.map((c, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className="quick-chip"
+                        onClick={() => handleChipClick(c.msg)}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {messages.map((m, idx) => (
-            <div key={m.id || idx} className={`msg ${m.role}`}>
-              {m.role !== 'user' && <div className="msg-who">{translate('ai', lang)}</div>}
-              <div style={{ whiteSpace: 'pre-wrap' }}>{m.text}</div>
+            {messages.map((m, idx) => (
+              <div key={m.id || idx} className={`msg ${m.role}`}>
+                {m.role !== 'user' && <div className="who">{translate('ai', lang)}</div>}
+                <div className="text" style={{ whiteSpace: 'pre-wrap' }}>{m.text}</div>
 
-              {m.result?.status === 'needs_clarification' && idx === messages.length - 1 && (
-                renderClarificationChips(m.result)
-              )}
+                {m.result?.status === 'needs_clarification' && idx === messages.length - 1 && (
+                  renderClarificationChips(m.result)
+                )}
 
-              {m.result?.status === 'planned' && (
-                renderPlanCard(m.result)
-              )}
-            </div>
-          ))}
-
-          {busy && (
-            <div className="msg ai">
-              <div className="msg-who">{translate('ai', lang)}</div>
-              <div className="thinking-row">
-                <span className="dots">
-                  <i /><i /><i />
-                </span>
-                <span>{I18N[lang].thinking[0]}</span>
+                {m.result?.status === 'planned' && (
+                  renderPlanCard(m.result)
+                )}
               </div>
-            </div>
-          )}
+            ))}
+
+            {busy && (
+              <div className="msg ai">
+                <div className="who">{translate('ai', lang)}</div>
+                <div className="thinking-row">
+                  <span className="dots">
+                    <i /><i /><i />
+                  </span>
+                  <span>{I18N[lang].thinking[0]}</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <footer className="chat-modal-footer">
-          <form className="chat-composer-box" onSubmit={handleSubmit}>
+          <form className="chat-composer" onSubmit={handleSubmit} autoComplete="off">
             <input
               ref={inputRef}
               type="text"
@@ -276,16 +282,25 @@ export const ChatModal: React.FC<ChatModalProps> = ({
             />
             <button
               type="submit"
+              className="send"
               disabled={busy || !inputVal.trim()}
               aria-label={translate('send', lang)}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M4 12h15M13 5l7 7-7 7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           </form>
-          <div className="chat-footer-disclaimer">{translate('disclaimer', lang)}</div>
+          <div className="chat-footer-note">
+            <span>{translate('disclaimer', lang)}</span>
+          </div>
         </footer>
       </div>
     </div>
