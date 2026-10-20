@@ -49,6 +49,7 @@ CATEGORY_TAGS = {
     "Museum": "museums", "Archaeological Site": "history", "Temple": "history", "Fortress": "history",
     "Monastery": "history", "Cultural Center": "culture", "National Park": "nature",
     "Aquarium": "diving", "Island / Beach": "beach", "Historic Oasis": "nature",
+    "Religious Site": "culture", "Landmark": "history", "Park / Promenade": "relax",  # places found online
 }
 TAG_LABELS = {
     "history": ("history", "التاريخ"), "museums": ("museums", "المتاحف"), "culture": ("local culture", "الثقافة المحلية"),
@@ -305,6 +306,7 @@ def format_clarification_message(
     travelers: Optional[Any] = None,
     language: str = "en",
     all_regions: str = "",
+    place: Optional[str] = None,
 ) -> str:
     """Ask only for what is still missing, acknowledging what the user already said.
 
@@ -314,7 +316,7 @@ def format_clarification_message(
     ar = language == "ar"
     parts: List[str] = []
 
-    known = []
+    known = [place] if place else []
     if days:
         known.append(("يوم واحد" if days == 1 else "يومين" if days == 2 else f"{_n(days, ar)} أيام") if ar
                      else ("one day" if days == 1 else f"{days} days"))

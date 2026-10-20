@@ -37,6 +37,8 @@ def check_ticket_price(attraction_id: Any, visitor_type: Any = None) -> Dict[str
         return {"ok": False, "error": f"Could not understand visitor_type {visitor_type!r}; use 'egyptian' or 'foreigner'."}
 
     price = attraction.price_egyptian_egp if visitor == "egyptian" else attraction.price_foreigner_egp
+    if price is None:  # places found online often list no price; never guess one
+        return {"ok": False, "error": f"No ticket price is listed for {attraction.name}."}
     if price == 0:
         note = ("Listed as 0 EGP. That may mean free entry or that no price was recorded; "
                 "verify on the source page before telling the user it is free.")

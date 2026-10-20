@@ -24,6 +24,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from agents.attractions import get_attraction
+from agents.places_online import arabic_area, arabic_name, is_dynamic
 from agents.planner import plan_trip
 from agents.travel import load_locations
 from api import analytics
@@ -79,6 +80,7 @@ def _enrich(itinerary: Dict[str, Any]) -> Dict[str, Any]:
     """Add what the UI needs to draw stop cards and the route map."""
     locations = load_locations()
     for day in itinerary.get("days", []):
+        day["area_ar"] = arabic_area(day["area"])
         for stop in day["stops"]:
             a = get_attraction(stop["attraction_id"])
             loc = locations.get(stop["attraction_id"], {})
@@ -89,6 +91,8 @@ def _enrich(itinerary: Dict[str, Any]) -> Dict[str, Any]:
                 "price_egyptian_egp": a.price_egyptian_egp,
                 "source_url": a.source_url, "last_verified": a.last_verified,
                 "lat": loc.get("lat"), "lon": loc.get("lon"),
+                "name_ar": arabic_name(stop["attraction_id"]),
+                "from_web": is_dynamic(stop["attraction_id"]),
             })
     if not itinerary.get("recommendations") and len(itinerary.get("days", [])) >= 2:
         from agents.recommendations import get_recommendations

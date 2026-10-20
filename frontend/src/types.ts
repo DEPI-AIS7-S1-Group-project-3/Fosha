@@ -15,8 +15,13 @@ export interface Stop {
   region?: string;
   city?: string;
   description?: string;
-  price_foreigner_egp?: number;
-  price_egyptian_egp?: number;
+  /** null = the source lists no price (places found online); 0 = free */
+  price_foreigner_egp?: number | null;
+  price_egyptian_egp?: number | null;
+  /** Arabic name for places found online (from Wikidata) */
+  name_ar?: string | null;
+  /** true when the place came from Wikivoyage rather than the curated dataset */
+  from_web?: boolean;
   source_url?: string;
   last_verified?: string;
   lat?: number | null;
@@ -29,6 +34,7 @@ export interface DayPlan {
   day: number;
   weekday?: string | null;
   area: string;
+  area_ar?: string | null;
   stops: Stop[];
   warnings: string[];
   notes: string[];

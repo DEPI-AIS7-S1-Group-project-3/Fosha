@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Language, ChatMessage, ChatResponse } from '../types';
 import { translate, I18N, AR_NAMES, formatNumber } from '../i18n';
+import { ReplyText } from './ReplyText';
 
 interface ChatModalProps {
   isOpen: boolean;
@@ -146,10 +147,10 @@ export const ChatModal: React.FC<ChatModalProps> = ({
         <div className="eyebrow">{translate('plan_ready', lang)}</div>
         <h3 className="plan-card-title">
           {days.length === 1
-            ? translate('one_day_in', lang, { place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area : days[0].area })
+            ? translate('one_day_in', lang, { place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area_ar || days[0].area : days[0].area })
             : translate('days_in', lang, {
                 n: formatNumber(days.length, lang),
-                place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area : days[0].area,
+                place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area_ar || days[0].area : days[0].area,
               })}
         </h3>
 
@@ -157,7 +158,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
           {days.map((d, i) => (
             <li key={i}>
               <b>{translate('day', lang)} {formatNumber(d.day, lang)}: </b>
-              <span>{d.stops.map((s) => isAr ? AR_NAMES.places[s.attraction_id] || s.name : s.name).join(' · ')}</span>
+              <span>{d.stops.map((s) => isAr ? AR_NAMES.places[s.attraction_id] || s.name_ar || s.name : s.name).join(' · ')}</span>
             </li>
           ))}
         </ul>
@@ -249,7 +250,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
             {messages.map((m, idx) => (
               <div key={m.id || idx} className={`msg ${m.role}`}>
                 {m.role !== 'user' && <div className="who">{translate('ai', lang)}</div>}
-                <div className="text" style={{ whiteSpace: 'pre-wrap' }}>{m.text}</div>
+                {m.role === 'user' ? <div className="text">{m.text}</div> : <ReplyText text={m.text} />}
 
                 {m.result?.status === 'needs_clarification' && idx === messages.length - 1 && (
                   renderClarificationChips(m.result)

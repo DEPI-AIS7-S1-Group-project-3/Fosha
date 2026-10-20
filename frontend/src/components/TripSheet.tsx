@@ -54,13 +54,15 @@ export const TripSheet: React.FC<TripSheetProps> = ({
     setExpandedStops((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const getStopPrice = (s: Stop) => {
+  // null means the source lists no price: show that, and leave it out of totals
+  const getStopPrice = (s: Stop): number | null => {
     const raw = visitorType === 'egyptian' ? s.price_egyptian_egp : s.price_foreigner_egp;
+    if (raw === null) return null;
     return raw || s.ticket_price_egp || 0;
   };
 
   const dayTotalMinutes = currentDay.stops.reduce((acc, s) => acc + (s.duration_min || 0), 0);
-  const dayTotalEgp = currentDay.stops.reduce((acc, s) => acc + getStopPrice(s), 0);
+  const dayTotalEgp = currentDay.stops.reduce((acc, s) => acc + (getStopPrice(s) ?? 0), 0);
 
   const formatHoursMins = (min: number) => {
     const h = Math.floor(min / 60);
@@ -84,10 +86,10 @@ export const TripSheet: React.FC<TripSheetProps> = ({
 
         <h2 className="trip-title">
           {days.length === 1
-            ? translate('one_day_in', lang, { place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area : days[0].area })
+            ? translate('one_day_in', lang, { place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area_ar || days[0].area : days[0].area })
             : translate('days_in', lang, {
                 n: formatNumber(days.length, lang),
-                place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area : days[0].area,
+                place: isAr ? AR_NAMES.regions[days[0].area] || days[0].area_ar || days[0].area : days[0].area,
               })}
         </h2>
 
@@ -130,7 +132,7 @@ export const TripSheet: React.FC<TripSheetProps> = ({
 
         <div className="day-head">
           <h3>
-            {isAr ? AR_NAMES.regions[currentDay.area] || currentDay.area : currentDay.area}
+            {isAr ? AR_NAMES.regions[currentDay.area] || currentDay.area_ar || currentDay.area : currentDay.area}
             {currentDay.weekday ? ` · ${isAr ? AR_NAMES.weekdays[currentDay.weekday.toLowerCase()] || currentDay.weekday : currentDay.weekday}` : ''}
           </h3>
           <span>
@@ -143,7 +145,7 @@ export const TripSheet: React.FC<TripSheetProps> = ({
             const key = `${selectedDayIdx}-${i}`;
             const isExpanded = expandedStops[key];
             const price = getStopPrice(stop);
-            const stopName = isAr ? AR_NAMES.places[stop.attraction_id] || stop.name : stop.name;
+            const stopName = isAr ? AR_NAMES.places[stop.attraction_id] || stop.name_ar || stop.name : stop.name;
 
             return (
               <li key={i} className="stop-card">
@@ -156,7 +158,9 @@ export const TripSheet: React.FC<TripSheetProps> = ({
                     </div>
                   </div>
                   <div className="stop-price">
-                    {price > 0 ? `${formatNumber(price, lang)} ${translate('egp', lang)}` : translate('free', lang)}
+                    {price === null
+                      ? translate('no_price', lang)
+                      : price > 0 ? `${formatNumber(price, lang)} ${translate('egp', lang)}` : translate('free', lang)}
                   </div>
                 </div>
 
@@ -167,6 +171,14 @@ export const TripSheet: React.FC<TripSheetProps> = ({
                       <div style={{ color: "var(--ink-soft)", fontSize: "13px" }}>
                         🕒 {stop.hours_note}
                       </div>
+                    )}
+                    {stop.place_note && (
+                      <div style={{ color: "var(--ink-soft)", fontSize: "13px" }}>📍 {stop.place_note}</div>
+                    )}
+                    {stop.source_url && (
+                      <a className="stop-source" href={stop.source_url} target="_blank" rel="noopener noreferrer">
+                        {translate(stop.from_web ? 'source_web' : 'source', lang)} ↗
+                      </a>
                     )}
                   </div>
                 )}

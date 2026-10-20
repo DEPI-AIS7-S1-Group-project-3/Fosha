@@ -26,9 +26,10 @@ def _system_prompt() -> str:
         '(translate from Arabic if needed), "" if they gave no preference\n'
         "  interests: list of short English words (e.g. [\"museums\", \"diving\"])\n"
         f"  region: exactly one of {known_regions()} or null. Use \"Cairo\" for Cairo, Giza and the Pyramids area.\n"
-        "  unsupported_region: if the user names a place that is not in that list, put its name here "
-        "and set region to null; otherwise null\n"
-        "  days: whole number of days, or null\n"
+        "  unsupported_region: if the user names another place in Egypt (any city, town or area not in "
+        "that list, e.g. Port Said, Ismailia, Fayoum, Dahab), put its usual ENGLISH name here and set region "
+        "to null; otherwise null\n"
+        "  days: whole number of days, or null. \"a day trip\", \"رحلة يوم\" and \"يوم\" on its own mean 1\n"
         '  budget: "economy", "moderate", "luxury", or null if not stated\n'
         '  travelers: "solo", "couple", "family", "group", whole number, or null if not stated\n'
         "  travel_date: a weekday name or YYYY-MM-DD, only if the user gave one, else null\n"

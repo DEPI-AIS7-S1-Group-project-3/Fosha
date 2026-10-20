@@ -11,7 +11,9 @@ import { translate, I18N } from './i18n';
 
 export const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(() => {
-    return (localStorage.getItem('fosha_lang') as Language) || 'en';
+    // Only trust a known value: anything else in storage must not blank the app
+    const saved = localStorage.getItem('fosha_lang');
+    return saved === 'ar' || saved === 'en' ? saved : 'en';
   });
 
   const isDashboardRoute = window.location.pathname === '/dashboard';

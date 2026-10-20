@@ -14,6 +14,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from agents.intent import extract_intent, known_regions
 from agents.llm import generate
+from agents.places_online import find_places, register_places
 from agents.pricing import check_ticket_price
 from agents.recommendations import format_clarification_message, get_recommendations, regions_for_days
 from agents.retrieval_adapter import search_attractions
@@ -27,10 +28,14 @@ MESSAGES = {
                  "ar": "كم يومًا لديك لهذه الرحلة؟"},
     "ask_region": {"en": "Which city or area would you like to visit? Available: {regions}.",
                    "ar": "ما المدينة أو المنطقة التي تريد زيارتها؟ المتاح: {regions}."},
-    "unsupported": {"en": "I don't have data for {place} yet. I can plan trips in: {regions}.",
-                    "ar": "ليست لدي بيانات عن {place} حاليًا. يمكنني تخطيط رحلات في: {regions}."},
-    "other": {"en": "For now I can plan itineraries in Egypt. Try: \"2 days in Luxor, I love temples\".",
-              "ar": "حاليًا أستطيع تخطيط برامج رحلات في مصر. جرّب: \"يومان في الأقصر وأحب المعابد\"."},
+    "not_found": {"en": "I couldn't find \"{place}\" in Egypt. Check the spelling, or try a city like Cairo, Luxor or Alexandria.",
+                  "ar": "ملقتش مكان اسمه «{place}» في مصر. اتأكد من الاسم، أو جرّب مدينة زي القاهرة أو الأقصر أو إسكندرية."},
+    "no_listings": {"en": "I found {place}, but my travel sources don't list places to visit there yet. Try a nearby city.",
+                    "ar": "لقيت {place}، بس مصادري مش ذاكرة أماكن للزيارة هناك لسه. جرّب مدينة قريبة."},
+    "offline": {"en": "I can't look up {place} right now because my travel sources aren't reachable. Try again in a moment, or pick Cairo, Luxor or Alexandria.",
+                "ar": "مش قادر أدوّر على {place} دلوقتي لأن مصادر السفر مش متاحة. جرّب كمان شوية، أو اختار القاهرة أو الأقصر أو إسكندرية."},
+    "other": {"en": "I plan trips anywhere in Egypt. Try: \"2 days in Luxor, I love temples\".",
+              "ar": "أنا بخطط رحلات في أي مكان في مصر. جرّب: «يومين في الأقصر وبحب المعابد»."},
     "no_results": {"en": "I couldn't find matching places. Try different interests or another area.",
                    "ar": "لم أجد أماكن مطابقة. جرّب اهتمامات مختلفة أو منطقة أخرى."},
 }
@@ -135,9 +140,22 @@ def _write_reply(payload: Dict[str, Any], language: str, llm: LLMFn) -> Dict[str
     return {"reply": render_plain(payload), "used_fallback": True}
 
 
-def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[..., Any]] = None) -> Dict[str, Any]:
+def _rank_by_interest(places: List[Dict[str, Any]], words: List[str]) -> List[Dict[str, Any]]:
+    """Places whose name/description/category mention the user's interests first (stable otherwise)."""
+    words = [w.lower() for w in words if w and len(w) > 2]
+    def hits(p: Dict[str, Any]) -> int:
+        text = f"{p['name']} {p['category']} {p['description']}".lower()
+        return sum(1 for w in words if w.rstrip("s") in text)
+    return sorted(places, key=lambda p: -hits(p))
+
+
+def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[..., Any]] = None,
+              places_fn: Optional[Callable[[str], Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Returns {"ok": False, "error": ...} or {"ok": True, "status": ..., "language": ..., "reply": ...}.
     status: planned | needs_clarification | unsupported_region | out_of_scope | no_results
+
+    A place outside the curated regions is looked up online (agents/places_online.py);
+    `places_fn` replaces that lookup in tests.
     """
     extracted = extract_intent(message, llm)
     if not extracted["ok"]:
@@ -151,8 +169,14 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
 
     if intent["task"] != "plan_trip":
         return done("out_of_scope", _say("other", lang))
+    online = None
     if intent["unsupported_region"]:
-        return done("unsupported_region", _say("unsupported", lang, place=intent["unsupported_region"], regions=regions))
+        place = intent["unsupported_region"]
+        online = (places_fn or find_places)(place)
+        if not online["ok"]:
+            city = online.get("city") or {}
+            label = (city.get("name_ar") if lang == "ar" else city.get("name")) or place
+            return done("unsupported_region", _say(online["reason"], lang, place=label), reason=online["reason"])
     if intent["missing"]:
         reply = format_clarification_message(
             missing=intent["missing"],
@@ -161,16 +185,23 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
             travelers=intent.get("travelers"),
             language=lang,
             all_regions=regions,
+            place=((online["city"].get("name_ar") if lang == "ar" else online["city"].get("name"))
+                   if online else None),
         )
         return done("needs_clarification", reply, missing=intent["missing"],
                     suggested_regions=regions_for_days(intent.get("days")))
 
-    top_k = min(12, max(6, intent["days"] * 4))
-    found = search_attractions(intent["search_query"], region=intent["region"], top_k=top_k,
-                              apply_cutoff=False, search_fn=search_fn)
-    if not found["ok"]:
-        return {"ok": False, "error": found["error"]}
-    candidate_ids = [r["attraction"]["id"] for r in found["results"]]
+    if online:
+        ranked = _rank_by_interest(online["places"], list(intent.get("interests") or [])
+                                   + intent.get("search_query", "").split())
+        candidate_ids = register_places(ranked)
+    else:
+        top_k = min(12, max(6, intent["days"] * 4))
+        found = search_attractions(intent["search_query"], region=intent["region"], top_k=top_k,
+                                  apply_cutoff=False, search_fn=search_fn)
+        if not found["ok"]:
+            return {"ok": False, "error": found["error"]}
+        candidate_ids = [r["attraction"]["id"] for r in found["results"]]
     if not candidate_ids:
         return done("no_results", _say("no_results", lang))
 

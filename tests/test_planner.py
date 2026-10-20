@@ -47,9 +47,11 @@ def test_missing_days_asks_in_user_language():
     assert ar["language"] == "ar" and "كام يوم" in ar["reply"]
 
 
-def test_unsupported_region_and_out_of_scope():
-    r = plan_trip("Dahab", make_llm({**BASE, "region": None, "unsupported_region": "Dahab"}), fake_search)
-    assert r["status"] == "unsupported_region" and "Dahab" in r["reply"]
+def test_unfindable_place_and_out_of_scope():
+    # Places outside the dataset are looked up online (tests/test_places_online.py); here the lookup fails.
+    r = plan_trip("Atlantis", make_llm({**BASE, "region": None, "unsupported_region": "Atlantis"}), fake_search,
+                  places_fn=lambda name: {"ok": False, "reason": "not_found"})
+    assert r["status"] == "unsupported_region" and "Atlantis" in r["reply"]
     assert plan_trip("hi", make_llm({"task": "other", "language": "en"}), fake_search)["status"] == "out_of_scope"
 
 

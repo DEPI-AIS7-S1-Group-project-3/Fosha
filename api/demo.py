@@ -11,6 +11,10 @@ import re
 from typing import Any, Dict, List, Optional
 
 from agents.attractions import load_attractions
+from agents.places_online import arabic_area
+from agents.recommendations import REGION_AR
+
+AREA_AR = {**REGION_AR, "Greater Cairo": "القاهرة الكبرى"}
 
 REGION_WORDS = {
     "Cairo": ["cairo", "giza", "pyramid", "القاهرة", "الجيزة", "الاهرامات", "الأهرامات", "مصر القديمة"],
@@ -22,8 +26,18 @@ REGION_WORDS = {
     "Matrouh": ["siwa", "matrouh", "سيوة", "مطروح"],
     "New Valley": ["white desert", "farafra", "new valley", "الصحراء البيضاء", "الفرافرة", "الوادي الجديد"],
 }
-UNSUPPORTED = {"dahab": "Dahab", "دهب": "Dahab", "marsa alam": "Marsa Alam", "مرسى علم": "Marsa Alam",
-               "fayoum": "Fayoum", "الفيوم": "Fayoum", "port said": "Port Said", "بورسعيد": "Port Said"}
+# Places outside the curated regions (real Gemini recognises any name; the demo needs a list).
+# They are looked up online by agents/places_online.py.
+OTHER_PLACES = {
+    "Port Said": ["port said", "بورسعيد", "بور سعيد"], "Ismailia": ["ismailia", "الإسماعيلية", "الاسماعيلية"],
+    "Suez": ["suez", "السويس"], "Fayoum": ["fayoum", "faiyum", "الفيوم"], "Dahab": ["dahab", "دهب"],
+    "Marsa Alam": ["marsa alam", "مرسى علم"], "El Alamein": ["alamein", "العلمين"],
+    "Rosetta": ["rosetta", "rashid", "رشيد"], "Damietta": ["damietta", "دمياط"], "Tanta": ["tanta", "طنطا"],
+    "Mansoura": ["mansoura", "المنصورة"], "Minya": ["minya", "المنيا"], "Asyut": ["asyut", "assiut", "أسيوط", "اسيوط"],
+    "Sohag": ["sohag", "سوهاج"], "Qena": ["qena", "قنا"], "Beni Suef": ["beni suef", "بني سويف"],
+    "Nuweiba": ["nuweiba", "نويبع"], "Taba": ["taba", "طابا"], "El Quseir": ["quseir", "القصير"],
+    "Safaga": ["safaga", "سفاجا"], "Ain Sokhna": ["sokhna", "السخنة"], "Bahariya": ["bahariya", "الواحات البحرية"],
+}
 NUMBER_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
                 "a week": 7, "weekend": 2, "واحد": 1, "يومين": 2, "يومان": 2, "ثلاث": 3, "ثلاثة": 3,
                 "أربع": 4, "اربع": 4, "أربعة": 4, "خمس": 5, "خمسة": 5, "ستة": 6, "أسبوع": 7, "اسبوع": 7}
@@ -48,7 +62,8 @@ def _has_arabic(text: str) -> bool:
 def _extract(message: str) -> Dict[str, Any]:
     text = message.lower().translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789"))
     region = next((r for r, words in REGION_WORDS.items() if any(w in text for w in words)), None)
-    unsupported = None if region else next((v for k, v in UNSUPPORTED.items() if k in text), None)
+    unsupported = None if region else next(
+        (name for name, words in OTHER_PLACES.items() if any(w in text for w in words)), None)
 
     days: Optional[int] = None
     match = re.search(r"(\d+)\s*(?:-?\s*days?|-?\s*nights?|يوم|أيام|ايام)", text)
@@ -59,7 +74,8 @@ def _extract(message: str) -> Dict[str, Any]:
             if re.search(rf"(?<!\w){re.escape(word)}(?!\w)", text):
                 days = n
                 break
-        if days is None and re.search(r"(?<!\w)(a|one) day|يوم واحد", text):
+        # "a day trip", "رحلة يوم", or "يوم" on its own all mean one day
+        if days is None and re.search(r"(?<!\w)(a|one) day|day trip|يوم واحد|(?<!\w)يوم(?!\w)", text):
             days = 1
 
     interests = [name for name, words in INTERESTS.items() if any(w in text for w in words)]
@@ -120,7 +136,8 @@ def _write(payload: Dict[str, Any], language: str) -> str:
     for day in payload["days"]:
         weekday = day.get("weekday")
         if ar:
-            head = f"اليوم {day['day']} - {day['area']}" + (f" ({AR_WEEKDAYS.get(weekday, weekday)})" if weekday else "")
+            area_ar = AREA_AR.get(day["area"]) or arabic_area(day["area"]) or day["area"]
+            head = f"اليوم {day['day']} - {area_ar}" + (f" ({AR_WEEKDAYS.get(weekday, weekday)})" if weekday else "")
         else:
             head = f"Day {day['day']} - {day['area']}" + (f" ({weekday.title()})" if weekday else "")
         lines += ["", f"**{head}**"]
