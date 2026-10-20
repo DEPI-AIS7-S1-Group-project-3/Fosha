@@ -20,6 +20,13 @@ data/analytics.jsonl
 .DS_Store
 .idea/
 .claude/
-*.zip
 *.pdf
+
+# Design documents and UI archives
+[Dd]esign.md
+[Dd]esign*.md
+*design*.md
+*.zip
+*design*.zip
+ui design.zip
 
