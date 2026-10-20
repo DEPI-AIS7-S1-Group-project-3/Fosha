@@ -126,6 +126,11 @@ export const I18N = {
     no_data_body: "Numbers appear once travellers start chatting.",
     open_app: "Open Fosha",
     load_error: "Couldn't load analytics.",
+    vs_prev: "vs previous period",
+    no_prev: "No earlier period to compare yet",
+    k_queries_title: "Questions asked",
+    k_planned_title: "Plans made",
+    seconds: "s",
   },
   ar: {
     brand_en: "Fosha",
@@ -252,6 +257,11 @@ export const I18N = {
     no_data_body: "الأرقام بتظهر لما المسافرين يبدأوا يسألوا.",
     open_app: "افتح فسحة",
     load_error: "معرفتش أحمّل الإحصائيات.",
+    vs_prev: "مقارنة بالفترة اللي فاتت",
+    no_prev: "لسه مفيش فترة قبلها للمقارنة",
+    k_queries_title: "أسئلة اتسألت",
+    k_planned_title: "برامج اتعملت",
+    seconds: "ث",
   },
 };
 

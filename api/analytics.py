@@ -30,6 +30,11 @@ def record_event(result: Dict[str, Any], cached: bool, response_ms: int,
         "destination": intent.get("region") or intent.get("unsupported_region"),
         "days": intent.get("days"),
         "attraction_ids": [s["attraction_id"] for d in itinerary.get("days", []) for s in d["stops"]],
+        # Names stored too: places found online only exist in memory, so look-ups after a
+        # restart would lose them.
+        "stops": [{"id": s["attraction_id"], "name": s["name"], "name_ar": s.get("name_ar"),
+                   "region": s.get("region"), "category": s.get("category")}
+                  for d in itinerary.get("days", []) for s in d["stops"]],
         "cached": cached,
         "response_ms": response_ms,
     }
@@ -73,11 +78,13 @@ def _window_stats(events: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def summary(days: Optional[int] = 7, now: Optional[float] = None,
-            path: Optional[Path] = None) -> Dict[str, Any]:
+            path: Optional[Path] = None, include_samples: bool = False) -> Dict[str, Any]:
     """Aggregates for the last `days` days (None = all time) plus the previous
     period of the same length, so the UI can show trends."""
     now = now or time.time()
     events = load_events(path)
+    if not include_samples:  # `python -m api.seed` events are for demos only
+        events = [e for e in events if not e.get("sample")]
     if days:
         span = days * 86400
         current = [e for e in events if e["ts"] >= now - span]
@@ -88,18 +95,22 @@ def summary(days: Optional[int] = 7, now: Optional[float] = None,
     destinations: Counter = Counter(e["destination"] for e in current if e.get("destination"))
     regions: Counter = Counter()
     attractions: Counter = Counter()
+    info: Dict[int, Dict[str, Any]] = {}
     for e in current:
-        for attraction_id in e.get("attraction_ids", []):
-            attraction = get_attraction(attraction_id)
-            if attraction:
-                attractions[attraction_id] += 1
-                regions[attraction.region] += 1
+        stops = e.get("stops") or [{"id": i} for i in e.get("attraction_ids", [])]
+        for stop in stops:
+            a = get_attraction(stop["id"])
+            details = {"id": stop["id"], "name": stop.get("name") or (a.name if a else None),
+                       "name_ar": stop.get("name_ar"), "region": stop.get("region") or (a.region if a else None),
+                       "category": stop.get("category") or (a.category if a else None)}
+            if not details["name"]:
+                continue  # an old event for a place we can no longer name
+            info.setdefault(stop["id"], details)
+            attractions[stop["id"]] += 1
+            if details["region"]:
+                regions[details["region"]] += 1
 
-    popular = []
-    for attraction_id, count in attractions.most_common(8):
-        a = get_attraction(attraction_id)
-        popular.append({"id": a.id, "name": a.name, "region": a.region,
-                        "category": a.category, "count": count})
+    popular = [{**info[i], "count": count} for i, count in attractions.most_common(8)]
 
     return {
         "window_days": days,

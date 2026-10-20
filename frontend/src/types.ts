@@ -112,16 +112,20 @@ export interface ChatMessage {
   result?: ChatResponse;
 }
 
-export interface AnalyticsSummary {
-  period_days: number | null;
+export interface WindowStats {
   total_queries: number;
   cache_hit_rate: number;
   avg_response_ms: number;
-  arabic_ratio: number;
-  planned_count: number;
-  top_destinations: Array<{ name: string; count: number }>;
-  top_regions: Array<{ name: string; count: number }>;
-  top_attractions: Array<{ id: number; name: string; region: string; category: string; count: number }>;
-  language_dist: { en: number; ar: number };
-  daily_volume: Array<{ date: string; count: number }>;
+  languages: { en: number; ar: number };
+  planned: number;
+}
+
+/** GET /api/v1/analytics (api/analytics.py summary) */
+export interface AnalyticsSummary {
+  window_days: number | null;
+  current: WindowStats;
+  previous: WindowStats | null;
+  destinations: Array<{ name: string; count: number }>;
+  regions: Array<{ name: string; count: number }>;
+  attractions: Array<{ id: number; name: string; name_ar?: string | null; region: string; category: string; count: number }>;
 }
