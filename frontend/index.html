@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fosha · فسحة</title>
+  <meta name="description" content="Fosha plans your Egypt trip day by day, in English or Arabic.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23ffe600'/%3E%3Ccircle cx='32' cy='62' r='30' fill='%23007fff'/%3E%3Cpath d='M14 34 L28 10 L42 34Z' fill='%23fff' stroke='%23333' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M28 10 L42 34 L34 34Z' fill='%23ef3b2c' stroke='%23333' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Changa+One&family=Lalezar&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/base.css">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="clouds" aria-hidden="true">
+    <svg class="cloud" style="top:14vh;animation-duration:95s;animation-delay:-20s" viewBox="0 0 150 60"><path d="M20 50c-14 0-18-16-6-21-2-14 16-22 26-12 6-16 34-18 40 0 14-6 30 2 28 16 14 2 14 17 0 17z"/></svg>
+    <svg class="cloud" style="top:26vh;width:110px;animation-duration:120s;animation-delay:-70s" viewBox="0 0 150 60"><path d="M20 50c-14 0-18-16-6-21-2-14 16-22 26-12 6-16 34-18 40 0 14-6 30 2 28 16 14 2 14 17 0 17z"/></svg>
+    <svg class="cloud" style="top:9vh;width:90px;animation-duration:140s;animation-delay:-110s" viewBox="0 0 150 60"><path d="M20 50c-14 0-18-16-6-21-2-14 16-22 26-12 6-16 34-18 40 0 14-6 30 2 28 16 14 2 14 17 0 17z"/></svg>
+  </div>
+
+  <header class="site-header">
+    <a class="wordmark" href="/" aria-label="Fosha">
+      <span class="wordmark-main" data-i18n="brand"></span>
+      <span class="wordmark-alt" data-i18n="brand_alt"></span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <button type="button" id="nav-plan" data-i18n="nav_plan"></button>
+      <button type="button" id="nav-trip" data-i18n="nav_trip"></button>
+    </nav>
+    <div class="tools">
+      <button type="button" class="text-btn" id="new-trip" data-i18n="new_trip" hidden></button>
+      <button type="button" class="text-btn" data-lang="en">EN</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" class="text-btn" data-lang="ar">ع</button>
+    </div>
+  </header>
+  <div id="banner" class="banner" role="status" hidden></div>
+
+  <section class="hero-copy">
+    <h1 class="hero-title"><span class="l1" data-i18n="hero_1"></span><span class="l2" data-i18n="hero_2"></span></h1>
+    <p class="hero-sub" data-i18n="hero_sub"></p>
+  </section>
+
+  <main class="conversation" id="conversation" aria-live="polite">
+    <div class="thread" id="thread"></div>
+  </main>
+
+  <div class="globe-wrap" id="globe-wrap">
+    <div id="globe"></div>
+    <form class="on-globe composer" id="composer" autocomplete="off">
+      <input id="input" maxlength="2000" aria-label="Message" data-i18n-placeholder="placeholder">
+      <button type="submit" class="send" id="send" aria-label="Send">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+    <div class="on-globe globe-extras">
+      <div class="chips" id="chips"></div>
+      <p class="globe-hint" data-i18n="globe_hint"></p>
+    </div>
+    <p class="on-globe status-line" style="top:calc(var(--lm) + 96px)"><span data-i18n="disclaimer"></span><span class="demo-badge" id="demo-badge" data-i18n="demo_badge" hidden></span></p>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+  <aside class="sheet" id="sheet" aria-label="Trip" aria-hidden="true">
+    <div class="sheet-scroll" id="sheet-body"></div>
+    <div class="sheet-foot" id="sheet-foot"></div>
+  </aside>
+
+  <script src="/static/i18n.js"></script>
+  <script src="/static/globe.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

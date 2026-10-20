@@ -1,0 +1,115 @@
+/* Fosha — shared tokens (DESIGN.md "Karl" system, Egyptian edition).
+   Yellow sky canvas, azure globe, Changa One display, Arial chrome, ink linework.
+   Flat: no shadows, no gradients; the 1440px radius only carves circles. */
+:root {
+  --sky: #ffe600;
+  --azure: #007fff;
+  --coral: #ef3b2c;
+  --ink: #333333;
+  --white: #ffffff;
+  --wall: #e8dfc9;     /* muted house walls inside the artwork */
+  --palm: #2e9e5b;     /* palm fronds inside the artwork */
+  --ink-soft: #5a5530;
+
+  --font-display: 'Changa One', ui-sans-serif, system-ui, sans-serif;
+  --font-ui: Arial, Helvetica, ui-sans-serif, system-ui, sans-serif;
+
+  --text-caption: 12px;
+  --text-body: 15px;
+  --text-sub: 20px;
+  --text-h-sm: 32px;
+  --text-h: 50px;
+  --text-display: 75px;
+
+  --s10: 10px;
+  --s20: 20px;
+  --s45: 45px;
+  --radius-globe: 1440px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --header-h: 68px;
+}
+html[lang="ar"] {
+  --font-display: 'Lalezar', 'Changa One', ui-sans-serif, system-ui, sans-serif;
+  --font-ui: 'Cairo', Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--sky);
+  color: var(--ink);
+  font: var(--text-body)/1.5 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+/* ---------- Header: wordmark · centred uppercase nav · tools ---------- */
+.site-header {
+  position: fixed; inset: 0 0 auto 0; z-index: 20;
+  height: var(--header-h);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  padding: 0 var(--s45);
+  background: var(--sky);
+}
+.wordmark { display: inline-flex; align-items: baseline; gap: 8px; text-decoration: none; justify-self: start; }
+.wordmark-main { font: 400 30px/1 'Changa One', 'Lalezar', sans-serif; }
+html[lang="ar"] .wordmark-main { font-family: 'Lalezar', sans-serif; font-size: 32px; }
+.wordmark-alt { font: 400 16px/1 'Lalezar', 'Changa One', sans-serif; opacity: .7; }
+html[lang="ar"] .wordmark-alt { font-family: 'Changa One', sans-serif; }
+.wordmark-dot { width: 14px; height: 14px; border-radius: var(--radius-globe); background: var(--azure); align-self: center; }
+
+.nav { display: flex; }
+.nav a, .nav button, .text-btn {
+  position: relative;
+  padding: var(--s10) var(--s20);
+  font: 400 14px/1.43 Arial, 'Cairo', sans-serif;
+  text-transform: uppercase;
+  text-decoration: none;
+  letter-spacing: .02em;
+}
+html[lang="ar"] .nav a, html[lang="ar"] .nav button, html[lang="ar"] .text-btn { font-family: 'Cairo', sans-serif; font-weight: 700; }
+.nav [aria-current="page"]::after, .text-btn[aria-pressed="true"]::after {
+  content: ""; position: absolute; left: calc(50% - 10px); bottom: 4px;
+  width: 20px; border-bottom: 2px solid var(--ink);
+}
+.tools { justify-self: end; display: flex; align-items: center; }
+.tools .text-btn { padding: var(--s10) 12px; }
+.tools .sep { width: 1px; height: 16px; background: var(--ink); opacity: .4; }
+
+/* ---------- Buttons: outlined ink, never filled until hover ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  border: 2px solid var(--ink);
+  padding: 11px 18px;
+  font: 400 13px/1 Arial, 'Cairo', sans-serif;
+  text-transform: uppercase; letter-spacing: .06em;
+  text-decoration: none;
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+html[lang="ar"] .btn { font-weight: 700; font-family: 'Cairo', sans-serif; letter-spacing: 0; }
+.btn:hover { background: var(--ink); color: var(--sky); }
+.btn .arrow { transition: transform .25s var(--ease); }
+.btn:hover .arrow { transform: translateX(4px); }
+html[dir="rtl"] .btn .arrow { transform: scaleX(-1); }
+html[dir="rtl"] .btn:hover .arrow { transform: scaleX(-1) translateX(4px); }
+
+/* ---------- Clouds drifting across the sky ---------- */
+.clouds { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.cloud { position: absolute; left: 0; width: 150px; animation: drift linear infinite; }
+.cloud path { fill: var(--white); stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; }
+@keyframes drift { from { transform: translateX(-200px); } to { transform: translateX(calc(100vw + 200px)); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
+}
+@media (max-width: 720px) {
+  :root { --s45: 16px; --text-display: 52px; --text-h: 36px; --header-h: 60px; }
+  .site-header { grid-template-columns: auto 1fr auto; gap: 6px; }
+  .nav a, .nav button { padding: 8px 8px; font-size: 12px; }
+  .wordmark-alt { display: none; }
+  .tools .text-btn { padding: 8px 6px; font-size: 12px; }
+}

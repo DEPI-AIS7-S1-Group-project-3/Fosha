@@ -17,7 +17,8 @@ This README documents the **knowledge base and retrieval (Member 1)** and the **
 | Gemini intent extraction and itinerary wording | Implemented |
 | Arabic / English support | Implemented (Arabic queries are translated to English for retrieval) |
 | Session memory and itinerary edits ("make day 2 lighter") | **Not implemented yet** |
-| Backend endpoint (`/api/v1/chat`) | **Not implemented yet** (contract to be agreed with Member 3) |
+| Web UI: chat, itinerary, dashboard, EN/AR (Member 4) | Implemented (`frontend/`, served by `api/server.py`, see section 12) |
+| Backend endpoint (`/api/v1/chat`) | Minimal version in `api/server.py` so the UI can run; Member 3 may replace it |
 
 ---
 
@@ -325,3 +326,44 @@ Not covered by automated tests: real Gemini calls and real Chroma retrieval. Che
 2. Day-trip travel time for far attractions.
 3. Better grouping of nearby places within a day.
 4. Integration with the backend once the `/api/v1/chat` contract is agreed.
+
+---
+
+## 12. Web UI and dashboard (Member 4): Fosha · فسحة
+
+The traveller-facing product is called **Fosha** (فسحة, Egyptian Arabic for "an outing"). It is a no-build web app in `frontend/` (plain HTML, CSS and JS), served by a small FastAPI app (`api/server.py`). The Python package name stays `rehlaguide`.
+
+```bash
+uv run uvicorn api.server:app --reload             # real pipeline: needs GEMINI_API_KEY and the Chroma index
+REHLA_DEMO=1 uv run uvicorn api.server:app         # offline demo: no key, no embeddings
+uv run python -m api.seed                          # optional: 400 sample events for the dashboard
+```
+
+| URL | What it is |
+|---|---|
+| http://localhost:8000/ | Traveller app: chat + trip plan |
+| http://localhost:8000/dashboard | Insights dashboard (separate page, not linked from the traveller app) |
+
+**Traveller app** (`index.html`, `app.js`, `globe.js`, `app.css`)
+- **Landing:** an azure globe rises from the bottom of the page with Egyptian landmarks on its rim (Qaitbay, the Pyramids, a Cairo mosque, Sinai, the Red Sea, a Karnak pylon, a felucca, Nubian houses, the White Desert, Siwa palms). It turns slowly. You can drag it, hover a suggestion to swing that region's landmark to the top, or tap a landmark to start a trip there. The input sits on the globe.
+- **Conversation:** after the first message the globe sinks to a horizon and the chat takes over. While the assistant works, the globe spins faster and the progress steps change. Missing details (days, region) are asked with one-tap answers, which are sent together with the original request, because the backend has no session memory yet.
+- **Trip panel:** opens automatically when a plan is ready (as a full-screen page on phones). It has day tabs, a schematic route map, a timeline of stops (expand a stop for its description, notes and official source), travel legs, a "good to know" list (warnings and places not included), a visitor/Egyptian price toggle, day and trip totals, and printing.
+- Error/retry, offline and API-down states. The conversation and the last plan are kept in `localStorage`.
+
+**Dashboard** (`dashboard.html`, `dashboard.js`, `dashboard.css`) shows total queries (inside the globe), cache hit rate, average response time, Arabic share, most requested destinations, language distribution, most popular regions and popular attractions. Each figure is compared with the previous period. Ranges: 7 days, 30 days, all time.
+
+**Languages:** English (LTR) and Arabic (RTL) in both pages. Region, category and attraction names are translated in the UI. Attraction descriptions and backend warnings are still English.
+
+**API** (`api/server.py`)
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/v1/chat` `{"message": "..."}` | `plan_trip()` result, with each stop enriched (category, description, both prices, coordinates, source) plus `cached` and `response_ms` |
+| `GET /api/v1/analytics?days=7` | Dashboard aggregates (`days=0` for all time) |
+| `GET /api/v1/health` | `{"ok": true, "demo": bool}` |
+
+- **Cache:** an in-memory LRU (256 entries) keyed on the normalised message. Errors are never cached. The cache resets when the server restarts.
+- **Analytics:** one JSON line per chat request in `data/analytics.jsonl` (gitignored). The message text is not stored. Seeded events are marked `"sample": true`. `uv run python -m api.seed --clear` deletes the log.
+- **Demo mode** (`REHLA_DEMO=1`, `api/demo.py`) replaces only Gemini (keyword intent and template wording) and the vector search (keyword overlap). Scheduling, hours, travel and prices still come from the real code.
+
+**Style:** follows `DESIGN.md`: Signal Yellow sky, a Globe Azure sphere as the focal surface, a white Changa One headline curving along the globe, a centred uppercase Arial nav with a 20px underline for the active item, flat colour with ink linework, no shadows, and the 1440px radius used only for circles. Egyptian touches come from the landmark illustrations. Arabic uses Lalezar for display text and Cairo for body text. Motion respects `prefers-reduced-motion`.
