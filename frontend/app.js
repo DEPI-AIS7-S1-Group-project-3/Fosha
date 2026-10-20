@@ -6,6 +6,22 @@
   const $ = (s, r = document) => r.querySelector(s);
   const body = document.body;
   const input = $("#input");
+  const chatModal = $("#chat-modal");
+  const chatInput = $("#chat-input");
+  const chatComposer = $("#chat-composer");
+  const chatSend = $("#chat-send");
+  const sendBtn = $("#send");
+
+  function openChat(open = true) {
+    if (chatModal) {
+      chatModal.hidden = !open;
+      body.classList.toggle("chat-open", open);
+      if (open) {
+        scrollToEnd();
+        setTimeout(() => chatInput && chatInput.focus(), 60);
+      }
+    }
+  }
 
   const state = {
     messages: store.get("messages", []),   // {role: "user"|"ai"|"error", text, result?}
@@ -26,9 +42,13 @@
   // ---------- Globe ----------
   const globe = FoshaGlobe.create($("#globe"), {
     onPick(r) {
-      input.value = t("globe_prefill", { region: region(r) });
-      input.focus();
-      input.setSelectionRange(input.value.length, input.value.length);
+      const prefill = t("globe_prefill", { region: region(r) });
+      openChat(true);
+      if (chatInput) {
+        chatInput.value = prefill;
+        chatInput.focus();
+        chatInput.setSelectionRange(chatInput.value.length, chatInput.value.length);
+      }
     },
   });
   function paintGlobeText() {
@@ -113,10 +133,13 @@
     const chatting = state.messages.length > 0;
     body.classList.toggle("chatting", chatting);
     $("#new-trip").hidden = !chatting;
-    input.placeholder = t(chatting ? "placeholder_chat" : "placeholder");
+    const chatNewTrip = $("#chat-new-trip");
+    if (chatNewTrip) chatNewTrip.hidden = !chatting;
+    input.placeholder = t("placeholder");
+    if (chatInput) chatInput.placeholder = t("placeholder_chat");
     $("#thread").innerHTML = state.messages.map((m, i) => renderMessage(m, i === state.messages.length - 1)).join("");
   }
-  const scrollToEnd = () => { const c = $("#conversation"); c.scrollTop = c.scrollHeight; };
+  const scrollToEnd = () => { const c = $("#conversation"); if (c) c.scrollTop = c.scrollHeight; };
 
   let stepTimer;
   function showThinking() {
@@ -144,7 +167,8 @@
     if (fresh) state.pending = null;
     const full = state.pending ? `${state.pending}. ${message}` : message;
     state.busy = true;
-    $("#send").disabled = true;
+    sendBtn.disabled = true;
+    if (chatSend) chatSend.disabled = true;
     if (state.messages.at(-1)?.role === "error") state.messages.pop();
     else state.messages.push({ role: "user", text: display });
     state.lastSent = { display, message, full };
@@ -171,7 +195,8 @@
     } finally {
       hideThinking();
       state.busy = false;
-      $("#send").disabled = false;
+      sendBtn.disabled = false;
+      if (chatSend) chatSend.disabled = false;
       save();
       renderThread();
       renderSheet();
@@ -292,26 +317,52 @@
   // ---------- Events ----------
   document.addEventListener("click", (e) => {
     const el = e.target.closest("button, a");
-    if (!el) return;
+    if (!el) {
+      if (e.target.id === "chat-backdrop") openChat(false);
+      return;
+    }
     if (el.dataset.lang) applyLang(el.dataset.lang);
-    else if (el.dataset.quick) send(el.dataset.label, { message: el.dataset.quick, fresh: el.hasAttribute("data-fresh") });
-    else if (el.hasAttribute("data-open-sheet") || el.id === "nav-trip") { renderSheet(); openSheet(true); }
-    else if (el.hasAttribute("data-close-sheet") || el.id === "nav-plan") { openSheet(false); if (el.hasAttribute("data-focus") || el.id === "nav-plan") input.focus(); }
-    else if (el.dataset.day) { state.dayIdx = +el.dataset.day; renderSheet(); $("#sheet-body").scrollTop = 0; }
+    else if (el.dataset.quick) {
+      openChat(true);
+      send(el.dataset.label, { message: el.dataset.quick, fresh: el.hasAttribute("data-fresh") });
+    }
+    else if (el.id === "chat-close" || el.hasAttribute("data-close-chat")) {
+      openChat(false);
+    }
+    else if (el.hasAttribute("data-open-sheet") || el.id === "nav-trip") {
+      renderSheet(); openSheet(true);
+    }
+    else if (el.hasAttribute("data-close-sheet")) {
+      openSheet(false);
+    }
+    else if (el.id === "nav-plan") {
+      openChat(true);
+    }
+    else if (el.dataset.day) {
+      state.dayIdx = +el.dataset.day; renderSheet(); $("#sheet-body").scrollTop = 0;
+    }
     else if (el.dataset.stop) {
       const k = el.dataset.stop;
       state.expanded.has(k) ? state.expanded.delete(k) : state.expanded.add(k);
       const li = el.closest(".stop"), open = state.expanded.has(k);
       li.setAttribute("aria-expanded", open); el.setAttribute("aria-expanded", open);
     }
-    else if (el.dataset.visitor) { state.visitor = el.dataset.visitor; store.set("visitor", state.visitor); renderSheet(); }
-    else if (el.hasAttribute("data-retry") && state.lastSent) send(state.lastSent.display, { message: state.lastSent.message });
+    else if (el.dataset.visitor) {
+      state.visitor = el.dataset.visitor; store.set("visitor", state.visitor); renderSheet();
+    }
+    else if (el.hasAttribute("data-retry") && state.lastSent) {
+      send(state.lastSent.display, { message: state.lastSent.message });
+    }
     else if (el.hasAttribute("data-print")) window.print();
-    else if (el.id === "new-trip") {
+    else if (el.id === "new-trip" || el.id === "chat-new-trip") {
       state.messages = []; state.pending = null;
-      save(); openSheet(false); renderThread(); globe.release(); input.focus();
+      save(); openSheet(false); renderThread(); globe.release();
+      if (chatInput) chatInput.value = "";
+      input.value = "";
+      openChat(false); input.focus();
     }
   });
+
   document.addEventListener("mouseover", (e) => {
     const chip = e.target.closest("[data-region]");
     if (chip && !state.busy) globe.focus(chip.dataset.region);
@@ -319,13 +370,53 @@
   document.addEventListener("mouseout", (e) => {
     if (e.target.closest("[data-region]") && !e.relatedTarget?.closest?.("[data-region]")) globe.release();
   });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && body.classList.contains("sheet-open")) openSheet(false); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      if (body.classList.contains("sheet-open")) openSheet(false);
+      else if (chatModal && !chatModal.hidden) openChat(false);
+    }
+  });
+
+  // Typing into landing input opens the separate chatbot view immediately
+  input.addEventListener("focus", () => {
+    if (input.value.trim()) {
+      const v = input.value;
+      input.value = "";
+      openChat(true);
+      if (chatInput) {
+        chatInput.value = v;
+        chatInput.focus();
+        chatInput.setSelectionRange(v.length, v.length);
+      }
+    }
+  });
+  input.addEventListener("input", () => {
+    const v = input.value;
+    input.value = "";
+    openChat(true);
+    if (chatInput) {
+      chatInput.value = v;
+      chatInput.focus();
+      chatInput.setSelectionRange(v.length, v.length);
+    }
+  });
+
   $("#composer").addEventListener("submit", (e) => {
     e.preventDefault();
-    const text = input.value;
+    const text = input.value.trim();
     input.value = "";
-    send(text);
+    openChat(true);
+    if (text) send(text);
   });
+
+  if (chatComposer) {
+    chatComposer.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      chatInput.value = "";
+      if (text) send(text);
+    });
+  }
   addEventListener("offline", () => banner("offline"));
   addEventListener("online", () => banner(null));
 
