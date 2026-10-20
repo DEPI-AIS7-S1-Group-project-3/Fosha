@@ -39,4 +39,3 @@ ui design.zip
 
 # Places looked up online for towns outside the dataset (agents/places_online.py)
 data/places_cache.json
-data/translations_cache.json

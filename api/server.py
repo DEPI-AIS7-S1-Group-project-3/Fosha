@@ -25,7 +25,6 @@ from pydantic import BaseModel, Field
 from agents.attractions import get_attraction
 from agents.places_online import arabic_area, arabic_name, is_dynamic
 from agents.planner import plan_trip
-from agents.translate import localize_itinerary
 from agents.travel import load_locations
 from api import analytics
 
@@ -130,9 +129,6 @@ def chat(request: ChatRequest) -> Dict[str, Any]:
             result = {"ok": False, "error": f"Unexpected error: {exc}"}
         if result.get("ok") and result.get("itinerary"):
             _enrich(result["itinerary"])
-            if not DEMO:  # Arabic copies of descriptions, notes and warnings (demo mode has no model)
-                from agents.llm import generate
-                localize_itinerary(result["itinerary"], generate)
         if result.get("ok") and result.get("status") in CACHEABLE and not request.context:
             cache.put(request.message, result)
     response_ms = round((time.perf_counter() - started) * 1000)

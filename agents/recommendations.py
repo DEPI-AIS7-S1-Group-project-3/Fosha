@@ -21,7 +21,6 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set
 
 from agents.attractions import get_attraction
-from agents.places_online import display_name
 from agents.travel import haversine_km, load_locations
 
 DATA_PATH = Path(__file__).resolve().parent / "data" / "recommendations.json"
@@ -199,7 +198,7 @@ def get_recommendations(
                                              locations[s["attraction_id"]]["lon"]), s) for s in reg_stops)
                 avg = sum(d for d, _ in dists) / len(dists)
                 score += max(0.0, 4 - avg / 4)
-                near = [display_name(s["attraction_id"], s["name"], ar) for d, s in dists if d <= 8][:2]
+                near = [s["name"] for d, s in dists if d <= 8][:2]
             ranked.append((score, h, why, near))
         ranked.sort(key=lambda r: -r[0])
         nearest_used = False
@@ -209,7 +208,7 @@ def get_recommendations(
                 why.insert(0, f"الأقرب لـ{names} في برنامجك" if ar else f"Closest to {names} in your plan")
                 nearest_used = True
             hotels.append({"area": h["name"][lang], "desc": h["desc"][lang],
-                           "example": _example(h.get("examples_ar" if ar else "examples") or h.get("examples", {}), budget),
+                           "example": _example(h.get("examples", {}), budget),
                            "region": reg, "why": why, "score": round(score, 2)})
 
     # ---- transport: tips tied to the plan first, then by fit; arrivals last ----
@@ -222,7 +221,7 @@ def get_recommendations(
         why: List[str] = []
         score = common_reasons(t, why)
         if t.get("needs_any"):
-            matched = [display_name(s["attraction_id"], s["name"], ar) for s in stops if s["attraction_id"] in t["needs_any"]]
+            matched = [s["name"] for s in stops if s["attraction_id"] in t["needs_any"]]
             if not matched:
                 continue
             score += 4

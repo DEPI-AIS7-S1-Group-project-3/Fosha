@@ -112,10 +112,9 @@ RehlaGuide/
 │   ├── scheduler.py             build_itinerary(), time_day()
 │   ├── recommendations.py       personalised hotel/transport ranking + clarification wording
 │   ├── places_online.py         any Egyptian town via OpenStreetMap / Wikivoyage / Wikidata
-│   ├── translate.py             Arabic copies of descriptions, notes and warnings (cached)
 │   ├── llm.py                   the only file that calls a model (Groq, Gemini)
 │   ├── attractions.py hours.py pricing.py travel.py retrieval_adapter.py
-│   └── data/                    hours, coordinates, Arabic names, recommendation catalogue
+│   └── data/                    hours, coordinates, recommendation catalogue
 ├── rag/                         knowledge base: ingest, retriever, evaluation
 ├── api/
 │   ├── server.py                FastAPI app: /api/v1/chat, /api/v1/analytics, serves the web app
@@ -160,9 +159,9 @@ React + TypeScript (Vite) in `frontend/`, built into `frontend/dist` and served 
 - **Landing:** an azure globe rises from the bottom of the page with Egyptian landmarks on its rim (Qaitbay, the Pyramids, a Cairo mosque, Sinai, the Red Sea, a Karnak pylon, a felucca, Nubian houses, the White Desert, Siwa palms). It turns slowly, can be dragged, and a tap on a landmark starts a trip there. The input box and suggestions sit on the globe.
 - **Chat:** follow-up questions come with one-tap answers; replies are short; plans show as a card that opens the trip sheet.
 - **Trip sheet:** day tabs, a timeline of stops (expand for description, notes, source), visitor/Egyptian prices, personalised hotel and transport picks with reasons.
-- **Print:** prints a dedicated document with only what is in the plan: every day and stop, travel, prices, notes, picks and sources (`PrintItinerary.tsx`), not a picture of the window.
+- **Print:** prints a dedicated document with every day and stop, travel, prices, notes, picks and sources (`PrintItinerary.tsx`), not a picture of the window.
 - **Dashboard (`/dashboard`):** total questions, plans made, cache hit rate, response time, Arabic share (each against the previous period), top destinations, regions and attractions. Only real chats count.
-- **Languages:** English (LTR) and Arabic (RTL). The plan, trip sheet and print appear entirely in the chosen language: Arabic names for places, towns and hotels, Arabic digits, and Arabic copies of descriptions, notes and warnings (`agents/translate.py`: one cached model call per new sentence; a translation that changes a time or number is discarded). Switching language swaps instantly; the chat reply follows the language you write in.
+- **Languages:** English (LTR) and Arabic (RTL), including Arabic names for places and towns.
 - **Style:** DESIGN.md's storybook look (Signal Yellow sky, azure globe, Changa One display type, flat colour, ink outlines), with Lalezar + Cairo for Arabic.
 
 ## 8. Knowledge base and retrieval
@@ -330,7 +329,7 @@ The only file that talks to a language model. Providers are tried in order (`LLM
 uv run pytest -q
 ```
 
-113 tests, with every model call and network request faked: data lookups and prices; opening-hours edge cases; travel estimates; the scheduler (an independent checker re-validates every stop); retrieval adapter; intent extraction; the planner pipeline, clarification wording and reply guard; personalised recommendations; online place lookup (parsing, caching, failures) and registration; plan editing; Arabic translation of plan texts; the LLM provider/model fallback; and the API (chat, cache, analytics, pages).
+110 tests, with every model call and network request faked: data lookups and prices; opening-hours edge cases; travel estimates; the scheduler (an independent checker re-validates every stop); retrieval adapter; intent extraction; the planner pipeline, clarification wording and reply guard; personalised recommendations; online place lookup (parsing, caching, failures) and registration; plan editing; the LLM provider/model fallback; and the API (chat, cache, analytics, pages).
 
 Not covered automatically: real model calls, real Chroma retrieval and live Wikivoyage data. Check those by running the app.
 

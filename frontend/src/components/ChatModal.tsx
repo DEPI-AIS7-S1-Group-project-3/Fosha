@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Language, ChatMessage, ChatResponse } from '../types';
-import { translate, I18N, AR_NAMES, formatNumber, localRecs } from '../i18n';
+import { translate, I18N, AR_NAMES, formatNumber } from '../i18n';
 import { ReplyText } from './ReplyText';
 
 interface ChatModalProps {
@@ -138,7 +138,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({
   const renderPlanCard = (res: ChatResponse) => {
     if (!res.itinerary) return null;
     const days = res.itinerary.days;
-    const recs = localRecs(res.itinerary, lang) || { hotels: [], transport: [] };
+    const recs = res.itinerary.recommendations || { hotels: [], transport: [] };
     const hotelArea = recs.hotels?.[0]?.area;
     const transportMode = recs.transport?.[0]?.mode;
 

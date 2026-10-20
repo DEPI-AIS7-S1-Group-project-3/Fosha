@@ -1,4 +1,4 @@
-import { Itinerary, Language, Recommendations } from './types';
+import { Language } from './types';
 
 export const I18N = {
   en: {
@@ -352,24 +352,4 @@ export function translate(key: keyof typeof I18N.en, lang: Language, params?: Re
     });
   }
   return val;
-}
-
-/** The text in the chosen language: the `<field>_ar` copy in Arabic when there is one. */
-export function localText<T extends object>(item: T, field: keyof T & string, lang: Language): string {
-  const record = item as Record<string, unknown>;
-  const arabic = record[`${field}_ar`];
-  const value = lang === 'ar' && typeof arabic === 'string' && arabic ? arabic : record[field];
-  return typeof value === 'string' ? localDigits(value, lang) : '';
-}
-
-/** Hotel/transport picks for the chosen language (falls back to the reply's language). */
-export function localRecs(
-  itinerary: Pick<Itinerary, 'recommendations' | 'recommendations_by_lang'>, lang: Language,
-): Recommendations | undefined {
-  return itinerary.recommendations_by_lang?.[lang] || itinerary.recommendations;
-}
-
-/** Digits in the chosen language, e.g. times "09:00" -> "٠٩:٠٠" in Arabic. */
-export function localDigits(text: string, lang: Language): string {
-  return lang === 'ar' ? text.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[Number(d)]) : text;
 }
