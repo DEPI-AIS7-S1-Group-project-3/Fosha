@@ -115,7 +115,7 @@ html[lang="ar"] .nav button, html[lang="ar"] .text-btn { font-family: 'Cairo', s
 
 /* ---------- Landing Hero ---------- */
 .hero-copy {
-  position: fixed; z-index: 1; left: 0; right: 0;
+  position: fixed; z-index: 3; left: 0; right: 0; pointer-events: none;
   top: calc(var(--header-h) + 4vh);
   text-align: center; padding: 0 16px;
   transition: opacity .7s var(--ease), transform .9s var(--ease);
@@ -125,8 +125,15 @@ body.sheet-open .hero-copy { opacity: 0; transform: translateY(-30px); pointer-e
 .hero-title span { display: block; }
 .hero-title .l1 { transform: rotate(-3deg) translateX(-.6em); }
 .hero-title .l2 { transform: rotate(2deg) translateX(.7em); margin-top: .12em; }
+/* RTL mirrors the stagger: "رايح" leads from the top right, "فين؟" drops below to the left */
+html[dir="rtl"] .hero-title .l1 { transform: rotate(3deg) translateX(.7em); }
+html[dir="rtl"] .hero-title .l2 { transform: rotate(-2deg) translateX(-.8em); }
 html[lang="ar"] .hero-title { line-height: .95; }
-.hero-sub { max-width: 470px; margin: 26px auto 0; font-size: 16px; color: var(--ink); }
+.hero-sub {
+  display: inline-block; max-width: 500px; margin: 22px auto 0; padding: 8px 14px;
+  font-size: 17px; font-weight: 700; line-height: 1.5; color: var(--ink);
+  background: var(--sky); /* flat sky backing so landmarks turning behind never cut through the text */
+}
 
 /* ---------- Globe Stage ---------- */
 .globe-wrap {
