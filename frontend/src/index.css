@@ -20,7 +20,7 @@
   --text-sub: 20px;
   --text-h-sm: 32px;
   --text-h: 50px;
-  --text-display: 92px;
+  --text-display: 104px;
 
   --s10: 10px;
   --s20: 20px;
@@ -29,13 +29,14 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --header-h: 68px;
 
-  /* The globe is laid out from the bottom of the viewport up, so the input box
-     and chips always fit on screen; on short windows the globe shrinks and its
-     landmarks may rise behind the hero copy (which sits above them). */
-  --gw: min(1200px, 150vw, 150svh);
-  --lm: calc(var(--gw) * 0.1875);          /* landmark band above the globe's top */
-  --arc: calc(var(--gw) * 0.09);           /* room under the curved headline */
-  --band: calc(var(--arc) + 180px);        /* visible globe: headline + input + chips + hint */
+  /* The globe is laid out from the bottom of the viewport up, so the input box,
+     chips and hint always fit on screen. On short windows its landmarks rise
+     behind the hero copy, which sits on top with a sky-coloured cut-out edge. */
+  --gw: min(1400px, 165vw);
+  --lm: calc(var(--gw) * 0.15625);         /* globe's top edge inside its box: 200 of 1280 viewBox units */
+  --dc: max(calc(var(--gw) * 0.085), 95px); /* input depth: clears the curved headline and
+                                              puts the input where the globe is wider than it */
+  --band: calc(var(--dc) + 172px);         /* visible globe: headline + input + chips + hint */
   --sheet-w: min(540px, 44vw);
 }
 
@@ -120,12 +121,16 @@ html[lang="ar"] .nav button, html[lang="ar"] .text-btn { font-family: 'Cairo', s
 /* ---------- Landing Hero ---------- */
 .hero-copy {
   position: fixed; z-index: 3; left: 0; right: 0; pointer-events: none;
-  top: calc(var(--header-h) + 4vh);
+  top: calc(var(--header-h) + 8vh);
   text-align: center; padding: 0 16px;
   transition: opacity .7s var(--ease), transform .9s var(--ease);
 }
 body.sheet-open .hero-copy { opacity: 0; transform: translateY(-30px); pointer-events: none; }
-.hero-title { margin: 0; font: 400 var(--text-display)/.72 var(--font-display); }
+.hero-title {
+  margin: 0; font: 400 var(--text-display)/.72 var(--font-display);
+  /* sky-coloured outline: where the title crosses a landmark it cuts out cleanly, like a sticker */
+  -webkit-text-stroke: 14px var(--sky); paint-order: stroke fill;
+}
 .hero-title span { display: block; }
 .hero-title .l1 { transform: rotate(-3deg) translateX(-.6em); }
 .hero-title .l2 { transform: rotate(2deg) translateX(.7em); margin-top: .12em; }
@@ -134,9 +139,9 @@ html[dir="rtl"] .hero-title .l1 { transform: rotate(3deg) translateX(.7em); }
 html[dir="rtl"] .hero-title .l2 { transform: rotate(-2deg) translateX(-.8em); }
 html[lang="ar"] .hero-title { line-height: .95; }
 .hero-sub {
-  display: inline-block; max-width: 600px; margin: 22px auto 0; padding: 8px 16px;
+  max-width: 600px; margin: 26px auto 0;
   font-size: 21px; font-weight: 700; line-height: 1.45; color: var(--ink);
-  background: var(--sky); /* flat sky backing so landmarks turning behind never cut through the text */
+  -webkit-text-stroke: 7px var(--sky); paint-order: stroke fill;
 }
 
 /* ---------- Globe Stage ---------- */
@@ -168,7 +173,8 @@ html[dir="rtl"] body.sheet-open .globe-wrap { left: calc(var(--sheet-w) + (100vw
 body.sheet-open .on-globe { opacity: 0; pointer-events: none; }
 
 .composer {
-  top: calc(var(--lm) + var(--arc));
+  top: calc(var(--lm) + var(--dc));
+  width: min(560px, calc(100vw - 32px));
   z-index: 3;
   display: flex; gap: 12px; align-items: center;
 }
@@ -195,7 +201,7 @@ body.sheet-open .on-globe { opacity: 0; pointer-events: none; }
 html[dir="rtl"] .send svg { transform: scaleX(-1); }
 
 .globe-extras {
-  top: calc(var(--lm) + var(--arc) + 76px);
+  top: calc(var(--lm) + var(--dc) + 74px);
   text-align: center;
   color: var(--white);
 }
@@ -573,8 +579,10 @@ html[lang="ar"] .dashboard-head h1 { line-height: 1; }
 
 /* ---------- Small screens: the type scale steps down (as in base.css) ---------- */
 @media (max-width: 720px) {
-  :root { --s45: 16px; --text-display: 62px; --text-h: 36px; --header-h: 60px; }
-  :root { --band: calc(var(--arc) + 250px); } /* chips wrap to two rows on phones */
+  :root { --s45: 16px; --text-display: 66px; --text-h: 36px; --header-h: 60px; }
+  :root { --band: calc(var(--dc) + 228px); } /* chips wrap to two rows on phones */
+  .hero-copy { top: calc(var(--header-h) + 5vh); }
+  .hero-title { -webkit-text-stroke-width: 10px; }
   .nav button { padding: 8px 8px; font-size: 12px; }
   .tools .text-btn { padding: 8px 6px; font-size: 12px; }
   .wordmark-sep, .wordmark-ar { display: none; }
@@ -588,7 +596,6 @@ html[lang="ar"] .dashboard-head h1 { line-height: 1; }
 
 /* Short windows (laptops with toolbars): tighten the hero copy above the globe */
 @media (max-height: 760px) and (min-width: 721px) {
-  :root { --text-display: 76px; }
-  .hero-copy { top: calc(var(--header-h) + 1vh); }
-  .hero-sub { margin-top: 14px; font-size: 19px; }
+  .hero-copy { top: calc(var(--header-h) + 4vh); }
+  .hero-sub { margin-top: 20px; }
 }
