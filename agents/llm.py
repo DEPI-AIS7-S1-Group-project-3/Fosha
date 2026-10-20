@@ -10,10 +10,11 @@ import os
 import time
 from typing import Any, Dict, Optional
 
-DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_MODEL = "gemini-2.5-flash"  # newest models were often overloaded (504/503) in testing
 MAX_ATTEMPTS = 3
+REQUEST_TIMEOUT_MS = 25_000
 BACKOFF_SECONDS = (1.0, 3.0)  # wait before attempt 2, then attempt 3
-TRANSIENT_MARKERS = ("503", "unavailable", "429", "resource_exhausted", "overloaded",
+TRANSIENT_MARKERS = ("503", "504", "deadline", "unavailable", "429", "resource_exhausted", "overloaded",
                      "high demand", "timed out", "timeout")
 
 
@@ -26,7 +27,8 @@ def _call_gemini(api_key: str, model: str, prompt: str, system: Optional[str], j
     from google import genai
     from google.genai import types
 
-    client = genai.Client(api_key=api_key)
+    # Cap each call so an overloaded model fails fast instead of hanging the chat for minutes.
+    client = genai.Client(api_key=api_key, http_options=types.HttpOptions(timeout=REQUEST_TIMEOUT_MS))
     config = types.GenerateContentConfig(
         system_instruction=system,
         temperature=0.0 if json_mode else 0.3,
