@@ -49,5 +49,11 @@ def test_empty_message_is_rejected(client):
 
 
 def test_pages_are_served(client):
-    assert "globe.js" in client.get("/").text
-    assert "dashboard.js" in client.get("/dashboard").text
+    res_home = client.get("/")
+    assert res_home.status_code == 200
+    assert "root" in res_home.text or "globe.js" in res_home.text
+
+    res_dash = client.get("/dashboard")
+    assert res_dash.status_code == 200
+    assert "root" in res_dash.text or "dashboard.js" in res_dash.text
+

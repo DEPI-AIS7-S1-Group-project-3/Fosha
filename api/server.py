@@ -136,7 +136,17 @@ def get_analytics(days: int = 7) -> Dict[str, Any]:
     return analytics.summary(days=days or None)
 
 
-if FRONTEND_DIR.exists():
+DIST_DIR = FRONTEND_DIR / "dist"
+if DIST_DIR.exists() and (DIST_DIR / "index.html").exists():
+    if (DIST_DIR / "assets").exists():
+        app.mount("/assets", StaticFiles(directory=DIST_DIR / "assets"), name="assets")
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+    @app.get("/")
+    @app.get("/dashboard")
+    def serve_react_app() -> FileResponse:
+        return FileResponse(DIST_DIR / "index.html")
+elif FRONTEND_DIR.exists():
     app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
 
     @app.get("/")
