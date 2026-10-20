@@ -2,7 +2,7 @@
 
 **Egypt, your way.** Fosha (*فسحة*, Egyptian Arabic for "an outing") is an AI travel assistant for Egypt, built as the RehlaGuide DEPI capstone. Tell it, in Arabic or English, where you're going, for how long and what you love ("عايزة اطلع يوم مع صحابي. بورسعيد", "3 days in Luxor, I love temples, we're a couple") and it builds a day-by-day plan that respects opening hours, visit lengths and travel time, suggests where to stay and how to get around, and lets you change the plan by chatting.
 
-![Fosha: the landmark globe on the left, a 3-day Luxor plan on the right](docs/trip-sheet.png)
+<img width="1440" height="667" alt="Screenshot 2026-10-20 at 8 17 57 PM" src="https://github.com/user-attachments/assets/c9b2c285-58aa-4b38-9daf-895d8fbedb92" />
 
 **Contents:** [Features](#1-features) · [Screenshots](#2-screenshots) · [Quick start](#3-quick-start) · [Deploying](#deploying-one-web-service) · [How it works](#4-how-it-works) · [Repository](#5-repository-structure) · [API](#6-api) · [Web app](#7-web-app) · [Retrieval](#8-knowledge-base-and-retrieval) · [Agent](#9-agent-and-itinerary-engine) · [Testing](#10-testing) · [Limitations](#11-known-limitations) · [Data & credits](#13-data-sources-and-credits)
 
