@@ -235,7 +235,9 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
         edited = edit_plan(message, context, llm, places_fn)
         if edited is not None:
             intent = context.get("intent") or {}
-            lang = "ar" if any("\u0600" <= ch <= "\u06ff" for ch in message) else intent.get("language", "en")
+            # Reply in the language of this message (fall back to the plan's for e.g. a bare number)
+            lang = ("ar" if any("\u0600" <= ch <= "\u06ff" for ch in message)
+                    else "en" if re.search(r"[A-Za-z]", message) else intent.get("language", "en"))
             base = {"ok": True, "language": lang, "intent": intent,
                     "reply": describe_edit(edited["summary"], lang)}
             if not edited["edited"]:
