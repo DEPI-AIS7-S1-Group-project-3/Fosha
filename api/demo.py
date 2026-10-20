@@ -69,6 +69,24 @@ def _extract(message: str) -> Dict[str, Any]:
     elif any(w in text for w in ("egyptian", "local", "مصري")):
         visitor = "egyptian"
 
+    budget = None
+    if any(w in text for w in ("econ", "budget", "cheap", "اقتصاد", "رخيص", "محدود")):
+        budget = "economy"
+    elif any(w in text for w in ("moderat", "medium", "standard", "mid", "متوسط", "عادي")):
+        budget = "moderate"
+    elif any(w in text for w in ("lux", "vip", "deluxe", "5 star", "فاخر", "راقي", "٥ نجوم")):
+        budget = "luxury"
+
+    travelers = None
+    if any(w in text for w in ("solo", "single", "alone", "واحد", "لوحدي", "مفرد")):
+        travelers = "solo"
+    elif any(w in text for w in ("couple", "two", "2", "wife", "husband", "زوج", "شخصين", "٢ أفراد", "2 أفراد")):
+        travelers = "couple"
+    elif any(w in text for w in ("fam", "kid", "child", "عائل", "مع أولادي", "مع الأسرة")):
+        travelers = "family"
+    elif any(w in text for w in ("group", "friend", "مجموع", "أصدقاء", "شلة")):
+        travelers = "group"
+
     is_trip = bool(region or unsupported or days) or any(w in text for w in TRIP_WORDS)
     return {
         "task": "plan_trip" if is_trip else "other",
@@ -78,6 +96,8 @@ def _extract(message: str) -> Dict[str, Any]:
         "region": region,
         "unsupported_region": unsupported,
         "days": days,
+        "budget": budget,
+        "travelers": travelers,
         "travel_date": weekday,
         "visitor_type": visitor,
     }
@@ -103,6 +123,20 @@ def _write(payload: Dict[str, Any], language: str) -> str:
                 price = (f" - تذكرة {stop['ticket_price_egp']:g} جنيه" if ar
                          else f" - ticket {stop['ticket_price_egp']:g} EGP")
             lines.append(f"- {stop['start']}-{stop['end']} {stop['name']}{price}")
+
+    recs = payload.get("recommendations")
+    if recs:
+        hotels = recs.get("hotels", [])
+        if hotels:
+            lines += ["", "**🏨 فنادق ومناطق إقامة مقترحة:**" if ar else "**🏨 Recommended Accommodation:**"]
+            for h in hotels:
+                lines.append(f"- **{h['area']}**: {h['desc']}")
+        transport = recs.get("transport", [])
+        if transport:
+            lines += ["", "**🚗 وسائل النقل والانتقالات:**" if ar else "**🚗 Transport Options:**"]
+            for t in transport:
+                lines.append(f"- **{t['mode']}**: {t['desc']}")
+
     lines += ["", "أوقات التنقل تقديرية، تأكد من المواعيد قبل الذهاب." if ar
               else "Travel times are estimates; confirm hours before you go."]
     return "\n".join(lines)

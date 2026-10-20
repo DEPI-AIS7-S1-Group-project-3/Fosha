@@ -89,13 +89,23 @@
   function quickReplies(result) {
     if (result.status === "needs_clarification") {
       const missing = result.missing || [];
+      const groups = [];
       if (missing.includes("days")) {
-        return { label: t("how_many_days"), items: t("day_options").map(([label, msg]) => ({ label, msg })) };
+        groups.push({ label: t("how_many_days"), items: t("day_options").map(([label, msg]) => ({ label, msg })) });
       }
-      return { label: t("which_region"), items: REGION_CHOICES.map((r) => ({ label: region(r), msg: region(r), region: r })) };
+      if (missing.includes("region")) {
+        groups.push({ label: t("which_region"), items: REGION_CHOICES.map((r) => ({ label: region(r), msg: region(r), region: r })) });
+      }
+      if (!result.intent?.budget) {
+        groups.push({ label: t("budget_label"), items: t("budget_options").map(([label, msg]) => ({ label, msg })) });
+      }
+      if (!result.intent?.travelers) {
+        groups.push({ label: t("travelers_label"), items: t("travelers_options").map(([label, msg]) => ({ label, msg })) });
+      }
+      return groups.length ? { groups } : null;
     }
     if (["unsupported_region", "out_of_scope", "no_results"].includes(result.status)) {
-      return { label: t("try_instead"), items: t("chips").map((c) => ({ label: c.label, msg: c.msg, region: c.region, fresh: true })) };
+      return { groups: [{ label: t("try_instead"), items: t("chips").map((c) => ({ label: c.label, msg: c.msg, region: c.region, fresh: true })) }] };
     }
     return null;
   }
@@ -112,17 +122,27 @@
     if (r.status === "planned" && r.itinerary) {
       const days = r.itinerary.days.map((d) => `<li><b>${esc(t("day"))} ${num(d.day)}</b>
         <div><b>${esc(region(d.area))}</b><br><span>${d.stops.map((s) => esc(place(s))).join(" · ")}</span></div></li>`).join("");
+      const recs = r.itinerary.recommendations || {};
+      const hotels = recs.hotels || [];
+      const transport = recs.transport || [];
+      const recsSummary = (hotels.length || transport.length)
+        ? `<div class="plan-recs-summary"><span>🏨 ${esc(hotels[0]?.area || t("recs_hotels"))}</span> · <span>🚗 ${esc(transport[0]?.mode || t("recs_transport"))}</span></div>`
+        : "";
       inner = `<div class="text">${md(intro(m.text))}</div>
         <div class="plan-card"><div class="eyebrow">${esc(t("plan_ready"))}</div><h3>${esc(planTitle(r))}</h3>
           <ol class="plan-days">${days}</ol>
+          ${recsSummary}
           <button type="button" class="btn" data-open-sheet>${esc(t("open_plan"))} ${arrow}</button></div>
         <details class="full"><summary>${esc(t("full_reply"))}</summary><div class="text">${md(m.text)}</div></details>`;
     } else {
       inner = `<div class="text">${md(m.text)}</div>`;
       const q = isLast ? quickReplies(r) : null;
-      if (q) {
-        inner += `<div class="quick"><span class="quick-label">${esc(q.label)}</span>${q.items.map((it) =>
-          `<button type="button" data-quick="${esc(it.msg)}" data-label="${esc(it.label)}" ${it.fresh ? "data-fresh" : ""} ${it.region ? `data-region="${it.region}"` : ""}>${esc(it.label)}</button>`).join("")}</div>`;
+      if (q && q.groups) {
+        inner += `<div class="quick-groups">${q.groups.map((g) =>
+          `<div class="quick"><span class="quick-label">${esc(g.label)}</span>
+            <div class="quick-chips">${g.items.map((it) =>
+              `<button type="button" data-quick="${esc(it.msg)}" data-label="${esc(it.label)}" ${it.fresh ? "data-fresh" : ""} ${it.region ? `data-region="${it.region}"` : ""}>${esc(it.label)}</button>`).join("")}
+            </div></div>`).join("")}</div>`;
       }
     }
     const meta = r.cached ? `<div class="meta">⚡ ${esc(t("cached"))}</div>` : "";
@@ -271,6 +291,24 @@
     const tips = [...day.warnings, ...day.notes, ...plan.itinerary.warnings,
       ...plan.itinerary.unscheduled.map((u) => `${t("not_included")}: ${Fosha.isAr() ? AR_NAMES.places[u.attraction_id] || u.name : u.name} — ${u.reason}`)];
 
+    const recs = plan.itinerary.recommendations || {};
+    const hotels = recs.hotels || [];
+    const transport = recs.transport || [];
+    const recsHtml = (hotels.length || transport.length) ? `
+      <div class="recs-card">
+        <div class="recs-badge">${esc(t("recs_badge"))}</div>
+        ${hotels.length ? `
+          <div class="recs-group">
+            <h4>🏨 ${esc(t("recs_hotels"))}</h4>
+            <ul>${hotels.map((h) => `<li><strong>${esc(h.area)}:</strong> ${esc(h.desc)}</li>`).join("")}</ul>
+          </div>` : ""}
+        ${transport.length ? `
+          <div class="recs-group">
+            <h4>🚗 ${esc(t("recs_transport"))}</h4>
+            <ul>${transport.map((tr) => `<li><strong>${esc(tr.mode)}:</strong> ${esc(tr.desc)}</li>`).join("")}</ul>
+          </div>` : ""}
+      </div>` : "";
+
     sb.innerHTML = `${top}
       <h2 class="trip-title">${esc(planTitle(plan))}</h2>
       <div class="trip-meta">
@@ -284,6 +322,7 @@
         <span>${duration(dayTot.min)} ${esc(t("on_site"))} · ${esc(money(dayTot.egp))}</span></div>
       <div class="route">${routeMap(day)}</div>
       <ol class="stops">${stops}</ol>
+      ${recsHtml}
       ${tips.length ? `<div class="know"><h4>${esc(t("good_to_know"))}</h4><ul>${tips.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}`;
     foot.innerHTML = `<span><strong>${esc(t("trip_total"))}</strong> · ${duration(trip.min)} ${esc(t("on_site"))} · ${esc(money(trip.egp))}</span>
       <button type="button" class="btn" data-print>${esc(t("print"))}</button>`;

@@ -192,9 +192,11 @@ details.full summary { cursor: pointer; font-size: 13px; text-transform: upperca
 details.full[open] summary { margin-bottom: 10px; }
 
 .quick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.quick-label { width: 100%; font-size: var(--text-caption); text-transform: uppercase; letter-spacing: .08em; }
-.quick button { border: 2px solid var(--ink); padding: 8px 14px; transition: background .2s, color .2s; }
-.quick button:hover { background: var(--ink); color: var(--sky); }
+.quick-groups { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.quick-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.quick-label { width: 100%; font-size: var(--text-caption); text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.quick button, .quick-chips button { border: 2px solid var(--ink); padding: 8px 14px; font-size: 13px; font-weight: 500; transition: background .2s, color .2s; }
+.quick button:hover, .quick-chips button:hover { background: var(--ink); color: var(--sky); }
 
 .plan-card { margin-top: 16px; background: var(--white); padding: 22px 24px; }
 .plan-card .eyebrow { font-size: var(--text-caption); text-transform: uppercase; letter-spacing: .1em; }
@@ -203,6 +205,14 @@ details.full[open] summary { margin-bottom: 10px; }
 .plan-days li { display: grid; grid-template-columns: 70px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid rgba(51,51,51,.2); }
 .plan-days b { font: 400 16px/1.3 var(--font-display); }
 .plan-days span { color: var(--ink-soft); font-size: 14px; }
+.plan-recs-summary { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; color: var(--ink); margin-bottom: 14px; padding: 8px 12px; background: rgba(0, 168, 204, .08); border-inline-start: 3px solid var(--azure); }
+
+.recs-card { margin-top: 22px; background: #f0f7fa; border: 2px solid var(--ink); padding: 18px 20px; }
+.recs-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; background: var(--azure); color: #fff; padding: 4px 8px; margin-bottom: 12px; }
+.recs-group { margin-top: 12px; }
+.recs-group h4 { margin: 0 0 8px; font: 700 15px/1.3 var(--font-body); color: var(--ink); }
+.recs-group ul { margin: 0; padding-inline-start: 18px; font-size: 13px; line-height: 1.5; }
+.recs-group li { margin-bottom: 6px; }
 
 .thinking-row { display: flex; align-items: center; gap: 10px; font-size: 15px; }
 .dots { display: inline-flex; gap: 4px; }

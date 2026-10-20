@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, List, Optional
 from agents.intent import extract_intent, known_regions
 from agents.llm import generate
 from agents.pricing import check_ticket_price
+from agents.recommendations import format_clarification_message, get_recommendations
 from agents.retrieval_adapter import search_attractions
 from agents.scheduler import build_itinerary
 
@@ -60,6 +61,8 @@ def _payload(itinerary: Dict[str, Any], visitor_type: Optional[str]) -> Dict[str
         "not_included": [{"name": u["name"], "reason": u["reason"]} for u in itinerary["unscheduled"]],
         "warnings": itinerary["warnings"],
     }
+    if itinerary.get("recommendations"):
+        result["recommendations"] = itinerary["recommendations"]
     if visitor_type:
         result["prices_note"] = "Adult ticket prices only; they can change, so verify on the official source."
     return result
@@ -78,6 +81,19 @@ def render_plain(payload: Dict[str, Any]) -> str:
         lines.extend(f"  ! {w}" for w in day["warnings"])
     lines.extend(f"Not included: {u['name']} - {u['reason']}" for u in payload["not_included"])
     lines.extend(f"Note: {w}" for w in payload["warnings"])
+
+    recs = payload.get("recommendations") or {}
+    hotels = recs.get("hotels") or []
+    if hotels:
+        lines.append("\nRecommended Accommodation:")
+        for h in hotels:
+            lines.append(f"  - {h['area']}: {h['desc']}")
+    transport = recs.get("transport") or []
+    if transport:
+        lines.append("\nTransport Options:")
+        for t in transport:
+            lines.append(f"  - {t['mode']}: {t['desc']}")
+
     return "\n".join(lines)
 
 
@@ -127,9 +143,15 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
     if intent["unsupported_region"]:
         return done("unsupported_region", _say("unsupported", lang, place=intent["unsupported_region"], regions=regions))
     if intent["missing"]:
-        questions = [_say("ask_days", lang) if m == "days" else _say("ask_region", lang, regions=regions)
-                     for m in intent["missing"]]
-        return done("needs_clarification", " ".join(questions), missing=intent["missing"])
+        reply = format_clarification_message(
+            missing=intent["missing"],
+            days=intent.get("days"),
+            budget=intent.get("budget"),
+            travelers=intent.get("travelers"),
+            language=lang,
+            all_regions=regions,
+        )
+        return done("needs_clarification", reply, missing=intent["missing"])
 
     top_k = min(12, max(6, intent["days"] * 4))
     found = search_attractions(intent["search_query"], region=intent["region"], top_k=top_k,
@@ -146,6 +168,11 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
                                 max_stops_per_day=per_day)
     if not itinerary["ok"]:
         return {"ok": False, "error": itinerary["error"]}
+
+    if intent["days"] >= 2:
+        itinerary["recommendations"] = get_recommendations(intent["region"], intent["days"], lang)
+    else:
+        itinerary["recommendations"] = {"hotels": [], "transport": []}
 
     payload = _payload(itinerary, intent["visitor_type"])
     written = _write_reply(payload, lang, llm)

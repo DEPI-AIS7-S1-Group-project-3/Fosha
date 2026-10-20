@@ -101,3 +101,30 @@ def test_weak_matches_still_fill_the_days_and_are_spread_out():
     days = r["itinerary"]["days"]
     assert len(days) == 3 and all(d["stops"] for d in days)
     assert all(len(d["stops"]) <= 2 for d in days)
+
+
+def test_clarification_asks_for_budget_travelers_and_suggests_places():
+    intent = {**BASE, "region": None, "days": 3, "budget": None, "travelers": None}
+    r = plan_trip("3 days trip", make_llm(intent), fake_search)
+    assert r["status"] == "needs_clarification"
+    reply = r["reply"]
+    # Check that it asks for region, budget, and travelers, and suggests places for 3 days
+    assert "budget" in reply.lower()
+    assert "travelling" in reply.lower() or "people" in reply.lower()
+    assert "luxor" in reply.lower() or "cairo" in reply.lower()
+
+
+def test_multi_day_trip_includes_hotels_and_transport():
+    # 3 days in Luxor: multi-day trip -> recommendations present
+    intent_3d = {**BASE, "region": "Luxor", "days": 3}
+    r3 = plan_trip("3 days in Luxor", make_llm(intent_3d), far_search)
+    recs = r3["itinerary"].get("recommendations", {})
+    assert len(recs.get("hotels", [])) > 0
+    assert len(recs.get("transport", [])) > 0
+
+    # 1 day in Luxor: single day -> recommendations empty
+    intent_1d = {**BASE, "region": "Luxor", "days": 1}
+    r1 = plan_trip("1 day in Luxor", make_llm(intent_1d), fake_search)
+    recs1 = r1["itinerary"].get("recommendations", {})
+    assert len(recs1.get("hotels", [])) == 0
+    assert len(recs1.get("transport", [])) == 0

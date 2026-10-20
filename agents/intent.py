@@ -29,6 +29,8 @@ def _system_prompt() -> str:
         "  unsupported_region: if the user names a place that is not in that list, put its name here "
         "and set region to null; otherwise null\n"
         "  days: whole number of days, or null\n"
+        '  budget: "economy", "moderate", "luxury", or null if not stated\n'
+        '  travelers: "solo", "couple", "family", "group", whole number, or null if not stated\n'
         "  travel_date: a weekday name or YYYY-MM-DD, only if the user gave one, else null\n"
         '  visitor_type: "egyptian" or "foreigner", only if the user said so, else null\n'
         "Never guess a value the user did not give. Use null instead.\n"
@@ -84,6 +86,28 @@ def normalize_intent(raw: Dict[str, Any]) -> Dict[str, Any]:
     visitor = raw.get("visitor_type")
     visitor = resolve_visitor_type(visitor) if visitor else None
 
+    raw_budget = str(raw.get("budget") or "").strip().lower()
+    budget = None
+    if any(w in raw_budget for w in ("econ", "budget", "cheap", "اقتصاد", "رخيص", "محدود")):
+        budget = "economy"
+    elif any(w in raw_budget for w in ("moderat", "medium", "standard", "mid", "متوسط", "عادي")):
+        budget = "moderate"
+    elif any(w in raw_budget for w in ("lux", "vip", "deluxe", "5 star", "فاخر", "راقي", "٥ نجوم")):
+        budget = "luxury"
+
+    raw_trav = str(raw.get("travelers") or raw.get("people") or "").strip().lower()
+    travelers = None
+    if any(w in raw_trav for w in ("solo", "single", "alone", "واحد", "لوحدي", "مفرد")):
+        travelers = "solo"
+    elif any(w in raw_trav for w in ("couple", "two", "2", "wife", "husband", "زوج", "شخصين", "٢ أفراد", "2 أفراد")):
+        travelers = "couple"
+    elif any(w in raw_trav for w in ("fam", "kid", "child", "عائل", "مع أولادي", "مع الأسرة")):
+        travelers = "family"
+    elif any(w in raw_trav for w in ("group", "friend", "مجموع", "أصدقاء", "شلة")):
+        travelers = "group"
+    elif raw_trav.isdigit():
+        travelers = int(raw_trav)
+
     query = str(raw.get("search_query") or "").strip()
     if not query:
         query = " ".join(interests) if interests else (
@@ -99,6 +123,7 @@ def normalize_intent(raw: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "task": task, "language": language, "search_query": query, "interests": interests,
         "region": region, "unsupported_region": unsupported, "days": days,
+        "budget": budget, "travelers": travelers,
         "travel_date": travel_date, "visitor_type": visitor, "missing": missing,
     }
 

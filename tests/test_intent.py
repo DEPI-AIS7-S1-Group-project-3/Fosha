@@ -61,3 +61,14 @@ def test_cairo_aliases_and_garbage_date():
 def test_non_trip_task():
     i = normalize_intent({"task": "chat", "language": "en"})
     assert i["task"] == "other" and i["missing"] == []
+
+
+def test_budget_and_travelers_normalized():
+    i1 = normalize_intent({**GOOD, "budget": "economy", "travelers": "solo"})
+    assert i1["budget"] == "economy" and i1["travelers"] == "solo"
+
+    i2 = normalize_intent({**GOOD, "budget": "فاخر", "travelers": "زوجان"})
+    assert i2["budget"] == "luxury" and i2["travelers"] == "couple"
+
+    i3 = normalize_intent({**GOOD, "budget": "mid-range", "travelers": "family of 4"})
+    assert i3["budget"] == "moderate" and i3["travelers"] == "family"
