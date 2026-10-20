@@ -4,7 +4,7 @@
 
 ![Fosha: the landmark globe on the left, a 3-day Luxor plan on the right](docs/trip-sheet.png)
 
-**Contents:** [Features](#1-features) · [Screenshots](#2-screenshots) · [Quick start](#3-quick-start) · [How it works](#4-how-it-works) · [Repository](#5-repository-structure) · [API](#6-api) · [Web app](#7-web-app) · [Retrieval](#8-knowledge-base-and-retrieval) · [Agent](#9-agent-and-itinerary-engine) · [Testing](#10-testing) · [Limitations](#11-known-limitations) · [Data & credits](#13-data-sources-and-credits)
+**Contents:** [Features](#1-features) · [Screenshots](#2-screenshots) · [Quick start](#3-quick-start) · [Deploying](#deploying-one-web-service) · [How it works](#4-how-it-works) · [Repository](#5-repository-structure) · [API](#6-api) · [Web app](#7-web-app) · [Retrieval](#8-knowledge-base-and-retrieval) · [Agent](#9-agent-and-itinerary-engine) · [Testing](#10-testing) · [Limitations](#11-known-limitations) · [Data & credits](#13-data-sources-and-credits)
 
 ---
 
@@ -56,6 +56,25 @@ Run **one** of these (each starts a single server that serves both the API and t
 | Offline demo | `REHLA_DEMO=1 uv run uvicorn api.server:app` | nothing: rule-based understanding and template replies |
 
 Other useful commands: `uv run pytest -q` (tests), `uv run python -m agents.planner "3 days in Luxor"` (planner from the terminal), `uv run python -m api.seed` / `--clear` (sample dashboard events; they're excluded from the dashboard unless asked for).
+
+### Deploying (one web service)
+
+Fosha deploys as **one** service: the FastAPI app serves the API and the built web app on a single port, so there's no separate frontend hosting. A static host on its own (GitHub Pages, Netlify) can't run it, because the planner is Python.
+
+```bash
+docker build -t fosha .
+docker run -p 8000:8000 -e GROQ_API_KEY=your-key fosha     # → http://localhost:8000
+```
+
+The image (about 290 MB) builds the React app, installs only the web dependencies (`requirements-deploy.txt`) and runs with keyword search; the model still understands requests and writes replies. For full vector search, build with `--build-arg SEARCH=vector` (adds torch, sentence-transformers and chromadb, and builds the index at build time; a much larger image).
+
+**On Render (free tier):** push the repo to GitHub → in Render choose **New + → Blueprint** and pick the repository (it reads `render.yaml`) → paste `GROQ_API_KEY` (and optionally `GEMINI_API_KEY`) when asked → deploy. Other Docker hosts work the same way (Railway, Fly.io, Google Cloud Run, Hugging Face Spaces with the Docker SDK): point them at the `Dockerfile` and set the keys as environment variables. The app listens on `$PORT` when the platform sets it.
+
+Things to know when hosting:
+- **Keys** are environment variables on the host. Never put them in the image, the repo or `render.yaml`.
+- **Storage is temporary** on most free hosts: the analytics log and the place/translation caches live in `data/` and reset on redeploy (caches simply refill). Attach a disk if you want the dashboard history to survive.
+- **Free tiers sleep:** the first request after idle can take ~30-60 s on Render's free plan.
+- **Model limits:** free Groq/Gemini quotas are shared by all visitors; the app falls back between models, then shows an error.
 
 ## 4. How it works
 
@@ -109,6 +128,7 @@ RehlaGuide/
 │   ├── src/i18n.ts              English/Arabic strings and Arabic place names
 │   └── dist/                    built app served by the API
 ├── data/raw_attractions.json    the curated dataset (30 attractions)
+├── Dockerfile, render.yaml       one-service deployment (requirements-deploy.txt: web-only deps)
 ├── docs/                        README screenshots
 └── tests/                       pytest suite (models and network faked)
 ```

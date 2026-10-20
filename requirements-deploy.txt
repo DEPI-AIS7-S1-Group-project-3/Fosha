@@ -1,0 +1,7 @@
+# Runtime dependencies for the deployed web service (see Dockerfile).
+# The full pyproject also pulls torch, sentence-transformers and chromadb, which are only
+# needed for vector search (docker build --build-arg SEARCH=vector).
+fastapi==0.149.0
+uvicorn[standard]==0.54.0
+python-dotenv==1.2.4
+google-genai==2.31.0   # Gemini backup; Groq is called over plain HTTPS

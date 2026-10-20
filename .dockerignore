@@ -1,0 +1,23 @@
+# Keep the image small and secrets out of it
+.env
+.env.*
+!.env.example
+.git
+.idea
+.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+notes-private/
+docs/
+tests/
+frontend/node_modules
+frontend/dist
+data/chroma_db*
+data/analytics.jsonl
+data/places_cache.json
+data/translations_cache.json
+*.zip
+*.pdf
+.DS_Store
+.claude/

@@ -1,0 +1,13 @@
+# Render Blueprint: one free web service built from the Dockerfile.
+# In Render: New + -> Blueprint -> pick this repository, then fill in the keys when asked.
+services:
+  - type: web
+    name: fosha
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: GROQ_API_KEY      # required (or GEMINI_API_KEY)
+        sync: false
+      - key: GEMINI_API_KEY    # optional backup model
+        sync: false
