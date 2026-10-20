@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Language, ChatResponse, Stop, HotelRecommendation, TransportRecommendation } from '../types';
-import { translate, AR_NAMES, formatNumber } from '../i18n';
+import { translate, AR_NAMES, AR_DESCRIPTIONS, translateNote, formatNumber } from '../i18n';
 
 interface TripSheetProps {
   isOpen: boolean;
@@ -146,6 +146,7 @@ export const TripSheet: React.FC<TripSheetProps> = ({
             const isExpanded = expandedStops[key];
             const price = getStopPrice(stop);
             const stopName = isAr ? AR_NAMES.places[stop.attraction_id] || stop.name_ar || stop.name : stop.name;
+            const desc = isAr ? AR_DESCRIPTIONS[stop.attraction_id] || stop.description_ar || '' : stop.description;
 
             return (
               <li key={i} className="stop-card">
@@ -166,14 +167,14 @@ export const TripSheet: React.FC<TripSheetProps> = ({
 
                 {isExpanded && (
                   <div className="stop-details">
-                    {stop.description && <p style={{ margin: "0 0 8px" }}>{stop.description}</p>}
+                    {desc && <p style={{ margin: "0 0 8px" }}>{desc}</p>}
                     {stop.hours_note && (
                       <div style={{ color: "var(--ink-soft)", fontSize: "13px" }}>
-                        🕒 {stop.hours_note}
+                        🕒 {translateNote(stop.hours_note, lang)}
                       </div>
                     )}
                     {stop.place_note && (
-                      <div style={{ color: "var(--ink-soft)", fontSize: "13px" }}>📍 {stop.place_note}</div>
+                      <div style={{ color: "var(--ink-soft)", fontSize: "13px" }}>📍 {translateNote(stop.place_note, lang)}</div>
                     )}
                     {stop.source_url && (
                       <a className="stop-source" href={stop.source_url} target="_blank" rel="noopener noreferrer">

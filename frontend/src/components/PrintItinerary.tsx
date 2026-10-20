@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChatResponse, Language, Stop } from '../types';
-import { AR_NAMES, formatNumber, translate } from '../i18n';
+import { AR_NAMES, AR_DESCRIPTIONS, formatNumber, translate, translateNote } from '../i18n';
 
 /** The printable itinerary. Hidden on screen; when printing it is the only thing on
     the page (see `.print-doc` in index.css), so "Print" gives the whole trip, every
@@ -17,6 +17,7 @@ export const PrintItinerary: React.FC<PrintItineraryProps> = ({ plan, lang }) =>
   const num = (v: number) => formatNumber(v, lang);
   const area = (d: { area: string; area_ar?: string | null }) => (isAr ? AR_NAMES.regions[d.area] || d.area_ar || d.area : d.area);
   const name = (s: Stop) => (isAr ? AR_NAMES.places[s.attraction_id] || s.name_ar || s.name : s.name);
+  const desc = (s: Stop) => (isAr ? AR_DESCRIPTIONS[s.attraction_id] || s.description_ar || '' : s.description || '');
   const category = (c?: string) => (c ? (isAr ? AR_NAMES.categories[c] || c : c) : '');
   const weekday = (w?: string | null) => (w ? (isAr ? AR_NAMES.weekdays[w] || w : w[0].toUpperCase() + w.slice(1)) : '');
   const price = (v?: number | null) =>
@@ -75,9 +76,9 @@ export const PrintItinerary: React.FC<PrintItineraryProps> = ({ plan, lang }) =>
                     <td>
                       <strong>{name(s)}</strong>
                       {s.category ? <span className="print-cat"> · {category(s.category)}</span> : null}
-                      {s.description ? <div className="print-desc">{s.description}</div> : null}
-                      {s.hours_note ? <div className="print-note">🕒 {s.hours_note}</div> : null}
-                      {s.place_note ? <div className="print-note">📍 {s.place_note}</div> : null}
+                      {desc(s) ? <div className="print-desc">{desc(s)}</div> : null}
+                      {s.hours_note ? <div className="print-note">🕒 {translateNote(s.hours_note, lang)}</div> : null}
+                      {s.place_note ? <div className="print-note">📍 {translateNote(s.place_note, lang)}</div> : null}
                     </td>
                     <td>{duration(s.duration_min)}</td>
                     <td>{price(s.price_foreigner_egp)}</td>

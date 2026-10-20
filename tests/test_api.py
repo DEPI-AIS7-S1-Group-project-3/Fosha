@@ -22,7 +22,8 @@ def test_chat_plans_and_enriches_stops(client):
     data = client.post("/api/v1/chat", json={"message": "2 days in Luxor, I love temples"}).json()
     assert data["ok"] and data["status"] == "planned"
     stop = data["itinerary"]["days"][0]["stops"][0]
-    assert {"category", "lat", "lon", "price_foreigner_egp", "description"} <= stop.keys()
+    assert {"category", "lat", "lon", "price_foreigner_egp", "description", "description_ar"} <= stop.keys()
+    assert stop["description_ar"] and isinstance(stop["description_ar"], str)
     assert data["cached"] is False
 
 

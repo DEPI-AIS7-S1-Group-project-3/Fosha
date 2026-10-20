@@ -23,7 +23,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from agents.attractions import get_attraction
-from agents.places_online import arabic_area, arabic_name, is_dynamic
+from agents.places_online import arabic_area, arabic_description, arabic_name, is_dynamic
 from agents.planner import plan_trip
 from agents.travel import load_locations
 from api import analytics
@@ -88,6 +88,7 @@ def _enrich(itinerary: Dict[str, Any]) -> Dict[str, Any]:
             stop.update({
                 "category": a.category, "region": a.region, "city": a.city,
                 "description": a.description,
+                "description_ar": arabic_description(stop["attraction_id"]),
                 "price_foreigner_egp": a.price_foreigner_egp,
                 "price_egyptian_egp": a.price_egyptian_egp,
                 "source_url": a.source_url, "last_verified": a.last_verified,

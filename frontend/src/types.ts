@@ -15,6 +15,7 @@ export interface Stop {
   region?: string;
   city?: string;
   description?: string;
+  description_ar?: string | null;
   /** null = the source lists no price (places found online); 0 = free */
   price_foreigner_egp?: number | null;
   price_egyptian_egp?: number | null;

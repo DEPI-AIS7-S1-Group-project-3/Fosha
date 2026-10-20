@@ -129,3 +129,19 @@ def test_planner_explains_when_a_place_cannot_be_found():
                   places_fn=lambda name: {"ok": False, "reason": "not_found"})
     assert r["status"] == "unsupported_region" and "Atlantis" in r["reply"] and "مصر" in r["reply"]
     assert "Alexandria, Aswan" not in r["reply"]  # no English list dumped into an Arabic reply
+
+
+def test_arabic_descriptions():
+    # Curated attraction (e.g. 1 Egyptian Museum)
+    desc_1 = po.arabic_description(1)
+    assert desc_1 and "المتحف المصري" in desc_1 or "متحف رئيسي" in desc_1
+    # Dynamic attraction registered with description_ar
+    po.register_places([{
+        "id": 999999, "name": "Test Place", "name_ar": "مكان تجريبي",
+        "city": "Test", "region": "Test", "category": "Landmark",
+        "description": "A test place.", "description_ar": "مكان تجريبي للاختبار.",
+        "hours_text": "", "window": None, "price_text": "", "price_egp": None,
+        "duration_min": 30, "lat": 30.0, "lon": 31.0, "approximate_location": False,
+        "source_url": "https://example.com"
+    }])
+    assert po.arabic_description(999999) == "مكان تجريبي للاختبار."

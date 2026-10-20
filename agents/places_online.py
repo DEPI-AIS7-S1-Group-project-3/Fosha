@@ -47,6 +47,7 @@ Fetch = Callable[[str, Dict[str, Any]], Any]
 _lock = threading.Lock()
 _arabic_names: Dict[int, str] = {}   # registered id -> Arabic name (from Wikidata), for the UI
 _arabic_areas: Dict[str, str] = {}   # town name (the scheduler's area) -> Arabic name
+_arabic_descriptions: Dict[int, str] = {} # registered id -> Arabic description
 
 # Category from words in the listing's name/description, most specific first.
 CATEGORY_RULES = [
@@ -283,6 +284,30 @@ def translate_names(names: List[str], llm: Callable[..., Dict[str, Any]]) -> Dic
     return out
 
 
+def translate_descriptions(items: List[Dict[str, Any]], llm: Callable[..., Dict[str, Any]]) -> Dict[str, str]:
+    """Translate short English descriptions from Wikivoyage into natural Arabic for Egyptian travelers."""
+    to_translate = {p["name"]: p["description"] for p in items if p.get("description") and not p.get("description_ar")}
+    if not to_translate:
+        return {}
+    prompt = ("Translate these visitor attraction descriptions from English into clear, natural Arabic for Egyptian travelers. "
+              "Keep each translation concise (1-2 sentences). Reply with one JSON object mapping each place name "
+              "exactly as given to its Arabic description.\n"
+              + json.dumps(to_translate, ensure_ascii=False))
+    result = llm(prompt, system=None, json_mode=True)
+    try:
+        data = json.loads(result.get("text") or "{}") if result.get("ok") else {}
+    except ValueError:
+        return {}
+    norm = lambda text: re.sub(r"[^a-z0-9]", "", text.lower())
+    by_norm = {norm(k): k for k in to_translate}
+    out = {}
+    for key, value in data.items():
+        name = key if key in to_translate else by_norm.get(norm(str(key)))
+        if name and isinstance(value, str) and re.search(r"[\u0600-\u06FF]", value):
+            out[name] = value.strip()
+    return out
+
+
 def find_places(place: str, fetch: Fetch = http_json, cache_path: Optional[Path] = None,
                 llm: Optional[Callable[..., Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Look up visitor attractions for any place in Egypt.
@@ -327,10 +352,13 @@ def find_places(place: str, fetch: Fetch = http_json, cache_path: Optional[Path]
                     "source_url": f"https://en.wikivoyage.org/wiki/{urllib.parse.quote(page['title'].replace(' ', '_'))}",
                 })
             if places and llm is not None:
-                missing = [p["name"] for p in places if not p["name_ar"]]
+                missing = [p["name"] for p in places if not p.get("name_ar")]
                 arabic = translate_names(missing, llm)
+                missing_descs = [p for p in places if p.get("description") and not p.get("description_ar")]
+                arabic_descs = translate_descriptions(missing_descs, llm)
                 for p in places:
-                    p["name_ar"] = p["name_ar"] or arabic.get(p["name"])
+                    p["name_ar"] = p.get("name_ar") or arabic.get(p["name"])
+                    p["description_ar"] = p.get("description_ar") or arabic_descs.get(p["name"])
             result = ({"ok": True, "city": city, "places": places} if places
                       else {"ok": False, "reason": "no_listings", "city": city})
     except Exception:  # network down, rate limited, unexpected payload
@@ -367,6 +395,8 @@ def register_places(places: List[Dict[str, Any]]) -> List[int]:
                               "note": "Approximate location (town centre)" if p["approximate_location"] else ""}
             if p.get("name_ar"):
                 _arabic_names[pid] = p["name_ar"]
+            if p.get("description_ar"):
+                _arabic_descriptions[pid] = p["description_ar"]
             if p.get("city_ar"):
                 _arabic_areas[p["region"]] = p["city_ar"]
             ids.append(pid)
@@ -375,6 +405,13 @@ def register_places(places: List[Dict[str, Any]]) -> List[int]:
 
 def arabic_name(attraction_id: int) -> Optional[str]:
     return _arabic_names.get(attraction_id)
+
+
+def arabic_description(attraction_id: int) -> Optional[str]:
+    if attraction_id in _arabic_descriptions:
+        return _arabic_descriptions[attraction_id]
+    from agents.attractions import arabic_description as curated_desc
+    return curated_desc(attraction_id)
 
 
 def arabic_area(area: str) -> Optional[str]:
