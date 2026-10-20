@@ -671,3 +671,38 @@ html[lang="ar"] .trip-title { line-height: 1.1; }
   .hero-copy { top: calc(var(--header-h) + 4vh); }
   .hero-sub { margin-top: 20px; }
 }
+
+/* ---------- Print: only the itinerary document (PrintItinerary.tsx) ---------- */
+.print-doc { display: none; }
+@media print {
+  @page { margin: 16mm 14mm; }
+  html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  .app-root > *:not(.print-doc) { display: none !important; }
+  .print-doc { display: block; color: #222; font: 11pt/1.45 var(--font-ui); }
+  .print-head { border-bottom: 3px solid #222; padding-bottom: 10px; margin-bottom: 18px; }
+  .print-brand { font: 400 13pt/1 'Changa One', 'Lalezar', sans-serif; color: var(--azure); }
+  .print-head h1 { margin: 6px 0 2px; font: 400 26pt/1.05 var(--font-display); }
+  .print-meta { margin: 0; color: #666; font-size: 9.5pt; }
+  .print-day { break-inside: auto; margin-bottom: 18px; }
+  .print-day h2 { font: 400 15pt/1.2 var(--font-display); margin: 0 0 8px; padding: 4px 10px; background: #fff5a8; break-after: avoid; }
+  .print-day table { width: 100%; border-collapse: collapse; }
+  .print-day th { text-align: start; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .05em; color: #555;
+                  border-bottom: 1.5px solid #222; padding: 4px 6px; }
+  .print-day td { vertical-align: top; padding: 6px; border-bottom: 1px solid #ddd; }
+  .print-day tr { break-inside: avoid; }
+  .print-time { white-space: nowrap; font-weight: 700; }
+  .print-day td:nth-child(n+3) { white-space: nowrap; }
+  .print-cat { color: #666; font-size: 9.5pt; }
+  .print-desc { font-size: 9.5pt; color: #444; margin-top: 2px; }
+  .print-note { font-size: 9pt; color: #666; margin-top: 2px; }
+  .print-leg td { border-bottom: none; padding: 2px 6px; font-size: 9pt; color: #666; }
+  .print-warnings { margin: 6px 0 0; padding-inline-start: 18px; font-size: 9pt; color: #555; }
+  .print-recs, .print-extra { break-inside: avoid; margin-top: 14px; }
+  .print-recs h2 { font: 400 14pt/1.2 var(--font-display); margin: 0 0 6px; }
+  .print-recs h3, .print-extra h3 { font-size: 11pt; margin: 10px 0 4px; }
+  .print-recs ul, .print-extra ul { margin: 0; padding-inline-start: 18px; }
+  .print-recs li, .print-extra li { margin-bottom: 4px; }
+  .print-why { font-size: 9pt; color: #17703d; }
+  .print-foot { margin-top: 18px; border-top: 1px solid #ccc; padding-top: 8px; font-size: 8.5pt; color: #666; }
+  .print-sources { word-break: break-all; }
+}

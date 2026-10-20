@@ -6,6 +6,7 @@ import { GlobeCanvas } from './components/GlobeCanvas';
 import { LandingHero } from './components/LandingHero';
 import { ChatModal } from './components/ChatModal';
 import { TripSheet } from './components/TripSheet';
+import { PrintItinerary } from './components/PrintItinerary';
 import { DashboardView } from './components/DashboardView';
 import { translate, I18N } from './i18n';
 
@@ -275,6 +276,9 @@ export const App: React.FC = () => {
             plan={plan}
             onOpenChat={() => setIsChatOpen(true)}
           />
+
+          {/* Only visible when printing: the whole itinerary as a document */}
+          <PrintItinerary plan={plan} lang={lang} />
 
           {/* Scrim backdrop when sheet is open on smaller devices */}
           <div
