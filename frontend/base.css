@@ -25,7 +25,7 @@
   --s20: 20px;
   --s45: 45px;
   --radius-globe: 1440px;
-  --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --header-h: 68px;
 }
 html[lang="ar"] {

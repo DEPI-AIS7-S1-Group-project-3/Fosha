@@ -118,19 +118,19 @@
     let velocity = 0;                 // extra spin from dragging (deg/s)
     let target = null;
     let busy = false;
-    const BASE = reduced ? 0 : 5;     // deg/s
-    const BUSY = reduced ? 0 : 45;
+    const BASE = reduced ? 0 : 2.2;   // deg/s - gentle, slow rotation
+    const BUSY = reduced ? 0 : 16;    // deg/s - calm, thoughtful spin during thinking
 
     function frame(now) {
       const dt = Math.min(0.05, (now - (frame.last || now)) / 1000);
       frame.last = now;
       if (target != null && !busy) {
         const diff = ((target - angle + 540) % 360) - 180;
-        angle += diff * (1 - Math.exp(-dt * 5));
+        angle += diff * (1 - Math.exp(-dt * 2.2));
       } else {
         angle += ((busy ? BUSY : BASE) + velocity) * dt;
       }
-      velocity *= Math.exp(-dt * 1.6);
+      velocity *= Math.exp(-dt * 2.2);
       turn.setAttribute("transform", `rotate(${angle.toFixed(3)})`);
       requestAnimationFrame(frame);
     }
