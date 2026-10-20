@@ -1,93 +1,40 @@
-# RehlaGuide
+# Fosha · فسحة
 
-An AI-powered travel assistant for Egypt (DEPI capstone). Given a request in Arabic or English such as *"3 days in Luxor, I love temples"*, it builds a day-by-day itinerary that respects opening hours, visit durations and travel time, and answers in the user's language.
+**Your Egypt, your way.** Fosha (*فسحة*, Egyptian Arabic for "an outing") is an AI travel assistant for Egypt, built as the RehlaGuide DEPI capstone. Tell it, in Arabic or English, where you're going, for how long and what you love ("عايزة اطلع يوم مع صحابي. بورسعيد", "3 days in Luxor, I love temples, we're a couple") and it builds a day-by-day plan that respects opening hours, visit lengths and travel time, suggests where to stay and how to get around, and lets you change the plan by chatting.
 
-This README documents the **knowledge base and retrieval (Member 1)** and the **travel agent and itinerary engine (Member 2)**. The backend/API (Member 3) is not part of this branch yet.
+![Fosha: the landmark globe on the left, a 3-day Luxor plan on the right](docs/trip-sheet.png)
+
+**Contents:** [Features](#1-features) · [Screenshots](#2-screenshots) · [Quick start](#3-quick-start) · [How it works](#4-how-it-works) · [Repository](#5-repository-structure) · [API](#6-api) · [Web app](#7-web-app) · [Retrieval](#8-knowledge-base-and-retrieval) · [Agent](#9-agent-and-itinerary-engine) · [Testing](#10-testing) · [Limitations](#11-known-limitations) · [Data & credits](#13-data-sources-and-credits)
 
 ---
 
-## 1. Status
+## 1. Features
 
-| Area | Status |
+- **Arabic (Egyptian) and English**, both ways: understands either, answers in the language you wrote in; the UI switches fully to RTL Arabic.
+- **Real constraints, no guessing:** opening hours, visit durations, travel time and day length are enforced by plain Python, not the model. Unknown hours or prices are shown as unknown.
+- **Anywhere in Egypt:** 30 curated attractions on the globe's regions, and any other town (Port Said, Ismailia, Fayoum, Dahab, Rosetta…) looked up live in OpenStreetMap, Wikivoyage and Wikidata.
+- **Personalised suggestions** for 2+ day trips: hotel areas and transport ranked by your interests, budget, who's travelling and the places actually in your plan, each with a "why".
+- **Edit by chatting:** "ممكن نحط كنيسة الأنبا بيشوي بعد الفنار", "remove the museum", "make it 2 days".
+- **Asks only what's missing**, with one-tap answers that fit the trip (a one-day trip is offered Cairo or Alexandria, not Aswan).
+- **Fast:** about 1-2 s per answer with Groq (Gemini as a backup); repeated questions come from a cache.
+- **Printable itinerary**, and an **insights dashboard** fed by real usage.
+
+## 2. Screenshots
+
+| Landing: the landmark globe | Arabic plan for a town outside the dataset |
 |---|---|
-| Knowledge base (30 attractions) and vector index | Implemented |
-| Retrieval with filters + evaluation suite | Implemented |
-| Attraction, hours, price and travel-time tools | Implemented |
-| Deterministic scheduler (hours, travel, grouping) | Implemented |
-| Gemini intent extraction and itinerary wording | Implemented |
-| Arabic / English support | Implemented (Arabic queries are translated to English for retrieval) |
-| Session memory and itinerary edits ("make day 2 lighter") | **Not implemented yet** |
-| Web UI: chat, itinerary, dashboard, EN/AR (Member 4) | Implemented (`frontend/`, served by `api/server.py`, see section 12) |
-| Backend endpoint (`/api/v1/chat`) | Minimal version in `api/server.py` so the UI can run; Member 3 may replace it |
+| ![Landing page with the rotating landmark globe](docs/landing.png) | ![Arabic trip sheet for a day in Port Said](docs/trip-sheet-ar.png) |
 
----
+![Insights dashboard with real usage](docs/dashboard.png)
 
-## 2. Architecture
+## 3. Quick start
 
-```
-User message (Arabic or English)
-        |
-        v
-agents/intent.py     Gemini extracts JSON  ->  Python validates every field
-        |
-        v
-agents/retrieval_adapter.py   ->   rag/retriever.py   ->   ChromaDB (MiniLM embeddings)
-        |                          (Member 1)
-        v
-agents/scheduler.py  uses  hours.py / travel.py / attractions.py   (plain Python, no LLM)
-        |
-        v
-agents/planner.py    Gemini words the plan  ->  guard checks times and prices
-        |
-        v
-Reply in the user's language + structured itinerary
-```
-
-**Design principle:** the LLM is used for language (understanding the request, writing the reply). Everything that must be correct - opening hours, travel time, prices, what fits in a day - is deterministic Python, so a model mistake cannot break a hard constraint.
-
----
-
-## 3. Repository structure
-
-```
-RehlaGuide/
-├── rag/                         Member 1: knowledge base and retrieval
-│   ├── config.py                paths, embedding model name, default top-k
-│   ├── ingest.py                builds the Chroma index from raw_attractions.json
-│   ├── retriever.py             search_attractions() with metadata filters
-│   └── eval.py                  retrieval evaluation (51 cases)
-├── agents/                      Member 2: agent, tools, itinerary
-│   ├── attractions.py           load attraction records, get_attraction_details
-│   ├── hours.py                 structured opening hours, check_opening_hours
-│   ├── pricing.py               check_ticket_price
-│   ├── travel.py                calculate_travel_time (estimate)
-│   ├── scheduler.py             build_itinerary
-│   ├── retrieval_adapter.py     the agent's only entry point to Member 1's retriever
-│   ├── intent.py                message -> validated trip request
-│   ├── planner.py               full pipeline: plan_trip()
-│   ├── llm.py                   the only file that calls Gemini
-│   └── data/
-│       ├── attraction_extras.json   structured hours per attraction
-│       └── locations.json           coordinates and notes per attraction
-├── data/
-│   ├── raw_attractions.json     the dataset (30 attractions)
-│   └── chroma_db/               generated locally, gitignored
-├── tests/                       pytest suite (LLM calls are mocked)
-├── conftest.py                  empty; lets pytest import agents/ and rag/
-├── .env.example                 template for your local .env
-└── pyproject.toml
-```
-
----
-
-## 4. Setup
-
-Requirements: Python 3.13 (see `.python-version`) and [uv](https://docs.astral.sh/uv/).
+Requirements: Python 3.13 with [uv](https://docs.astral.sh/uv/), and Node 18+ (only to rebuild the web app).
 
 ```bash
-uv sync                          # install dependencies
-uv run python -m rag.ingest      # build the vector index (required once, see note)
-cp .env.example .env             # then put your own key in .env
+uv sync                          # Python dependencies
+cp .env.example .env             # then add at least one key (below)
+cd frontend && npm install && npm run build && cd ..   # the web app (frontend/dist is also committed)
 ```
 
 `.env` (at least one key; Groq is tried first, Gemini is the backup):
@@ -96,58 +43,106 @@ GROQ_API_KEY=your-groq-key        # https://console.groq.com
 GEMINI_API_KEY=your-gemini-key    # https://aistudio.google.com/apikey
 GEMINI_MODEL=gemini-3-flash-preview
 ```
-Why Groq first: in testing (Oct 2026) Groq's `openai/gpt-oss-120b` understood our real Arabic/English requests 6/6 correctly in under a second, while Gemini calls took 7-12s and the free tier ran out of daily quota. Each provider's models are tried in order and a model that is out of quota or overloaded is skipped at once (`agents/llm.py`; override with `LLM_PROVIDERS`, `GROQ_MODEL`, `GROQ_FALLBACK_MODELS`, `GEMINI_MODEL`, `GEMINI_FALLBACK_MODELS`).
+`.env` is gitignored: never commit it or put a real key in `.env.example`.
 
-Notes:
-- `.env` is gitignored. **Never commit it, and never put a real key in `.env.example`.**
-- `data/chroma_db/` is gitignored and is **not** in the repository. Every developer must run `rag.ingest` locally. Ingest deletes any existing index and rebuilds it from scratch, so it is safe to re-run.
-- Model names are retired from time to time (a previous default, `gemini-2.5-flash`, was). If you get a `404 NOT_FOUND` for the model, change `GEMINI_MODEL` in `.env`.
-- The "unauthenticated requests to the HF Hub" warning is harmless. It only concerns the embedding-model download.
-- Run all commands from the repository root. `agents` and `rag` are imported as top-level packages from there.
+Run it, then open **http://localhost:8000** (dashboard: **/dashboard**):
 
----
+| Mode | Command | Needs |
+|---|---|---|
+| Full | `uv run uvicorn api.server:app --reload` | an LLM key + the Chroma index (`uv run python -m rag.ingest`, once) |
+| Real LLM, keyword search | `REHLA_SEARCH=keyword uv run uvicorn api.server:app` | an LLM key (no index; works where `sentence-transformers` can't install, e.g. Intel Macs) |
+| Offline demo | `REHLA_DEMO=1 uv run uvicorn api.server:app` | nothing: rule-based understanding and template replies |
 
-## 5. Usage
+Other useful commands: `uv run pytest -q` (tests), `uv run python -m agents.planner "3 days in Luxor"` (planner from the terminal), `uv run python -m api.seed` / `--clear` (sample dashboard events; they're excluded from the dashboard unless asked for).
 
-Command line:
-```bash
-uv run python -m agents.planner "3 days in Luxor, I love temples"
-uv run python -m agents.planner "ثلاثة أيام في الأقصر وأحب المعابد"
-uv run python -m agents.planner "2 days in Cairo, I'm a tourist, museums, starting Friday"
+## 4. How it works
+
+```
+User message (Arabic / English)  + the current plan, if any
+        │
+        ├─ editing request? ── agents/editor.py: the model picks changes by id from real places,
+        │                       scheduler.time_day re-times the day
+        ▼
+agents/intent.py      LLM extracts JSON (days, place, interests, budget, group…) → Python validates it
+        │
+        ├─ place outside the dataset? ── agents/places_online.py: OpenStreetMap → Wikivoyage → Wikidata
+        ▼
+agents/retrieval_adapter.py → rag/retriever.py → ChromaDB (or keyword search)
+        ▼
+agents/scheduler.py   opening hours, travel time, day window, grouping   (plain Python)
+        ▼
+agents/recommendations.py   hotel areas + transport ranked for this traveller   (plain Python)
+        ▼
+agents/planner.py     LLM writes a 2-4 sentence reply → guard rejects invented times/prices
+        ▼
+api/server.py (FastAPI: cache, analytics) → frontend (React): chat, trip sheet, print, dashboard
 ```
 
-Python:
-```python
-from agents.planner import plan_trip
+**Design rule:** the language model only *understands* requests and *words* replies. Everything that must be correct (which places exist, hours, travel, prices, what fits in a day) is deterministic Python, so a model mistake can't produce an impossible plan or an invented price.
 
-result = plan_trip("2 days in Cairo, I'm a tourist, museums, starting Friday")
+## 5. Repository structure
+
+```
+RehlaGuide/
+├── agents/                      the travel agent
+│   ├── intent.py                message → validated trip request
+│   ├── planner.py               full pipeline: plan_trip(); short reply + guard
+│   ├── editor.py                "put X after Y" edits of the current plan
+│   ├── scheduler.py             build_itinerary(), time_day()
+│   ├── recommendations.py       personalised hotel/transport ranking + clarification wording
+│   ├── places_online.py         any Egyptian town via OpenStreetMap / Wikivoyage / Wikidata
+│   ├── llm.py                   the only file that calls a model (Groq, Gemini)
+│   ├── attractions.py hours.py pricing.py travel.py retrieval_adapter.py
+│   └── data/                    hours, coordinates, recommendation catalogue
+├── rag/                         knowledge base: ingest, retriever, evaluation
+├── api/
+│   ├── server.py                FastAPI app: /api/v1/chat, /api/v1/analytics, serves the web app
+│   ├── analytics.py             query log + dashboard aggregates
+│   ├── demo.py                  offline demo mode (rule-based)
+│   └── seed.py                  sample dashboard events
+├── frontend/                    React + TypeScript (Vite)
+│   ├── src/App.tsx              app state, chat calls
+│   ├── src/components/          GlobeCanvas, ChatModal, TripSheet, PrintItinerary, DashboardView, …
+│   ├── src/i18n.ts              English/Arabic strings and Arabic place names
+│   └── dist/                    built app served by the API
+├── data/raw_attractions.json    the curated dataset (30 attractions)
+├── docs/                        README screenshots
+└── tests/                       pytest suite (models and network faked)
 ```
 
-`plan_trip` never raises. It returns one of:
+## 6. API
 
-```python
-{"ok": False, "error": "human-readable reason"}      # LLM down, retrieval failed, ...
-
-{"ok": True,
- "status": "planned" | "needs_clarification" | "unsupported_region" | "out_of_scope" | "no_results",
- "language": "ar" | "en",
- "reply": "text to show the user",
- "intent": {...},                  # the validated request
- "itinerary": {...},               # only when status == "planned"
- "used_fallback": False}           # only when status == "planned"
-```
-
-| status | Meaning |
+| Endpoint | Purpose |
 |---|---|
-| `planned` | An itinerary was built. `reply` is the wording, `itinerary` the structured data. |
-| `needs_clarification` | Days or region missing. `reply` is the question (in the user's language), `missing` lists the fields. |
-| `unsupported_region` | The user named a place we have no data for (e.g. Dahab). |
-| `out_of_scope` | The message is not a trip request. |
-| `no_results` | Retrieval found nothing. |
+| `POST /api/v1/chat` `{"message": "...", "context"?: {"intent": {...}, "days": [[ids]]}}` | Plan, clarify or edit. Returns `plan_trip()`'s result (below) with each stop enriched (Arabic name, category, description, prices, coordinates, source) plus `cached` and `response_ms`. |
+| `GET /api/v1/analytics?days=7` | Dashboard aggregates over real usage (`days=0` = all time). |
+| `GET /api/v1/health` | `{"ok": true, "demo": bool, "search": "vector" or "keyword"}` |
 
----
+`plan_trip` never raises. It returns `{"ok": False, "error": "..."}` or:
+```python
+{"ok": True,
+ "status": "planned" | "needs_clarification" | "unsupported_region" | "out_of_scope" | "no_results" | "edit_not_applied",
+ "language": "ar" | "en",
+ "reply": "short text for the chat",
+ "intent": {...},                     # the validated request
+ "itinerary": {...},                  # when planned: days, stops, unscheduled, warnings, recommendations
+ "suggested_regions": [...],          # with needs_clarification: regions that fit the trip length
+ "edited": True}                      # when the plan was edited rather than re-planned
+```
 
-## 6. Part 1 - Knowledge base and retrieval (Member 1)
+## 7. Web app
+
+React + TypeScript (Vite) in `frontend/`, built into `frontend/dist` and served by the API.
+
+- **Landing:** an azure globe rises from the bottom of the page with Egyptian landmarks on its rim (Qaitbay, the Pyramids, a Cairo mosque, Sinai, the Red Sea, a Karnak pylon, a felucca, Nubian houses, the White Desert, Siwa palms). It turns slowly, can be dragged, and a tap on a landmark starts a trip there. The input box and suggestions sit on the globe.
+- **Chat:** follow-up questions come with one-tap answers; replies are short; plans show as a card that opens the trip sheet.
+- **Trip sheet:** day tabs, a timeline of stops (expand for description, notes, source), visitor/Egyptian prices, personalised hotel and transport picks with reasons.
+- **Print:** prints a dedicated document with every day and stop, travel, prices, notes, picks and sources (`PrintItinerary.tsx`), not a picture of the window.
+- **Dashboard (`/dashboard`):** total questions, plans made, cache hit rate, response time, Arabic share (each against the previous period), top destinations, regions and attractions. Only real chats count.
+- **Languages:** English (LTR) and Arabic (RTL), including Arabic names for places and towns.
+- **Style:** DESIGN.md's storybook look (Signal Yellow sky, azure globe, Changa One display type, flat colour, ink outlines), with Lalezar + Cairo for Arabic.
+
+## 8. Knowledge base and retrieval
 
 ### Dataset - `data/raw_attractions.json`
 30 attractions across 10 regions (Cairo, Giza, Luxor, Aswan, Alexandria, Sharm El Sheikh, Saint Catherine, Hurghada, Siwa, Farafra) and 10 categories (Museum, Archaeological Site, Temple, Fortress, Cultural Center, National Park, Monastery, Aquarium, Island / Beach, Historic Oasis).
@@ -214,9 +209,9 @@ Findings:
 
 ---
 
-## 7. Part 2 - Agent and itinerary (Member 2)
+## 9. Agent and itinerary engine
 
-### 7.1 Tools
+### 9.1 Tools
 
 All tools return `{"ok": True, ...}` or `{"ok": False, "error": "..."}`. None of them raises on bad input.
 
@@ -234,7 +229,7 @@ Behaviour worth knowing:
 - A price of 0 EGP (ids 25 and 28) is reported with a warning, because it may mean "free" or "not recorded".
 - `calculate_travel_time` is **always an estimate** and says so.
 
-### 7.2 Data files (`agents/data/`)
+### 9.2 Data files (`agents/data/`)
 
 `attraction_extras.json` - structured opening hours, written by hand from the dataset text and official pages because the raw `opening_hours` field is free text:
 ```json
@@ -248,7 +243,7 @@ Behaviour worth knowing:
 
 `locations.json` - latitude/longitude per attraction plus notes such as "On an island; reached by a short boat ride". `validate_locations()` checks coverage and that points lie inside Egypt. Two coordinates (Hurghada Aquarium, Giftun Island) are marked as least certain.
 
-### 7.3 Scheduler rules (`scheduler.py`)
+### 9.3 Scheduler rules (`scheduler.py`)
 
 Hard constraints, enforced in plain Python:
 - A visit must fit entirely inside an opening window, on every weekday it could fall on when no date is given (no date means only places open every day are used).
@@ -262,7 +257,7 @@ Choosing among valid options: each next stop is scored by travel time + waiting 
 
 Travel estimate: straight-line (haversine) distance x 1.3 road factor, divided by an average speed (20 km/h under 5 km, 30 km/h up to 60 km, 70 km/h beyond), plus 10 minutes, rounded to 5 minutes.
 
-### 7.4 Retrieval adapter (`retrieval_adapter.py`)
+### 9.4 Retrieval adapter (`retrieval_adapter.py`)
 The agent never calls Member 1's retriever directly. The adapter:
 - validates region and category against the real data (case-insensitive);
 - expands "Cairo" to Cairo + Giza (two retriever calls, because the retriever accepts one region);
@@ -273,13 +268,13 @@ The agent never calls Member 1's retriever directly. The adapter:
 
 If Member 1 changes retrieval internals, only this file needs to change.
 
-### 7.5 Intent extraction (`intent.py`)
+### 9.5 Intent extraction (`intent.py`)
 Gemini returns JSON with: task, language, an English search query, interests, region, days, travel date and visitor type. Python then validates every field: days must be 1-14, the region must exist in the data, dates must be understandable, and the visitor type must map to "egyptian"/"foreigner". Missing required details (days, region) are decided in code, not by the model, and are asked for with fixed Arabic/English templates.
 
-### 7.6 Planner and reply guard (`planner.py`)
-After scheduling, Gemini writes the itinerary in the user's language from the structured data only. A guard then checks that **every scheduled start/end time and every ticket price appears in the reply** (Arabic-Indic digits are normalised). If anything is missing or the model call fails, the reply is replaced by a plain deterministic rendering (`used_fallback: True`). Ticket prices are included only when the visitor type is known.
+### 9.6 Planner (`planner.py`)
+`plan_trip(message, context=None)` runs: intent → (online place lookup for towns outside the dataset) → retrieval → scheduler → personalised recommendations → short reply. With `context` (the plan the user already has) an editing request changes that plan instead (9.6d). Ticket prices are attached only when the visitor type is known.
 
-### 7.6b Personalised hotel and transport tips (`recommendations.py`)
+### 9.6b Personalised hotel and transport tips (`recommendations.py`)
 For trips of 2+ days the planner adds hotel areas and transport tips, ranked for this traveller rather than looked up per region. The catalogue lives in `agents/data/recommendations.json` (15 hotel areas, 23 transport tips, English and Arabic), each tagged with interests, budget tiers, traveller types and, for hotels, approximate coordinates. Ranking is deterministic:
 - **Interests** from the request (e.g. "temples", "snorkelling", "رحلة رومانسية") map to tags such as history, diving, nile, romance; the categories of the planned places count a little too.
 - **Budget**: hotel areas without the user's tier drop down the list and show the example for that tier; transport tips outside the budget are removed.
@@ -288,7 +283,7 @@ For trips of 2+ days the planner adds hotel areas and transport tips, ranked for
 
 Each pick returns a localised `why` list (e.g. "Closest to Valley of the Kings and Hatshepsut Temple in your plan", "Has options for a luxury budget") plus `based_on`, which the reply writer and the trip panel show. Example hotels are given only as listed in the catalogue.
 
-### 7.6c Places outside the dataset (`places_online.py`)
+### 9.6c Places outside the dataset (`places_online.py`)
 The curated dataset covers the regions on the globe. When a user names any other place in Egypt ("بورسعيد", "Ismailia", "Fayoum", "Dahab"...), the planner looks it up in open sources instead of refusing or letting the LLM invent places:
 1. **Nominatim (OpenStreetMap)** geocodes the name, restricted to Egypt, and links the town's Wikidata item.
 2. **Wikivoyage** supplies the "See" listings (name, description, sometimes coordinates, hours and price). The town's Wikidata item gives the exact page title whatever language the user typed.
@@ -296,99 +291,47 @@ The curated dataset covers the regions on the globe. When a user names any other
 
 Found places are registered next to the curated ones (ids from 100000), so the scheduler applies the same rules. Nothing is guessed: unlisted hours default to a daytime window marked "check before you go", unlisted prices stay unknown ("Price not listed"), and listings without coordinates are placed at the town centre and flagged as approximate. Results are cached in `data/places_cache.json` (gitignored). If the place isn't in Egypt, has no listings, or the sources are unreachable, the user gets a clear message instead of an error.
 
-### 7.6d Short replies and editing the plan (`planner.py`, `editor.py`)
+### 9.6d Short replies and editing the plan (`planner.py`, `editor.py`)
 - **Replies are 2-4 sentences** (Egyptian Arabic or English) naming the highlights; the trip sheet shows the full timetable. The writer gets place names only, and a guard rejects any reply that mentions a time or price that isn't in the schedule, runs long, or uses a table, falling back to a one-line template.
 - **Editing:** the app sends the current plan with each message. The model decides what to change only by referring to ids of real places in the plan's area ("add [id] after [id]", "remove [id]", "make it N days"); `scheduler.time_day` re-times the edited day with the usual rules and reports any stop that no longer fits instead of squeezing it in. A request for a different trip is planned from scratch.
 - Found places without an Arabic label on Wikidata get a literal Arabic translation (one model call per town, cached); no facts come from the model.
 
-### 7.7 LLM wrapper (`llm.py`)
-The only file that talks to Gemini. It reads `GEMINI_API_KEY` and `GEMINI_MODEL`, returns an error dict instead of raising, and retries temporary errors (503, 429, timeouts) up to three times with a short wait. Everything else receives the LLM as a function argument, which is why tests run without internet or a key.
+### 9.7 LLM wrapper (`llm.py`)
+The only file that talks to a language model. Providers are tried in order (`LLM_PROVIDERS`, default `groq,gemini`; a provider without a key is skipped), and within each provider its models in order. A model that is out of quota, missing or overloaded is skipped at once; a brief rate-limit blip is retried once on the same model. Each request is capped at 25 s. It returns an error dict instead of raising, and everything else receives the LLM as a function argument, which is why the tests run without internet or a key.
 
 ---
 
-## 8. Testing
+## 10. Testing
 
 ```bash
 uv run pytest -q
 ```
 
-69 tests cover: data lookup and prices, opening-hours edge cases (window ends, split hours, weekday overrides, closed days, ISO dates), travel estimates, the scheduler (an independent checker re-validates every stop against hours, day bounds and travel gaps), the retrieval adapter (with a fake search function), intent extraction, the planner pipeline and reply guard, and the LLM retry logic. Gemini calls are mocked in all tests.
+110 tests, with every model call and network request faked: data lookups and prices; opening-hours edge cases; travel estimates; the scheduler (an independent checker re-validates every stop); retrieval adapter; intent extraction; the planner pipeline, clarification wording and reply guard; personalised recommendations; online place lookup (parsing, caching, failures) and registration; plan editing; the LLM provider/model fallback; and the API (chat, cache, analytics, pages).
 
-Not covered by automated tests: real Gemini calls and real Chroma retrieval. Check those manually with the commands in section 5.
+Not covered automatically: real model calls, real Chroma retrieval and live Wikivoyage data. Check those by running the app.
 
----
+## 11. Known limitations
 
-## 9. Known limitations
+- **Day trips:** Abu Simbel, Edfu and Kom Ombo are scheduled as if the traveller starts there; the journey from Aswan isn't added.
+- **Inter-city travel:** consecutive days can be in different cities with no transfer time (the plan carries a warning).
+- **Travel times are estimates** from straight-line distance; no traffic or ferry crossings. Places found online without coordinates sit at the town centre and are marked approximate.
+- **Online places** depend on Wikivoyage coverage (some towns have few or no listings) and need internet the first time a town is looked up.
+- **Prices** are adult tickets and may be outdated; places found online usually have no listed price.
+- **Free-tier limits** apply to Groq and Gemini; under heavy use the app falls back between models and then shows an error.
+- **No accounts:** the conversation and plan live in the browser (localStorage); the server keeps no session.
+- **Dataset size:** 30 curated attractions; the retrieval distance cutoff should be recalibrated if it grows.
 
-- **Day trips:** Abu Simbel, Edfu and Kom Ombo are scheduled as if the traveller starts there. The journey from Aswan is not added to the day.
-- **Inter-city travel:** consecutive days can be in different cities (e.g. Cairo then Luxor) with no transfer time. The plan only carries a warning.
-- **Travel times are estimates** from straight-line distance. They ignore traffic and, for example, the Nile crossing in Luxor.
-- **Grouping:** places are not clustered by sub-area, so a plan may split nearby places across days (e.g. West Bank sites in Luxor).
-- **Ticket windows** (for example "ticket window closes 16:00") are stored as notes only, not enforced as hard limits.
-- **Prices** are adult tickets only and may be outdated. The dataset records a verification date and source URL per attraction.
-- **Reply wording:** the guard verifies times and prices only. The model can still phrase notes imperfectly (for example attach a note to the wrong stop).
-- **Arabic:** reliant on Gemini translating the query to English. Place names in Arabic replies stay in English. Day names in Arabic ("الجمعة") depend on the model converting them to a weekday name or date.
-- **Dataset size:** 30 attractions. The retrieval distance cutoff should be recalibrated if it grows.
-- **No memory yet:** every request is planned from scratch.
+## 12. Roadmap
 
----
+1. Day-trip travel time for far attractions; transfers between cities.
+2. Better grouping of nearby places within a day.
+3. Arabic-capable embedding model so Arabic queries don't rely on translation.
+4. Accounts and saved trips.
 
-## 10. Notes for integration (Member 3)
+## 13. Data sources and credits
 
-- The entry point is `agents.planner.plan_trip(message)`, returning the dict described in section 5. The API contract for `/api/v1/chat` has not been agreed, so nothing here defines it.
-- Session memory is not implemented. Once it is, the function will need a session identifier or state object. This is to be agreed with Member 3.
-- `rag/retriever.py` builds the vector store once per process (`lru_cache`), so the embedding model is loaded on the first search only. After re-running ingest inside a running server, call `get_vector_store.cache_clear()` or restart.
-- Run from the repository root; `agents` and `rag` are not installed as packages.
-- The vector index must be built on the server with `uv run python -m rag.ingest`.
-- `GEMINI_API_KEY` must be supplied through the environment.
-
----
-
-## 11. Roadmap
-
-1. Session memory and itinerary edits (change a day, swap a place, add a day without discarding the rest).
-2. Day-trip travel time for far attractions.
-3. Better grouping of nearby places within a day.
-4. Integration with the backend once the `/api/v1/chat` contract is agreed.
-
----
-
-## 12. Web UI and dashboard (Member 4): Fosha · فسحة
-
-The traveller-facing product is called **Fosha** (فسحة, Egyptian Arabic for "an outing"). It is a no-build web app in `frontend/` (plain HTML, CSS and JS), served by a small FastAPI app (`api/server.py`). The Python package name stays `rehlaguide`.
-
-```bash
-uv run uvicorn api.server:app --reload             # real pipeline: needs GEMINI_API_KEY and the Chroma index
-REHLA_DEMO=1 uv run uvicorn api.server:app         # offline demo: no key, no embeddings
-REHLA_SEARCH=keyword uv run uvicorn api.server:app  # real Gemini, keyword search (no Chroma index needed)
-uv run python -m api.seed                          # optional: 400 sample events for the dashboard
-```
-
-| URL | What it is |
-|---|---|
-| http://localhost:8000/ | Traveller app: chat + trip plan |
-| http://localhost:8000/dashboard | Insights dashboard (separate page, not linked from the traveller app) |
-
-**Traveller app** (`index.html`, `app.js`, `globe.js`, `app.css`)
-- **Landing:** an azure globe rises from the bottom of the page with Egyptian landmarks on its rim (Qaitbay, the Pyramids, a Cairo mosque, Sinai, the Red Sea, a Karnak pylon, a felucca, Nubian houses, the White Desert, Siwa palms). It turns slowly. You can drag it, hover a suggestion to swing that region's landmark to the top, or tap a landmark to start a trip there. The input sits on the globe.
-- **Conversation:** after the first message the globe sinks to a horizon and the chat takes over. While the assistant works, the globe spins faster and the progress steps change. Missing details (days, region) are asked with one-tap answers, which are sent together with the original request, because the backend has no session memory yet.
-- **Trip panel:** opens automatically when a plan is ready (as a full-screen page on phones). It has day tabs, a schematic route map, a timeline of stops (expand a stop for its description, notes and official source), travel legs, a "good to know" list (warnings and places not included), a visitor/Egyptian price toggle, day and trip totals, and printing.
-- Error/retry, offline and API-down states. The conversation and the last plan are kept in `localStorage`.
-
-**Dashboard** (`dashboard.html`, `dashboard.js`, `dashboard.css`) shows total queries (inside the globe), cache hit rate, average response time, Arabic share, most requested destinations, language distribution, most popular regions and popular attractions. Each figure is compared with the previous period. Ranges: 7 days, 30 days, all time.
-
-**Languages:** English (LTR) and Arabic (RTL) in both pages. Region, category and attraction names are translated in the UI. Attraction descriptions and backend warnings are still English.
-
-**API** (`api/server.py`)
-
-| Endpoint | Purpose |
-|---|---|
-| `POST /api/v1/chat` `{"message": "..."}` | `plan_trip()` result, with each stop enriched (category, description, both prices, coordinates, source) plus `cached` and `response_ms` |
-| `GET /api/v1/analytics?days=7` | Dashboard aggregates (`days=0` for all time) |
-| `GET /api/v1/health` | `{"ok": true, "demo": bool}` |
-
-- **Cache:** an in-memory LRU (256 entries) keyed on the normalised message. Errors are never cached. The cache resets when the server restarts.
-- **Analytics:** one JSON line per chat request in `data/analytics.jsonl` (gitignored). The message text is not stored. Seeded events are marked `"sample": true`. `uv run python -m api.seed --clear` deletes the log.
-- **Demo mode** (`REHLA_DEMO=1`, `api/demo.py`) replaces only Gemini (keyword intent and template wording) and the vector search (keyword overlap). Scheduling, hours, travel and prices still come from the real code.
-
-**Style:** follows `DESIGN.md`: Signal Yellow sky, a Globe Azure sphere as the focal surface, a white Changa One headline curving along the globe, a centred uppercase Arial nav with a 20px underline for the active item, flat colour with ink linework, no shadows, and the 1440px radius used only for circles. Egyptian touches come from the landmark illustrations. Arabic uses Lalezar for display text and Cairo for body text. Motion respects `prefers-reduced-motion`.
+- Curated attractions: official sources listed per attraction in `data/raw_attractions.json` (with verification dates).
+- Towns outside the dataset: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL), [Wikivoyage](https://en.wikivoyage.org) (CC BY-SA), [Wikidata](https://www.wikidata.org) (CC0). Each stop links to its source.
+- Language models: [Groq](https://groq.com) (open models such as gpt-oss-120b), [Google Gemini](https://ai.google.dev) as a backup.
+- Built by the DEPI AIS7 S1 Group 3 team for the DEPI capstone.
