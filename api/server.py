@@ -88,15 +88,7 @@ def _enrich(itinerary: Dict[str, Any]) -> Dict[str, Any]:
             })
     if not itinerary.get("recommendations") and len(itinerary.get("days", [])) >= 2:
         from agents.recommendations import get_recommendations
-        reg = None
-        for day in itinerary.get("days", []):
-            for stop in day.get("stops", []):
-                reg = stop.get("region")
-                if reg:
-                    break
-            if reg:
-                break
-        itinerary["recommendations"] = get_recommendations(reg, len(itinerary["days"]))
+        itinerary["recommendations"] = get_recommendations(None, len(itinerary["days"]), itinerary=itinerary)
     return itinerary
 
 

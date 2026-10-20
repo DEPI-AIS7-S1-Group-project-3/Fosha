@@ -61,8 +61,14 @@ def _payload(itinerary: Dict[str, Any], visitor_type: Optional[str]) -> Dict[str
         "not_included": [{"name": u["name"], "reason": u["reason"]} for u in itinerary["unscheduled"]],
         "warnings": itinerary["warnings"],
     }
-    if itinerary.get("recommendations"):
-        result["recommendations"] = itinerary["recommendations"]
+    recs = itinerary.get("recommendations") or {}
+    if recs.get("hotels") or recs.get("transport"):
+        # The ranking score is internal; the writer only needs the picks and their reasons.
+        result["recommendations"] = {
+            key: [{k: v for k, v in item.items() if k != "score"} for item in recs.get(key, [])]
+            for key in ("hotels", "transport")
+        }
+        result["recommendations"]["based_on"] = recs.get("based_on", [])
     if visitor_type:
         result["prices_note"] = "Adult ticket prices only; they can change, so verify on the official source."
     return result
@@ -87,12 +93,15 @@ def render_plain(payload: Dict[str, Any]) -> str:
     if hotels:
         lines.append("\nRecommended Accommodation:")
         for h in hotels:
-            lines.append(f"  - {h['area']}: {h['desc']}")
+            example = f" (e.g. {h['example']})" if h.get("example") else ""
+            why = f" - why: {'; '.join(h['why'])}" if h.get("why") else ""
+            lines.append(f"  - {h['area']}: {h['desc']}{example}{why}")
     transport = recs.get("transport") or []
     if transport:
         lines.append("\nTransport Options:")
         for t in transport:
-            lines.append(f"  - {t['mode']}: {t['desc']}")
+            why = f" - why: {'; '.join(t['why'])}" if t.get("why") else ""
+            lines.append(f"  - {t['mode']}: {t['desc']}{why}")
 
     return "\n".join(lines)
 
@@ -116,7 +125,9 @@ def _write_reply(payload: Dict[str, Any], language: str, llm: LLMFn) -> Dict[str
         "Rules: use ONLY the data given. Keep every place name, time and price exactly as given "
         "(use the 24-hour HH:MM times as written). Do not add attractions, opening hours, prices or tips "
         "that are not in the data. Mention warnings and not-included places only when those lists are "
-        "non-empty, and never mention field names such as not_included. Say travel times are estimates. If prices_note is present, say it once; do not repeat it per stop.\n\nDATA:\n" + json.dumps(payload, ensure_ascii=False, indent=1)
+        "non-empty, and never mention field names such as not_included. Say travel times are estimates. If prices_note is present, say it once; do not repeat it per stop. "
+        "If recommendations are present, offer them as suggestions picked for this traveller: for each one say "
+        "briefly why it fits, using only its 'why' reasons, and name example hotels only as given in 'example'.\n\nDATA:\n" + json.dumps(payload, ensure_ascii=False, indent=1)
     )
     result = llm(prompt, system=None, json_mode=False)
     if result.get("ok") and reply_is_faithful(result["text"], payload):
@@ -169,10 +180,11 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
     if not itinerary["ok"]:
         return {"ok": False, "error": itinerary["error"]}
 
-    if intent["days"] >= 2:
-        itinerary["recommendations"] = get_recommendations(intent["region"], intent["days"], lang)
-    else:
-        itinerary["recommendations"] = {"hotels": [], "transport": []}
+    itinerary["recommendations"] = get_recommendations(
+        intent["region"], intent["days"], lang,
+        interests=intent.get("interests"), search_query=intent.get("search_query"),
+        budget=intent.get("budget"), travelers=intent.get("travelers"), itinerary=itinerary,
+    )
 
     payload = _payload(itinerary, intent["visitor_type"])
     written = _write_reply(payload, lang, llm)

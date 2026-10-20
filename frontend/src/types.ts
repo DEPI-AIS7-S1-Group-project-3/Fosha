@@ -37,16 +37,23 @@ export interface DayPlan {
 export interface HotelRecommendation {
   area: string;
   desc: string;
+  example?: string | null;
+  region?: string;
+  why?: string[];
 }
 
 export interface TransportRecommendation {
   mode: string;
   desc: string;
+  region?: string;
+  why?: string[];
 }
 
 export interface Recommendations {
   hotels: HotelRecommendation[];
   transport: TransportRecommendation[];
+  /** The traveller preferences the picks were ranked on (localised labels). */
+  based_on?: string[];
 }
 
 export interface Itinerary {

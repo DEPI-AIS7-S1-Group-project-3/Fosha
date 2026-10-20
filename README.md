@@ -277,6 +277,15 @@ Gemini returns JSON with: task, language, an English search query, interests, re
 ### 7.6 Planner and reply guard (`planner.py`)
 After scheduling, Gemini writes the itinerary in the user's language from the structured data only. A guard then checks that **every scheduled start/end time and every ticket price appears in the reply** (Arabic-Indic digits are normalised). If anything is missing or the model call fails, the reply is replaced by a plain deterministic rendering (`used_fallback: True`). Ticket prices are included only when the visitor type is known.
 
+### 7.6b Personalised hotel and transport tips (`recommendations.py`)
+For trips of 2+ days the planner adds hotel areas and transport tips, ranked for this traveller rather than looked up per region. The catalogue lives in `agents/data/recommendations.json` (15 hotel areas, 23 transport tips, English and Arabic), each tagged with interests, budget tiers, traveller types and, for hotels, approximate coordinates. Ranking is deterministic:
+- **Interests** from the request (e.g. "temples", "snorkelling", "رحلة رومانسية") map to tags such as history, diving, nile, romance; the categories of the planned places count a little too.
+- **Budget**: hotel areas without the user's tier drop down the list and show the example for that tier; transport tips outside the budget are removed.
+- **Travellers**: solo / couple / family / group, or a head count.
+- **The plan itself**: hotel areas are ranked by distance to the scheduled stops; place-specific tips (West Bank taxi, Abu Simbel trip, Giftun boat, Saqqara driver) only appear when those places are scheduled; multi-city trips get one area per city plus the link between them.
+
+Each pick returns a localised `why` list (e.g. "Closest to Valley of the Kings and Hatshepsut Temple in your plan", "Has options for a luxury budget") plus `based_on`, which the reply writer and the trip panel show. Example hotels are given only as listed in the catalogue.
+
 ### 7.7 LLM wrapper (`llm.py`)
 The only file that talks to Gemini. It reads `GEMINI_API_KEY` and `GEMINI_MODEL`, returns an error dict instead of raising, and retries temporary errors (503, 429, timeouts) up to three times with a short wait. Everything else receives the LLM as a function argument, which is why tests run without internet or a key.
 

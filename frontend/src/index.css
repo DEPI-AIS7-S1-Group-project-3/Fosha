@@ -509,7 +509,10 @@ html[lang="ar"] .trip-title { line-height: 1.1; }
 .multi-day-section ul {
   margin: 0; padding-inline-start: 18px; font-size: 13px;
 }
-.multi-day-section li { margin-bottom: 6px; }
+.multi-day-section li { margin-bottom: 10px; }
+.rec-basis { margin: 0 0 4px; font-size: var(--text-caption); color: var(--ink-soft); }
+.rec-example { color: var(--ink-soft); }
+.rec-why { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: var(--text-caption); color: #1d7442; }
 
 .sheet-foot {
   padding: 16px 32px;

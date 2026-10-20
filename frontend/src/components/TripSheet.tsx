@@ -179,8 +179,14 @@ export const TripSheet: React.FC<TripSheetProps> = ({
         {(hotels.length > 0 || transport.length > 0) && (
           <div className="multi-day-card">
             <span className="multi-day-badge">
-              {isAr ? 'نصائح الرحلات متعددة الأيام' : 'Multi-Day Trip Guide'}
+              {isAr ? 'مختارة لرحلتك' : 'Picked for your trip'}
             </span>
+            {(recs?.based_on?.length ?? 0) > 0 && (
+              <p className="rec-basis">
+                {isAr ? 'على أساس: ' : 'Based on: '}
+                {recs!.based_on!.join(' · ')}
+              </p>
+            )}
 
             {hotels.length > 0 && (
               <div className="multi-day-section">
@@ -189,6 +195,12 @@ export const TripSheet: React.FC<TripSheetProps> = ({
                   {hotels.map((h, i) => (
                     <li key={i}>
                       <strong>{h.area}:</strong> {h.desc}
+                      {h.example && (
+                        <span className="rec-example"> {isAr ? 'مثل' : 'e.g.'} {h.example}</span>
+                      )}
+                      {h.why && h.why.length > 0 && (
+                        <span className="rec-why">{h.why.map((w, j) => <span key={j}>✓ {w}</span>)}</span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -202,6 +214,9 @@ export const TripSheet: React.FC<TripSheetProps> = ({
                   {transport.map((t, i) => (
                     <li key={i}>
                       <strong>{t.mode}:</strong> {t.desc}
+                      {t.why && t.why.length > 0 && (
+                        <span className="rec-why">{t.why.map((w, j) => <span key={j}>✓ {w}</span>)}</span>
+                      )}
                     </li>
                   ))}
                 </ul>

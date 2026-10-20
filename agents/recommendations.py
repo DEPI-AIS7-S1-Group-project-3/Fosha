@@ -1,163 +1,253 @@
-"""Curated hotel and transport recommendations for Egyptian destinations."""
-from typing import Any, Dict, List, Optional
+"""Personalised hotel-area and transport tips for multi-day trips.
 
-RECOMMENDATIONS: Dict[str, Dict[str, Any]] = {
-    "Cairo": {
-        "hotels": {
-            "en": [
-                {"area": "Downtown & Nile Corniche", "desc": "Central location, scenic river walks, close to the Egyptian Museum and Tahrir Square (e.g. Steigenberger Hotel El Tahrir, Ramses Hilton)."},
-                {"area": "Zamalek Island", "desc": "Upscale, quiet green neighborhood with art galleries, leafy cafes, and boutique hotels (e.g. Marriott Cairo Palace)."},
-                {"area": "Giza Pyramids Area", "desc": "Stunning balcony views directly facing the Pyramids and easy morning access to the plateau (e.g. Marriott Mena House, Giza boutique lodges)."}
-            ],
-            "ar": [
-                {"area": "وسط البلد وكورنيش النيل", "desc": "موقع مركزي حيوي على مقربة من المتحف المصري وميدان التحرير والمطاعم التراثية."},
-                {"area": "حي الزمالك", "desc": "جزيرة راقية هادئة تضم مساحات خضراء ومطاعم وفنادق تاريخية متميزة."},
-                {"area": "منطقة أهرامات الجيزة", "desc": "إطلالات مباشرة ومبهرة على الأهرامات وسهولة الوصول لهضبة الجيزة والمتحف الكبير."}
-            ]
-        },
-        "transport": {
-            "en": [
-                {"mode": "City Touring", "desc": "Uber and Careem operate widely and affordably throughout Greater Cairo."},
-                {"mode": "Day Trips & Pyramids", "desc": "Hire a licensed air-conditioned private car with driver for full-day sightseeing (Pyramids, Saqqara, NMEC)."},
-                {"mode": "Inter-city to Luxor/Aswan", "desc": "EgyptAir domestic flight (1 hr) from Cairo Airport (CAI) or Wataniya Sleeper Train from Ramses Station."}
-            ],
-            "ar": [
-                {"mode": "التنقل داخل المدينة", "desc": "تطبيقات النقل الذكي (أوبر وكريم) متوفرة بكثرة وبأسعار مناسبة للتنقل السريع."},
-                {"mode": "الجولات اليومية", "desc": "يُفضل استئجار سيارة خاصة مكيفة بسائق ليوم كامل لزيارة الأهرامات وسقارة والمتحف القومي للحضارة."},
-                {"mode": "السفر إلى الأقصر وأسوان", "desc": "طيران داخلي (ساعة واحدة) عبر مطار القاهرة، أو قطار النوم (الوطنية) من محطة رمسيس."}
-            ]
-        }
-    },
-    "Luxor": {
-        "hotels": {
-            "en": [
-                {"area": "East Bank (Downtown)", "desc": "Walking distance to Luxor Temple, the lively Nile Corniche promenade, and local markets (e.g. Sofitel Winter Palace, Steigenberger Nile Palace)."},
-                {"area": "West Bank (Theban Necropolis)", "desc": "Serene countryside retreat among sugarcane fields, eco-guesthouses just minutes from the Valley of the Kings."}
-            ],
-            "ar": [
-                {"area": "البر الشرقي (وسط المدينة)", "desc": "بالقرب من معبد الأقصر، كورنيش النيل، والمطاعم ومحطة القطار (مثل وينتر بالاس التاريخي)."},
-                {"area": "البر الغربي", "desc": "أجواء ريفية هادئة ونزل بيئية أصيلة تقع مباشرة بجوار وادي الملوك ومعبد حتشبسوت."}
-            ]
-        },
-        "transport": {
-            "en": [
-                {"mode": "Nile River Crossing", "desc": "Local public ferry (5-10 EGP) or motorized wooden water-taxis take 5 minutes between East and West banks."},
-                {"mode": "West Bank Excursions", "desc": "Pre-arrange an AC taxi/van for the morning circuit (Valley of the Kings, Hatshepsut, Colossi of Memnon)."},
-                {"mode": "Sunset Sailing", "desc": "Rent a traditional white-sail Nile felucca for a tranquil 1-2 hour sail to Banana Island."}
-            ],
-            "ar": [
-                {"mode": "العبّارة النيلية", "desc": "المعدية النيلية العامة أو المراكب السريعة تعبر بين البرين الشرقي والغربي في ٥ دقائق."},
-                {"mode": "جولات البر الغربي", "desc": "يُنصح بتأجير تاكسي خاص أو ميني باص مكيف لجولة الصباح (وادي الملوك، حتشبسوت، تمثالا ممنون)."},
-                {"mode": "فلوكة نيلية", "desc": "استمتع بجولة شراعية تقليدية عند الغروب في النيل وصولًا إلى جزيرة الموز."}
-            ]
-        }
-    },
-    "Alexandria": {
-        "hotels": {
-            "en": [
-                {"area": "Corniche & Stanley Bay", "desc": "Breathtaking Mediterranean sea views, close to Stanley Bridge and fine seafood dining (e.g. Four Seasons San Stefano, Romance Hotel)."},
-                {"area": "Raml Station & Mansheya", "desc": "Classic belle-époque architecture, within walking distance of the Roman Amphitheatre and Alexandria Library."}
-            ],
-            "ar": [
-                {"area": "الكورنيش وخليج ستانلي", "desc": "إطلالة بانورامية على البحر المتوسط ومطاعم الأسماك الشهيرة (مثل فورسيزونز سان ستيفانو)."},
-                {"area": "محطة الرمل والمنشية", "desc": "طابع كلاسيكي تاريخي وقرب من المسرح الروماني ومكتبة الإسكندرية والأسواق الشعبية."}
-            ]
-        },
-        "transport": {
-            "en": [
-                {"mode": "High-Speed Rail from Cairo", "desc": "The Spanish Talgo Express Train connects Cairo and Alexandria in just 2 hours in air-conditioned comfort."},
-                {"mode": "Coastal Travel", "desc": "Uber or the yellow-and-black city taxis along the Corniche from Qaitbay Citadel to Montaza Palace."}
-            ],
-            "ar": [
-                {"mode": "القطار من القاهرة", "desc": "قطار تالجو الإسباني الفاخر يصل الإسكندرية من القاهرة في نحو ساعتين بأعلى مستويات الراحة."},
-                {"mode": "التنقل الساحلي", "desc": "تطبيقات أوبر أو التاكسي الأصفر والأسود على طول الكورنيش من قلعة قايتباي حتى حدائق المنتزه."}
-            ]
-        }
-    },
-    "Aswan": {
-        "hotels": {
-            "en": [
-                {"area": "Elephantine Island & West Bank", "desc": "Vibrant Nubian guesthouses painted in bright indigo and earth tones, offering home-cooked meals and tranquil river vistas."},
-                {"area": "Aswan Corniche", "desc": "Prime spots overlooking the granite rocks and feluccas (e.g. Sofitel Legend Old Cataract, Basma Hotel)."}
-            ],
-            "ar": [
-                {"area": "جزيرة إلفنتين وغرب أسوان", "desc": "بيوت نوبية ملونة بتجربة ضيافة أصيلة ومأكولات طازجة وإطلالات هادئة على جزر النيل."},
-                {"area": "كورنيش أسوان", "desc": "موقع رائع يطل على صخور الجرانيت وجزر النيل (مثل فندق أولد كاتاراكت الأسطوري)."}
-            ]
-        },
-        "transport": {
-            "en": [
-                {"mode": "Island Access", "desc": "Motorized Nile boats are the everyday highway connecting islands to the city mainland."},
-                {"mode": "Abu Simbel Excursion", "desc": "Early morning shared tourist shuttle or 40-minute domestic flight from Aswan Airport (ASW)."}
-            ],
-            "ar": [
-                {"mode": "التنقل النهري", "desc": "اللانشات النيلية والمراكب هي الوسيلة الأساسية للتنقل بين الجزر والكورنيش."},
-                {"mode": "رحلة أبو سمبل", "desc": "حافلات سياحية مجمعة صباحًا مبكرًا عبر طريق أسوان-أبو سمبل أو طيران داخلي (٤٠ دقيقة)."}
-            ]
-        }
-    },
-    "South Sinai": {
-        "hotels": {
-            "en": [
-                {"area": "Naama Bay & Nabq (Sharm)", "desc": "World-class beachfront all-inclusive resorts with private beaches, dive centres, and nightlife."},
-                {"area": "Saint Catherine Foothills", "desc": "Quiet mountain eco-lodges perfect for hiking Mount Sinai for the sunrise."}
-            ],
-            "ar": [
-                {"area": "خليج نعمة ونبق (شرم الشيخ)", "desc": "منتجعات شاطئية متكاملة تضم شواطئ رملية ومراكز غوص عالمية."},
-                {"area": "سفح جبل سانت كاترين", "desc": "نزل بيئية جبلية ملائمة لتسلق جبل موسى ومشاهدة شروق الشمس."}
-            ]
-        },
-        "transport": {
-            "en": [
-                {"mode": "Sharm El Sheikh Airport (SSH)", "desc": "Direct domestic and international flights; airport taxis or hotel transfers to your resort."},
-                {"mode": "Excursions", "desc": "Organized 4x4 desert tours for Saint Catherine, Blue Hole, and Ras Mohamed National Park."}
-            ],
-            "ar": [
-                {"mode": "مطار شرم الشيخ الدولي", "desc": "رحلات طيران منتظمة وسيارات نقل الفنادق للوصول السريع للمنتجع."},
-                {"mode": "الرحلات الجبلية والبحرية", "desc": "حافلات ورحلات دفع رباعي منظمة لمحمية رأس محمد وسانت كاترين."}
-            ]
-        }
-    },
-    "Red Sea": {
-        "hotels": {
-            "en": [
-                {"area": "El Gouna", "desc": "Upscale lagoon town with golf courses, turquoise waterways, boutique hotels, and Abu Tig Marina."},
-                {"area": "Hurghada Promenade (El Mamsha)", "desc": "Family-friendly beachfront resorts with waterparks and coral reefs."}
-            ],
-            "ar": [
-                {"area": "مدينة الجونة", "desc": "بحيرات شاطئية راقية، فنادق ومارينا اليخوت، ومطاعم عالمية."},
-                {"area": "الممشى السياحي بالغردقة", "desc": "منتجعات شاطئية وألعاب مائية ورياضات بحرية مناسبة للعائلات."}
-            ]
-        },
-        "transport": {
-            "en": [
-                {"mode": "Airport Transfer", "desc": "Hurghada Airport (HRG) is only 15 minutes from downtown and 30 minutes from El Gouna."},
-                {"mode": "Marine Travel", "desc": "Daily chartered boats depart for Giftun Island and coral diving excursions."}
-            ],
-            "ar": [
-                {"mode": "المطار", "desc": "مطار الغردقة الدولي يبعد ١٥ دقيقة عن المدينة ونحو نصف ساعة عن الجونة."},
-                {"mode": "الرحلات البحرية", "desc": "يخوت بحرية يومية إلى جزيرة جفتون ومواقع الغوص والشعب المرجانية."}
-            ]
-        }
-    }
+The catalogue (agents/data/recommendations.json) is curated by hand; this module
+only ranks and filters it for one traveller, deterministically:
+
+  * interests   - the words the user gave (intent.interests + search_query), mapped
+                  to tags such as history, beach, diving, nile, romance (weight 3);
+                  the categories of the places actually planned count weakly (1)
+  * budget      - economy / moderate / luxury: a hotel area without that tier is
+                  pushed down, a transport tip without it is dropped
+  * travelers   - solo / couple / family / group (or a head count)
+  * the plan    - hotel areas are ranked by distance to the scheduled stops, and a
+                  transport tip tied to specific places (West Bank taxi, Abu Simbel,
+                  Giftun boat...) only appears when those places are in the plan
+
+Every pick carries a localised `why` list so the reply and the UI can say why it fits.
+"""
+import json
+from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Set
+
+from agents.attractions import get_attraction
+from agents.travel import haversine_km, load_locations
+
+DATA_PATH = Path(__file__).resolve().parent / "data" / "recommendations.json"
+GREATER_CAIRO = {"Cairo", "Giza", "Greater Cairo"}
+
+# Free-text interest words -> catalogue tags. Matching is by substring, so
+# "temples" hits "temple" and "snorkelling" hits "snorkel".
+INTEREST_WORDS: Dict[str, List[str]] = {
+    "history": ["history", "histor", "ancient", "pharao", "temple", "tomb", "archaeolog", "monument",
+                "pyramid", "egyptolog", "تاريخ", "آثار", "اثار", "فرعون", "معبد", "معابد", "مقابر", "أهرام"],
+    "museums": ["museum", "art", "gallery", "mummy", "mummies", "متحف", "متاحف", "فن"],
+    "culture": ["culture", "local", "bazaar", "souk", "market", "nubian", "heritage", "islamic", "coptic",
+                "ثقاف", "سوق", "أسواق", "نوبي", "تراث", "إسلامي", "قبطي"],
+    "food": ["food", "cuisine", "eat", "restaurant", "street food", "seafood", "أكل", "مطاعم", "مأكولات"],
+    "shopping": ["shop", "souvenir", "تسوق", "شوبينج"],
+    "nightlife": ["nightlife", "party", "bar", "club", "night", "سهر", "حفلات"],
+    "nature": ["nature", "desert", "hik", "trek", "mountain", "camp", "safari", "sunrise", "stars", "oasis",
+               "طبيعة", "صحراء", "جبل", "تخييم", "سفاري", "واحة"],
+    "beach": ["beach", "sea", "swim", "resort", "sun", "شاطئ", "بحر", "سباحة", "منتجع"],
+    "diving": ["div", "snorkel", "reef", "coral", "غوص", "سنوركل", "شعاب"],
+    "nile": ["nile", "river", "felucca", "cruise", "boat", "sail", "نيل", "فلوكة", "مركب"],
+    "relax": ["relax", "quiet", "calm", "peace", "slow", "spa", "رايق", "هادي", "هدوء", "استرخاء"],
+    "romance": ["romant", "honeymoon", "anniversary", "رومانس", "شهر العسل"],
 }
+CATEGORY_TAGS = {
+    "Museum": "museums", "Archaeological Site": "history", "Temple": "history", "Fortress": "history",
+    "Monastery": "history", "Cultural Center": "culture", "National Park": "nature",
+    "Aquarium": "diving", "Island / Beach": "beach", "Historic Oasis": "nature",
+}
+TAG_LABELS = {
+    "history": ("history", "التاريخ"), "museums": ("museums", "المتاحف"), "culture": ("local culture", "الثقافة المحلية"),
+    "food": ("food", "الأكل"), "shopping": ("shopping", "التسوق"), "nightlife": ("nightlife", "السهر"),
+    "nature": ("nature", "الطبيعة"), "beach": ("the beach", "البحر"), "diving": ("diving", "الغوص"),
+    "nile": ("the Nile", "النيل"), "relax": ("a slow pace", "الهدوء"), "romance": ("a romantic trip", "رحلة رومانسية"),
+}
+BUDGET_LABELS = {"economy": ("an economy", "الاقتصادية"), "moderate": ("a moderate", "المتوسطة"), "luxury": ("a luxury", "الفاخرة")}
+TRAVELER_LABELS = {"solo": ("solo travellers", "المسافر لوحده"), "couple": ("couples", "الأزواج"),
+                   "family": ("families", "العائلات"), "group": ("groups", "المجموعات")}
+TIER_ORDER = ["moderate", "economy", "luxury"]
 
 
-def get_recommendations(region: Optional[str], days: int, language: str = "en") -> Dict[str, Any]:
-    """Return hotel and transport tips for multi-day trips (days >= 2)."""
-    if days < 2 or not region:
-        return {"hotels": [], "transport": []}
+@lru_cache(maxsize=1)
+def load_catalogue() -> Dict[str, List[Dict[str, Any]]]:
+    with open(DATA_PATH, encoding="utf-8") as f:
+        data = json.load(f)
+    return {"hotels": data["hotels"], "transport": data["transport"]}
 
-    reg_key = "Cairo" if region in ("Cairo", "Giza", "Greater Cairo") else region
-    data = RECOMMENDATIONS.get(reg_key)
-    if not data:
-        return {"hotels": [], "transport": []}
 
-    lang = "ar" if language == "ar" else "en"
-    return {
-        "hotels": data["hotels"].get(lang, data["hotels"]["en"]),
-        "transport": data["transport"].get(lang, data["transport"]["en"])
-    }
+def canonical_region(region: Optional[str]) -> Optional[str]:
+    if not region:
+        return None
+    return "Cairo" if region in GREATER_CAIRO else region
+
+
+def interest_tags(words: Iterable[str]) -> Set[str]:
+    """Map free-text interests (English or Arabic) to catalogue tags."""
+    text = " ".join(str(w) for w in words if w).lower()
+    return {tag for tag, keys in INTEREST_WORDS.items() if any(k in text for k in keys)}
+
+
+def traveler_types(travelers: Any) -> Set[str]:
+    if travelers is None or travelers == "":
+        return set()
+    if isinstance(travelers, (int, float)) or str(travelers).isdigit():
+        n = int(travelers)
+        return {"solo"} if n <= 1 else {"couple"} if n == 2 else {"family", "group"} if n <= 5 else {"group"}
+    return {str(travelers).lower()} & set(TRAVELER_LABELS)
+
+
+def _plan_stops(itinerary: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    stops = []
+    for day in (itinerary or {}).get("days", []):
+        for stop in day.get("stops", []):
+            stops.append({**stop, "day": day.get("day")})
+    return stops
+
+
+def _label(pair: Any, ar: bool) -> str:
+    return pair[1] if ar else pair[0]
+
+
+def _join(items: List[str], ar: bool) -> str:
+    if len(items) <= 1:
+        return "".join(items)
+    return (" و".join([", ".join(items[:-1]), items[-1]]) if ar
+            else f"{', '.join(items[:-1])} and {items[-1]}")
+
+
+def _example(examples: Dict[str, str], budget: Optional[str]) -> Optional[str]:
+    if budget and budget in examples:
+        return examples[budget]
+    for tier in TIER_ORDER:
+        if tier in examples:
+            return examples[tier]
+    return None
+
+
+def get_recommendations(
+    region: Optional[str],
+    days: int,
+    language: str = "en",
+    *,
+    interests: Optional[Iterable[str]] = None,
+    search_query: Optional[str] = None,
+    budget: Optional[str] = None,
+    travelers: Any = None,
+    itinerary: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Ranked hotel areas and transport tips for one traveller (multi-day trips only).
+
+    Returns {"hotels": [{"area", "desc", "example", "region", "why": [...]}],
+             "transport": [{"mode", "desc", "region", "why": [...]}],
+             "based_on": [labels of the preferences that were used]}
+    """
+    empty: Dict[str, Any] = {"hotels": [], "transport": [], "based_on": []}
+    if not days or days < 2:
+        return empty
+    ar = language == "ar"
+    lang = "ar" if ar else "en"
+
+    stops = _plan_stops(itinerary)
+    regions: List[str] = []
+    for stop_region in [canonical_region(get_attraction(s["attraction_id"]).region) for s in stops
+                        if get_attraction(s["attraction_id"])] + [canonical_region(region)]:
+        if stop_region and stop_region not in regions:
+            regions.append(stop_region)
+    if not regions:
+        return empty
+
+    wanted = interest_tags(list(interests or []) + [search_query or ""])
+    from_plan = {CATEGORY_TAGS[a.category] for a in (get_attraction(s["attraction_id"]) for s in stops)
+                 if a and a.category in CATEGORY_TAGS} - wanted
+    who = traveler_types(travelers)
+    budget = budget if budget in BUDGET_LABELS else None
+    stop_ids = {s["attraction_id"] for s in stops}
+    locations = load_locations()
+    catalogue = load_catalogue()
+
+    def common_reasons(item: Dict[str, Any], why: List[str]) -> float:
+        score = 0.0
+        hits = [t for t in item["tags"] if t in wanted]
+        if hits:
+            score += 3 * len(hits)
+            labels = _join([_label(TAG_LABELS[t], ar) for t in hits], ar)
+            why.append(f"يناسب اهتمامك بـ{labels}" if ar else f"Suits your interest in {labels}")
+        score += sum(1 for t in item["tags"] if t in from_plan)
+        both = who & set(item.get("travelers", []))
+        if both:
+            score += 2
+            labels = _join([_label(TRAVELER_LABELS[t], ar) for t in sorted(both)], ar)
+            why.append(f"مناسب لـ{labels}" if ar else f"Good for {labels}")
+        return score
+
+    # ---- hotel areas: best 2 for a one-area trip, best 1 per area otherwise ----
+    hotels: List[Dict[str, Any]] = []
+    per_region = 2 if len(regions) == 1 else 1
+    for reg in regions:
+        reg_stops = [s for s in stops if canonical_region(get_attraction(s["attraction_id"]).region) == reg
+                     and s["attraction_id"] in locations]
+        ranked = []
+        for h in (h for h in catalogue["hotels"] if h["region"] == reg):
+            why: List[str] = []
+            score = common_reasons(h, why)
+            if budget:
+                if budget in h["budgets"]:
+                    score += 3
+                    why.append(f"فيه اختيارات للميزانية {_label(BUDGET_LABELS[budget], ar)}" if ar
+                               else f"Has options for {_label(BUDGET_LABELS[budget], ar)} budget")
+                else:
+                    score -= 4
+            near = []
+            if reg_stops:
+                dists = sorted((haversine_km(h["lat"], h["lon"], locations[s["attraction_id"]]["lat"],
+                                             locations[s["attraction_id"]]["lon"]), s) for s in reg_stops)
+                avg = sum(d for d, _ in dists) / len(dists)
+                score += max(0.0, 4 - avg / 4)
+                near = [s["name"] for d, s in dists if d <= 8][:2]
+            ranked.append((score, h, why, near))
+        ranked.sort(key=lambda r: -r[0])
+        nearest_used = False
+        for score, h, why, near in ranked[:per_region]:
+            if near and not nearest_used:
+                names = _join(near, ar)
+                why.insert(0, f"الأقرب لـ{names} في برنامجك" if ar else f"Closest to {names} in your plan")
+                nearest_used = True
+            hotels.append({"area": h["name"][lang], "desc": h["desc"][lang],
+                           "example": _example(h.get("examples", {}), budget),
+                           "region": reg, "why": why, "score": round(score, 2)})
+
+    # ---- transport: tips tied to the plan first, then by fit; arrivals last ----
+    picks, arrivals = [], []
+    for t in catalogue["transport"]:
+        if t["region"] not in regions:
+            continue
+        if budget and t.get("budgets") and budget not in t["budgets"]:
+            continue
+        why: List[str] = []
+        score = common_reasons(t, why)
+        if t.get("needs_any"):
+            matched = [s["name"] for s in stops if s["attraction_id"] in t["needs_any"]]
+            if not matched:
+                continue
+            score += 4
+            names = _join(list(dict.fromkeys(matched))[:2], ar)
+            why.insert(0, f"عشان {names} في برنامجك" if ar else f"For {names} in your plan")
+        if t.get("needs_areas"):
+            if not set(t["needs_areas"]) & set(regions):
+                continue
+            score += 4
+            why.insert(0, "رحلتك بين أكتر من مدينة" if ar else "Your trip spans more than one city")
+        entry = {"mode": t["mode"][lang], "desc": t["desc"][lang], "region": t["region"], "why": why,
+                 "score": round(score, 2)}
+        if t.get("arrival"):
+            if len(regions) > 1 and t["region"] == regions[0]:
+                continue  # the first area is where the trip starts; how to get there is the user's call
+            arrivals.append(entry)
+        else:
+            picks.append(entry)
+    picks.sort(key=lambda e: -e["score"])
+    transport = picks[:3] + arrivals[:2]
+
+    based_on = [_label(TAG_LABELS[t], ar) for t in sorted(wanted)]
+    if budget:
+        based_on.append(("ميزانية " + _label(BUDGET_LABELS[budget], ar).replace("ال", "", 1)) if ar
+                        else f"{budget} budget")
+    based_on += [_label(TRAVELER_LABELS[t], ar) for t in sorted(who)]
+    return {"hotels": hotels, "transport": transport, "based_on": based_on}
 
 
 def suggest_destinations_for_duration(days: Optional[int], language: str = "en") -> str:

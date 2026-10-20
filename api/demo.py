@@ -32,6 +32,9 @@ INTERESTS = {
     "temples": ["temple", "معبد", "معابد"], "beach": ["beach", "sea", "شاطئ", "بحر"],
     "diving": ["diving", "snorkel", "غوص"], "desert": ["desert", "صحراء"],
     "islamic": ["islamic", "إسلامي", "اسلامي"], "coptic": ["coptic", "قبطي"],
+    "nile": ["nile", "felucca", "river", "نيل", "فلوكة"], "relax": ["relax", "quiet", "calm", "رايق", "هدوء", "استرخاء"],
+    "romance": ["romant", "honeymoon", "رومانس", "شهر العسل"], "nature": ["nature", "hik", "mountain", "طبيعة", "جبل"],
+    "food": ["food", "eat", "أكل"], "culture": ["culture", "local", "nubian", "ثقاف", "نوبي"],
 }
 DAYS_EN = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 DAYS_AR = ["الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]
@@ -69,23 +72,27 @@ def _extract(message: str) -> Dict[str, Any]:
     elif any(w in text for w in ("egyptian", "local", "مصري")):
         visitor = "egyptian"
 
+    # Specific tiers first: "moderate budget" must not read as economy just because it says "budget".
     budget = None
-    if any(w in text for w in ("econ", "budget", "cheap", "اقتصاد", "رخيص", "محدود")):
-        budget = "economy"
+    if any(w in text for w in ("luxury", "luxurious", "vip", "deluxe", "5 star", "five star", "فاخر", "راقي", "٥ نجوم")):
+        budget = "luxury"
     elif any(w in text for w in ("moderat", "medium", "standard", "mid", "متوسط", "عادي")):
         budget = "moderate"
-    elif any(w in text for w in ("lux", "vip", "deluxe", "5 star", "فاخر", "راقي", "٥ نجوم")):
-        budget = "luxury"
+    elif any(w in text for w in ("econ", "cheap", "low budget", "tight budget", "on a budget", "backpack",
+                                 "اقتصاد", "رخيص", "محدود")):
+        budget = "economy"
 
+    # Family/group before couple, and no bare digits: "2 days" is not two travellers.
     travelers = None
-    if any(w in text for w in ("solo", "single", "alone", "واحد", "لوحدي", "مفرد")):
-        travelers = "solo"
-    elif any(w in text for w in ("couple", "two", "2", "wife", "husband", "زوج", "شخصين", "٢ أفراد", "2 أفراد")):
-        travelers = "couple"
-    elif any(w in text for w in ("fam", "kid", "child", "عائل", "مع أولادي", "مع الأسرة")):
+    if any(w in text for w in ("fam", "kid", "child", "عائل", "أولاد", "الأسرة")):
         travelers = "family"
-    elif any(w in text for w in ("group", "friend", "مجموع", "أصدقاء", "شلة")):
+    elif any(w in text for w in ("group", "friends", "مجموع", "أصدقاء", "اصدقاء", "صحاب", "أصحاب", "اصحاب", "شلة")):
         travelers = "group"
+    elif any(w in text for w in ("couple", "my wife", "my husband", "partner", "honeymoon", "زوجان", "زوجين",
+                                 "مراتي", "جوزي", "شهر العسل")):
+        travelers = "couple"
+    elif any(w in text for w in ("solo", "alone", "by myself", "لوحدي", "بمفردي")):
+        travelers = "solo"
 
     is_trip = bool(region or unsupported or days) or any(w in text for w in TRIP_WORDS)
     return {
@@ -130,12 +137,15 @@ def _write(payload: Dict[str, Any], language: str) -> str:
         if hotels:
             lines += ["", "**🏨 فنادق ومناطق إقامة مقترحة:**" if ar else "**🏨 Recommended Accommodation:**"]
             for h in hotels:
-                lines.append(f"- **{h['area']}**: {h['desc']}")
+                example = (f" (مثل {h['example']})" if ar else f" (e.g. {h['example']})") if h.get("example") else ""
+                why = f" _{' · '.join(h['why'])}_" if h.get("why") else ""
+                lines.append(f"- **{h['area']}**: {h['desc']}{example}{why}")
         transport = recs.get("transport", [])
         if transport:
             lines += ["", "**🚗 وسائل النقل والانتقالات:**" if ar else "**🚗 Transport Options:**"]
             for t in transport:
-                lines.append(f"- **{t['mode']}**: {t['desc']}")
+                why = f" _{' · '.join(t['why'])}_" if t.get("why") else ""
+                lines.append(f"- **{t['mode']}**: {t['desc']}{why}")
 
     lines += ["", "أوقات التنقل تقديرية، تأكد من المواعيد قبل الذهاب." if ar
               else "Travel times are estimates; confirm hours before you go."]
