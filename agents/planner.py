@@ -130,12 +130,14 @@ _MONEY = re.compile(r"(\d+(?:\.\d+)?)\s*(?:EGP|LE|L\.E|£E|جنيه|ج\.م)|(?:E
 MAX_REPLY_CHARS = 700
 
 
-def reply_invents_nothing(reply: str, payload: Dict[str, Any]) -> bool:
+def reply_invents_nothing(reply: str, payload: Dict[str, Any], language: str = "ar") -> bool:
     """Guard for the short reply: it may leave facts out (the trip sheet shows the full
     timetable), but every time and price it does mention must be a real one, and it
     must stay short and free of tables."""
     text = reply.translate(_ARABIC_DIGITS).replace(",", "")
     if len(text) > MAX_REPLY_CHARS or "|" in text:
+        return False
+    if language == "en" and re.search(r"[\u0600-\u06FF]", text):  # Arabic names leaking into English
         return False
     stops = [stop for day in payload["days"] for stop in day["stops"]]
     times = {stop[k] for stop in stops for k in ("start", "end")}
@@ -195,13 +197,14 @@ def _write_reply(payload: Dict[str, Any], language: str, llm: LLMFn) -> Dict[str
         f"Write a short reply in {voice} introducing this trip plan. 2 to 4 sentences, under 60 words.\n"
         "The app already shows the full timetable, so do NOT list times, prices, travel times, warnings or "
         "places that were left out. Name the area and two or three highlights from 'places' "
-        "(in Arabic script if writing Arabic). If some_opening_hours_unconfirmed is true, end with one short "
+        + ("(write them in Arabic). " if ar else "(write them in English exactly as given; no Arabic script). ")
+        + "If some_opening_hours_unconfirmed is true, end with one short "
         "reminder to check opening hours. If top_hotel_area is present, mention it in one short clause "
         "with its reason. Use only these facts. No headings, tables or bullet lists.\n\nDATA:\n"
         + json.dumps(brief, ensure_ascii=False)
     )
     result = llm(prompt, system=None, json_mode=False)
-    if result.get("ok") and reply_invents_nothing(result["text"], payload):
+    if result.get("ok") and reply_invents_nothing(result["text"], payload, language):
         return {"reply": result["text"].strip(), "used_fallback": False}
     return {"reply": short_summary(payload, language), "used_fallback": True}
 

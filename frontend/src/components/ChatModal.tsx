@@ -249,8 +249,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({
 
             {messages.map((m, idx) => (
               <div key={m.id || idx} className={`msg ${m.role}`}>
-                {m.role !== 'user' && <div className="who">{translate('ai', lang)}</div>}
-                {m.role === 'user' ? <div className="text">{m.text}</div> : <ReplyText text={m.text} />}
+                <div className="who">{translate(m.role === 'user' ? 'you' : 'ai', lang)}</div>
+                {m.role === 'user' ? <div className="bubble text">{m.text}</div> : <ReplyText text={m.text} />}
 
                 {m.result?.status === 'needs_clarification' && idx === messages.length - 1 && (
                   renderClarificationChips(m.result)
