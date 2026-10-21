@@ -8,8 +8,7 @@ DATA_DIR = BASE_DIR / "data"
 
 RAW_DATA_PATH = DATA_DIR / "raw_attractions.json"
 
-DEFAULT_EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-
+DEFAULT_EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 # Override per run to compare models, e.g. (PowerShell):
 #   $env:RAG_EMBEDDING_MODEL="paraphrase-multilingual-MiniLM-L12-v2"
 # Ingest, retriever and eval all read this one setting, so they stay in sync.
