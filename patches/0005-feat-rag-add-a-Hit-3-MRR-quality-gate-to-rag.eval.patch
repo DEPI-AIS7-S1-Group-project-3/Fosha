@@ -1,0 +1,87 @@
+From 7f19c19f0ea0a5fbbfe060b3b22a1497ff310e2e Mon Sep 17 00:00:00 2001
+From: Asaad <assadelbadawy24@gmail.com>
+Date: Wed, 21 Oct 2026 21:11:59 +0300
+Subject: [PATCH 5/7] feat(rag): add a Hit@3 / MRR quality gate to rag.eval
+
+--min-hit3 and --min-mrr make rag.eval exit with code 1 when the headline
+metrics fall below the given minimum, so CI can block retrieval regressions.
+---
+ rag/eval.py            | 22 +++++++++++++++++++++-
+ tests/test_rag_eval.py | 10 ++++++++++
+ 2 files changed, 31 insertions(+), 1 deletion(-)
+
+diff --git a/rag/eval.py b/rag/eval.py
+index 9450f1d..eaea3e7 100644
+--- a/rag/eval.py
++++ b/rag/eval.py
+@@ -5,6 +5,7 @@ Usage (from the repo root):
+     uv run python -m rag.eval --validate       # check the dataset only (no model, no DB)
+     uv run python -m rag.eval --json out.json  # also save a machine-readable report
+     uv run python -m rag.eval --mlflow         # also log the run to MLflow (see rag/tracking.py)
++    uv run python -m rag.eval --min-hit3 0.9   # exit 1 if headline Hit@3 < 0.9 (quality gate for CI)
+ 
+ What it measures
+ ----------------
+@@ -384,6 +385,18 @@ def print_report(health: Optional[Dict[str, Any]], results: List[Dict[str, Any]]
+     print("=" * 72)
+ 
+ 
++def check_thresholds(summary: Dict[str, Any], min_hit3: Optional[float] = None,
++                     min_mrr: Optional[float] = None) -> List[str]:
++    """Quality gate for CI: returns one message per headline metric below its minimum."""
++    headline = summary["headline"]
++    failures = []
++    if min_hit3 is not None and headline["hit@3"] < min_hit3:
++        failures.append(f"headline Hit@3 {headline['hit@3']:.3f} is below the minimum {min_hit3:.3f}")
++    if min_mrr is not None and headline["mrr"] < min_mrr:
++        failures.append(f"headline MRR {headline['mrr']:.3f} is below the minimum {min_mrr:.3f}")
++    return failures
++
++
+ def evaluate_retriever(search_fn: Optional[Callable[..., List[Dict[str, Any]]]] = None,
+                        json_path: Optional[str] = None,
+                        skip_health: bool = False,
+@@ -434,6 +447,10 @@ if __name__ == "__main__":
+     parser.add_argument("--run-name", default=None, help="MLflow run name (default: the embedding model)")
+     parser.add_argument("--tracking-uri", default=None,
+                         help="MLflow tracking URI (default: $MLFLOW_TRACKING_URI or a local mlflow.db)")
++    parser.add_argument("--min-hit3", type=float, default=None,
++                        help="fail (exit code 1) if the headline Hit@3 is below this value, e.g. 0.9")
++    parser.add_argument("--min-mrr", type=float, default=None,
++                        help="fail (exit code 1) if the headline MRR@5 is below this value")
+     args = parser.parse_args()
+ 
+     if args.validate:
+@@ -447,4 +464,7 @@ if __name__ == "__main__":
+             from rag.tracking import DEFAULT_EXPERIMENT
+             options = {"experiment": args.experiment or DEFAULT_EXPERIMENT,
+                        "run_name": args.run_name, "tracking_uri": args.tracking_uri}
+-        evaluate_retriever(json_path=args.json, mlflow_options=options)
++        final = evaluate_retriever(json_path=args.json, mlflow_options=options)
++        problems = check_thresholds(final["summary"], args.min_hit3, args.min_mrr)
++        if problems:
++            raise SystemExit("Quality gate failed:\n  " + "\n  ".join(problems))
+diff --git a/tests/test_rag_eval.py b/tests/test_rag_eval.py
+index 8492e05..70aa773 100644
+--- a/tests/test_rag_eval.py
++++ b/tests/test_rag_eval.py
+@@ -77,6 +77,16 @@ def test_run_cases_and_summarize_shape():
+     assert summary["distance"]["out_of_scope_top1_mean"] == pytest.approx(0.4)
+ 
+ 
++# --------------------------------------------------------------- quality gate --
++def test_check_thresholds():
++    summary = {"headline": {"hit@3": 0.90, "mrr": 0.80}}
++    assert rag_eval.check_thresholds(summary) == []
++    assert rag_eval.check_thresholds(summary, min_hit3=0.90, min_mrr=0.80) == []
++    assert len(rag_eval.check_thresholds(summary, min_hit3=0.95)) == 1
++    both = rag_eval.check_thresholds(summary, min_hit3=0.95, min_mrr=0.9)
++    assert len(both) == 2 and "Hit@3" in both[0] and "MRR" in both[1]
++
++
+ # ----------------------------------------------------------------- tracking --
+ def test_metric_name_replaces_at_sign():
+     assert tracking.metric_name("headline", "hit@3") == "headline.hit_at_3"
+-- 
+2.43.0
+

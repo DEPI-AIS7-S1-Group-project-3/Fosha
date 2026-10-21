@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --frozen --python 3.12
+      - name: Check the labelled RAG evaluation dataset
+        run: uv run python -m rag.eval --validate
+      - name: Run tests
+        run: uv run pytest -q

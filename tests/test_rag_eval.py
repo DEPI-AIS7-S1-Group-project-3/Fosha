@@ -77,6 +77,16 @@ def test_run_cases_and_summarize_shape():
     assert summary["distance"]["out_of_scope_top1_mean"] == pytest.approx(0.4)
 
 
+# --------------------------------------------------------------- quality gate --
+def test_check_thresholds():
+    summary = {"headline": {"hit@3": 0.90, "mrr": 0.80}}
+    assert rag_eval.check_thresholds(summary) == []
+    assert rag_eval.check_thresholds(summary, min_hit3=0.90, min_mrr=0.80) == []
+    assert len(rag_eval.check_thresholds(summary, min_hit3=0.95)) == 1
+    both = rag_eval.check_thresholds(summary, min_hit3=0.95, min_mrr=0.9)
+    assert len(both) == 2 and "Hit@3" in both[0] and "MRR" in both[1]
+
+
 # ----------------------------------------------------------------- tracking --
 def test_metric_name_replaces_at_sign():
     assert tracking.metric_name("headline", "hit@3") == "headline.hit_at_3"

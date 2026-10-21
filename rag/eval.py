@@ -5,6 +5,7 @@ Usage (from the repo root):
     uv run python -m rag.eval --validate       # check the dataset only (no model, no DB)
     uv run python -m rag.eval --json out.json  # also save a machine-readable report
     uv run python -m rag.eval --mlflow         # also log the run to MLflow (see rag/tracking.py)
+    uv run python -m rag.eval --min-hit3 0.9   # exit 1 if headline Hit@3 < 0.9 (quality gate for CI)
 
 What it measures
 ----------------
@@ -384,6 +385,18 @@ def print_report(health: Optional[Dict[str, Any]], results: List[Dict[str, Any]]
     print("=" * 72)
 
 
+def check_thresholds(summary: Dict[str, Any], min_hit3: Optional[float] = None,
+                     min_mrr: Optional[float] = None) -> List[str]:
+    """Quality gate for CI: returns one message per headline metric below its minimum."""
+    headline = summary["headline"]
+    failures = []
+    if min_hit3 is not None and headline["hit@3"] < min_hit3:
+        failures.append(f"headline Hit@3 {headline['hit@3']:.3f} is below the minimum {min_hit3:.3f}")
+    if min_mrr is not None and headline["mrr"] < min_mrr:
+        failures.append(f"headline MRR {headline['mrr']:.3f} is below the minimum {min_mrr:.3f}")
+    return failures
+
+
 def evaluate_retriever(search_fn: Optional[Callable[..., List[Dict[str, Any]]]] = None,
                        json_path: Optional[str] = None,
                        skip_health: bool = False,
@@ -434,6 +447,10 @@ if __name__ == "__main__":
     parser.add_argument("--run-name", default=None, help="MLflow run name (default: the embedding model)")
     parser.add_argument("--tracking-uri", default=None,
                         help="MLflow tracking URI (default: $MLFLOW_TRACKING_URI or a local mlflow.db)")
+    parser.add_argument("--min-hit3", type=float, default=None,
+                        help="fail (exit code 1) if the headline Hit@3 is below this value, e.g. 0.9")
+    parser.add_argument("--min-mrr", type=float, default=None,
+                        help="fail (exit code 1) if the headline MRR@5 is below this value")
     args = parser.parse_args()
 
     if args.validate:
@@ -447,4 +464,7 @@ if __name__ == "__main__":
             from rag.tracking import DEFAULT_EXPERIMENT
             options = {"experiment": args.experiment or DEFAULT_EXPERIMENT,
                        "run_name": args.run_name, "tracking_uri": args.tracking_uri}
-        evaluate_retriever(json_path=args.json, mlflow_options=options)
+        final = evaluate_retriever(json_path=args.json, mlflow_options=options)
+        problems = check_thresholds(final["summary"], args.min_hit3, args.min_mrr)
+        if problems:
+            raise SystemExit("Quality gate failed:\n  " + "\n  ".join(problems))

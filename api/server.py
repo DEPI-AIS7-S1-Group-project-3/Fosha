@@ -10,6 +10,7 @@ Endpoints:
     GET  /api/v1/health                                        -> {"ok": true, "demo": bool, "search": ...}
     GET  /, /dashboard                                         -> React app (frontend/dist, `npm run build`)
 """
+import json
 import os
 import threading
 import time
@@ -22,6 +23,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from agents import telemetry
 from agents.attractions import get_attraction
 from agents.places_online import arabic_area, arabic_description, arabic_name, is_dynamic
 from agents.planner import plan_trip
@@ -36,6 +38,8 @@ CACHE_SIZE = 256
 # Only answers that do not depend on a model hiccup are worth repeating.
 CACHEABLE = {"planned", "needs_clarification", "unsupported_region", "out_of_scope", "no_results"}
 
+telemetry.configure_logging()
+log = telemetry.log
 app = FastAPI(title="Fosha API (RehlaGuide)", version="0.2.0")
 
 
@@ -122,17 +126,24 @@ def chat(request: ChatRequest) -> Dict[str, Any]:
     # Edits depend on the plan sent along, so they are never answered from the cache.
     result = None if request.context else cache.get(request.message)
     cached = result is not None
-    if result is None:
-        try:
-            result = _run_pipeline(request.message, request.context)
-        except Exception as exc:  # plan_trip should not raise; this is a last line of defence
-            result = {"ok": False, "error": f"Unexpected error: {exc}"}
-        if result.get("ok") and result.get("itinerary"):
-            _enrich(result["itinerary"])
-        if result.get("ok") and result.get("status") in CACHEABLE and not request.context:
-            cache.put(request.message, result)
+    with telemetry.request() as metrics:
+        if result is None:
+            try:
+                result = _run_pipeline(request.message, request.context)
+            except Exception as exc:  # plan_trip should not raise; this is a last line of defence
+                log.exception("pipeline crashed")
+                result = {"ok": False, "error": f"Unexpected error: {exc}"}
+            if result.get("ok") and result.get("itinerary"):
+                _enrich(result["itinerary"])
+            if result.get("ok") and result.get("status") in CACHEABLE and not request.context:
+                cache.put(request.message, result)
     response_ms = round((time.perf_counter() - started) * 1000)
-    analytics.record_event(result, cached=cached, response_ms=response_ms)
+    health_metrics = metrics.summary()
+    event = analytics.record_event(result, cached=cached, response_ms=response_ms, metrics=health_metrics)
+    # One line per request, never the message text (same privacy rule as the analytics log).
+    log.info("chat %s", json.dumps({k: event[k] for k in (
+        "status", "language", "cached", "response_ms", "llm_calls", "llm_failed",
+        "llm_fallbacks", "top1_distance", "error")}, ensure_ascii=False))
     return {**result, "cached": cached, "response_ms": response_ms, "demo": DEMO}
 
 

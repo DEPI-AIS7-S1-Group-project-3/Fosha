@@ -5,6 +5,7 @@ The dashboard reads the same file, so numbers survive a server restart.
 The raw message text is NOT stored, only what the dashboard needs.
 """
 import json
+import math
 import threading
 import time
 from collections import Counter
@@ -18,7 +19,11 @@ _lock = threading.Lock()
 
 
 def record_event(result: Dict[str, Any], cached: bool, response_ms: int,
-                 path: Optional[Path] = None) -> Dict[str, Any]:
+                 path: Optional[Path] = None,
+                 metrics: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """`metrics` is agents.telemetry.RequestMetrics.summary() for this request (LLM and
+    retrieval health); it is empty for cached answers because nothing ran."""
+    metrics = metrics or {}
     path = path or LOG_PATH
     intent = result.get("intent") or {}
     itinerary = result.get("itinerary") or {}
@@ -37,6 +42,15 @@ def record_event(result: Dict[str, Any], cached: bool, response_ms: int,
                   for d in itinerary.get("days", []) for s in d["stops"]],
         "cached": cached,
         "response_ms": response_ms,
+        # health of this request (no message text): see agents/telemetry.py
+        "error": None if result.get("ok") else str(result.get("error", ""))[:200],
+        "llm_calls": metrics.get("llm_calls", 0),
+        "llm_failed": metrics.get("llm_failed", 0),
+        "llm_fallbacks": metrics.get("llm_fallbacks", 0),
+        "llm_ms": metrics.get("llm_ms", 0),
+        "llm_models": metrics.get("llm_models", []),
+        "top1_distance": metrics.get("top1_distance"),
+        "retrieval_empty": metrics.get("retrieval_empty", False),
     }
     path.parent.mkdir(parents=True, exist_ok=True)
     with _lock, open(path, "a", encoding="utf-8") as f:
@@ -62,9 +76,23 @@ def _top(counter: Counter, n: int) -> List[Dict[str, Any]]:
     return [{"name": name, "count": count} for name, count in counter.most_common(n)]
 
 
+def _rate(part: int, whole: int) -> float:
+    return round(part / whole, 4) if whole else 0.0
+
+
+def _percentile(values: List[float], q: float) -> int:
+    """Nearest-rank percentile (q in 0..1); 0 for no data."""
+    if not values:
+        return 0
+    ordered = sorted(values)
+    return round(ordered[max(0, math.ceil(q * len(ordered)) - 1)])
+
+
 def _window_stats(events: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
     events = list(events)
     total = len(events)
+    with_llm = [e for e in events if e.get("llm_calls")]
+    distances = [e["top1_distance"] for e in events if e.get("top1_distance") is not None]
     languages = Counter(e["language"] for e in events)
     cached = sum(1 for e in events if e.get("cached"))
     fresh_times = [e["response_ms"] for e in events if not e.get("cached")]
@@ -74,6 +102,13 @@ def _window_stats(events: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
         "avg_response_ms": round(sum(fresh_times) / len(fresh_times)) if fresh_times else 0,
         "languages": {"en": languages.get("en", 0), "ar": languages.get("ar", 0)},
         "planned": sum(1 for e in events if e.get("status") == "planned"),
+        # --- health (events logged before these fields existed count as healthy) ---
+        "error_rate": _rate(sum(1 for e in events if not e.get("ok")), total),
+        "p95_response_ms": _percentile(fresh_times, 0.95),
+        "llm_failure_rate": _rate(sum(1 for e in with_llm if e.get("llm_failed")), len(with_llm)),
+        "llm_fallback_rate": _rate(sum(1 for e in with_llm if e.get("llm_fallbacks")), len(with_llm)),
+        "empty_retrieval_rate": _rate(sum(1 for e in events if e.get("retrieval_empty")), total),
+        "avg_top1_distance": round(sum(distances) / len(distances), 4) if distances else None,
     }
 
 

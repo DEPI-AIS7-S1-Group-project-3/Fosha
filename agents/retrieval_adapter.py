@@ -11,6 +11,7 @@ What it adds on top of rag.retriever.search_attractions:
 from dataclasses import asdict
 from typing import Any, Callable, Dict, List, Optional
 
+from agents import telemetry
 from agents.attractions import get_attraction, load_attractions
 
 # Chroma distance, lower = closer. From Member 1's eval: worst in-scope top-1 was
@@ -129,6 +130,8 @@ def search_attractions(
             continue
         results.append({"attraction": asdict(attraction), "distance": round(distance, 4)})
 
+    telemetry.record_retrieval(top1_distance=min(best_distance.values()) if best_distance else None,
+                               n_results=len(results[:top_k]), dropped_too_far=dropped_too_far)
     return {
         "ok": True,
         "results": results[:top_k],

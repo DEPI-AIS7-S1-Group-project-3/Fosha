@@ -23,6 +23,8 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Optional, Tuple
 
+from agents import telemetry
+
 DEFAULTS = {
     "groq": ("openai/gpt-oss-120b", ("openai/gpt-oss-20b", "qwen/qwen3.8-27b")),
     "gemini": ("gemini-3-flash-preview", ("gemini-2.5-flash", "gemini-3.1-flash-lite")),
@@ -119,7 +121,7 @@ def _call_gemini(api_key: str, model: str, prompt: str, system: Optional[str], j
 CALLERS = {"groq": "_call_groq", "gemini": "_call_gemini"}
 
 
-def generate(prompt: str, system: Optional[str] = None, json_mode: bool = False) -> Dict[str, Any]:
+def _generate(prompt: str, system: Optional[str] = None, json_mode: bool = False) -> Dict[str, Any]:
     try:
         from dotenv import load_dotenv
 
@@ -146,5 +148,17 @@ def generate(prompt: str, system: Optional[str] = None, json_mode: bool = False)
             if not text:
                 errors.append(f"{provider}/{model}: empty response")
                 break
-            return {"ok": True, "text": text, "model": f"{provider}/{model}"}
+            return {"ok": True, "text": text, "model": f"{provider}/{model}", "_skipped": len(errors)}
     return {"ok": False, "error": "LLM call failed on every model: " + " | ".join(errors)}
+
+
+def generate(prompt: str, system: Optional[str] = None, json_mode: bool = False) -> Dict[str, Any]:
+    """Same contract as before; also reports the call (model, latency, fallbacks) to
+    agents.telemetry so the API can monitor LLM health."""
+    started = time.perf_counter()
+    result = _generate(prompt, system, json_mode)
+    skipped = result.pop("_skipped", 0)  # models that failed before one answered
+    telemetry.record_llm(model=result.get("model"), ok=bool(result.get("ok")),
+                         ms=round((time.perf_counter() - started) * 1000),
+                         failed_models=skipped, error=result.get("error"))
+    return result

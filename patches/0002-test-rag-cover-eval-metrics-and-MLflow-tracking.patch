@@ -1,0 +1,172 @@
+From 731e2194d8a4a6030bc5e79ea436ff2267c53053 Mon Sep 17 00:00:00 2001
+From: Asaad <assadelbadawy24@gmail.com>
+Date: Wed, 21 Oct 2026 20:57:36 +0300
+Subject: [PATCH 2/7] test(rag): cover eval metrics and MLflow tracking
+
+Unit tests for score_case (Hit/Recall/Precision/nDCG/MRR), dedupe, dataset
+validation, metric flattening and an end-to-end MLflow run on a temp
+SQLite store (skipped when mlflow is not installed).
+---
+ tests/test_rag_eval.py | 150 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 150 insertions(+)
+ create mode 100644 tests/test_rag_eval.py
+
+diff --git a/tests/test_rag_eval.py b/tests/test_rag_eval.py
+new file mode 100644
+index 0000000..8492e05
+--- /dev/null
++++ b/tests/test_rag_eval.py
+@@ -0,0 +1,150 @@
++"""Tests for rag/eval.py metrics and rag/tracking.py (no model, no Chroma, no MLflow needed)."""
++import math
++
++import pytest
++
++from rag import eval as rag_eval
++from rag import tracking
++
++
++# ------------------------------------------------------------------ metrics --
++def test_score_case_perfect_ranking():
++    s = rag_eval.score_case([5, 6, 7], {5: 2, 6: 1})
++    assert s["hit@1"] == 1.0
++    assert s["recall@3"] == 1.0
++    assert s["mrr"] == 1.0
++    assert s["ndcg@3"] == pytest.approx(1.0)
++
++
++def test_score_case_miss():
++    s = rag_eval.score_case([1, 2, 3, 4, 5], {9: 2})
++    assert all(v == 0.0 for v in s.values())
++
++
++def test_score_case_mrr_uses_first_relevant_rank():
++    s = rag_eval.score_case([1, 2, 9], {9: 2})
++    assert s["mrr"] == pytest.approx(1 / 3)
++    assert s["hit@1"] == 0.0 and s["hit@3"] == 1.0
++
++
++def test_score_case_ndcg_penalises_wrong_order():
++    # the primary answer (grade 2) at rank 2 instead of rank 1
++    s = rag_eval.score_case([6, 5], {5: 2, 6: 1})
++    ideal = 2 / math.log2(2) + 1 / math.log2(3)
++    actual = 1 / math.log2(2) + 2 / math.log2(3)
++    assert s["ndcg@3"] == pytest.approx(actual / ideal)
++    assert s["ndcg@3"] < 1.0
++
++
++def test_score_case_precision_and_recall():
++    s = rag_eval.score_case([5, 1, 2], {5: 2, 6: 1})
++    assert s["precision@3"] == pytest.approx(1 / 3)
++    assert s["recall@3"] == pytest.approx(1 / 2)
++
++
++def test_dedupe_keeps_first_occurrence_order():
++    assert rag_eval.dedupe([3, 1, 3, 2, 1]) == [3, 1, 2]
++
++
++# ------------------------------------------------------------------ dataset --
++def test_labelled_dataset_is_consistent():
++    assert rag_eval.validate_dataset() == []
++
++
++def test_passes_filters_mirrors_retriever_rules():
++    item = {"region": "Giza", "category": "Temple", "estimated_visit_duration_min": 90}
++    assert rag_eval.passes_filters(item, {})
++    assert rag_eval.passes_filters(item, {"region": "Giza", "max_duration": 1.5})
++    assert not rag_eval.passes_filters(item, {"region": "Cairo"})
++    assert not rag_eval.passes_filters(item, {"category": "Museum"})
++    assert not rag_eval.passes_filters(item, {"max_duration": 1.0})
++
++
++# ------------------------------------------------------------- run + summary --
++def _fake_search(**kwargs):
++    """Always returns attraction 5, so only cases that expect 5 can hit."""
++    return [{"metadata": {"id": 5}, "relevance_score": 0.4}]
++
++
++def test_run_cases_and_summarize_shape():
++    results = rag_eval.run_cases(_fake_search)
++    assert len(results) == len(rag_eval.EVAL_DATASET)
++    summary = rag_eval.summarize(results)
++    assert 0.0 < summary["headline"]["hit@3"] < 1.0
++    assert summary["headline_n"] == len(
++        [c for c in rag_eval.EVAL_DATASET if c["type"] in ("semantic", "intent")])
++    assert "out_of_scope" not in summary["by_type"]  # nothing to score there
++    assert summary["distance"]["out_of_scope_top1_mean"] == pytest.approx(0.4)
++
++
++# ----------------------------------------------------------------- tracking --
++def test_metric_name_replaces_at_sign():
++    assert tracking.metric_name("headline", "hit@3") == "headline.hit_at_3"
++    assert tracking.metric_name("slice", "arabic", "ndcg@1") == "slice.arabic.ndcg_at_1"
++
++
++def test_dataset_fingerprint_is_stable_and_sensitive():
++    a = tracking.dataset_fingerprint(rag_eval.EVAL_DATASET)
++    assert a == tracking.dataset_fingerprint(rag_eval.EVAL_DATASET)
++    changed = [dict(rag_eval.EVAL_DATASET[0], query="something else")] + rag_eval.EVAL_DATASET[1:]
++    assert a != tracking.dataset_fingerprint(changed)
++
++
++def test_flatten_metrics_names_and_values():
++    summary = rag_eval.summarize(rag_eval.run_cases(_fake_search))
++    health = {"healthy": True, "indexed_rows": 30}
++    m = tracking.flatten_metrics(summary, health)
++    assert m["headline.hit_at_3"] == summary["headline"]["hit@3"]
++    assert m["headline.mrr"] == summary["headline"]["mrr"]
++    assert "slice.arabic.n" in m
++    assert m["index_healthy"] == 1.0 and m["index_rows"] == 30.0
++    # the fake search ignores filters, so violations are expected; just check they pass through
++    assert m["filter_violations"] == float(summary["filter_violations"])
++    assert all(isinstance(v, float) for v in m.values())
++    assert all("@" not in k for k in m)
++
++
++def test_flatten_metrics_skips_missing_distances_and_health():
++    m = tracking.flatten_metrics({"distance": {"in_scope_top1_mean": 0.3, "out_of_scope_top1_min": None}})
++    assert m["distance.in_scope_top1_mean"] == 0.3
++    assert "distance.out_of_scope_top1_min" not in m
++    assert "index_healthy" not in m
++
++
++def test_build_params_drops_missing_values():
++    p = tracking.build_params({"embedding_model": "m", "dataset_size": 5, "summary": {"headline_n": 3}})
++    assert p == {"embedding_model": "m", "dataset_size": 5, "headline_n": 3}
++
++
++def test_resolve_tracking_uri_priority(monkeypatch):
++    monkeypatch.delenv("MLFLOW_TRACKING_URI", raising=False)
++    assert tracking.resolve_tracking_uri() == tracking.DEFAULT_TRACKING_URI
++    monkeypatch.setenv("MLFLOW_TRACKING_URI", "http://mlflow.local:5000")
++    assert tracking.resolve_tracking_uri() == "http://mlflow.local:5000"
++    assert tracking.resolve_tracking_uri("sqlite:///x.db") == "sqlite:///x.db"
++
++
++def test_evaluate_retriever_fails_fast_without_mlflow(monkeypatch):
++    monkeypatch.setattr(tracking, "mlflow_available", lambda: False)
++    with pytest.raises(SystemExit, match="uv sync --extra tracking"):
++        rag_eval.evaluate_retriever(search_fn=_fake_search, skip_health=True, mlflow_options={})
++
++
++def test_log_eval_run_end_to_end(tmp_path):
++    pytest.importorskip("mlflow")
++    import mlflow
++
++    uri = f"sqlite:///{(tmp_path / 'mlflow.db').as_posix()}"
++    report = rag_eval.evaluate_retriever(
++        search_fn=_fake_search, skip_health=True,
++        mlflow_options={"experiment": "test-exp", "run_name": "fake", "tracking_uri": uri})
++
++    client = mlflow.tracking.MlflowClient(tracking_uri=uri)
++    experiment = client.get_experiment_by_name("test-exp")
++    runs = client.search_runs([experiment.experiment_id])
++    assert len(runs) == 1
++    run = runs[0]
++    assert run.data.params["embedding_model"] == report["embedding_model"]
++    assert run.data.params["dataset_hash"] == report["dataset_hash"]
++    assert run.data.metrics["headline.hit_at_3"] == pytest.approx(report["summary"]["headline"]["hit@3"])
++    assert [a.path for a in client.list_artifacts(run.info.run_id)] == ["eval_report.json"]
+-- 
+2.43.0
+

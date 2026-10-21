@@ -208,19 +208,6 @@ Latest results on a healthy index (30 rows, 30/30 attractions):
 Headline Hit@1 is 90.3%. Filter integrity: 0 violations. Duplicates in top-5: 0.
 
 ### Comparing embedding models
-### Experiment tracking - MLflow (optional)
-
-`rag/tracking.py` logs each evaluation as an MLflow run, so embedding models and retrieval changes can be compared over time. MLflow is an optional extra; the app and the tests do not need it.
-
-```bash
-uv sync --extra tracking
-uv run python -m rag.eval --mlflow                                   # log to a local mlflow.db
-uv run python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
-uv run mlflow ui --backend-store-uri sqlite:///mlflow.db              # open http://127.0.0.1:5000
-```
-
-Each run stores: **params** (embedding model, dataset size and hash, headline n, raw attraction count), the git commit as a tag, **metrics** (headline and per-slice Hit/Recall/Precision/nDCG@K and MRR, e.g. `headline.hit_at_3`, `slice.arabic.mrr`; filter violations, duplicates, out-of-scope distances, index health) and the full JSON report as the `eval_report.json` artifact. Runs with the same `dataset_hash` are directly comparable. Use `--tracking-uri` or `MLFLOW_TRACKING_URI` to point at a shared MLflow server.
-
 The model is read from the `RAG_EMBEDDING_MODEL` environment variable (default `all-MiniLM-L6-v2`). Ingest, the retriever and the evaluation all use it, and each non-default model gets its own index folder (`data/chroma_db_<model>/`), so indexes never mix and the default one is never overwritten.
 
 ```powershell
@@ -241,6 +228,19 @@ Findings:
 - English retrieval is strong. The one English miss is *"Step Pyramid and the Imhotep Museum"* (Saqqara).
 - Arabic retrieval with this English-only model is not usable directly. This is why the agent translates Arabic queries to English before searching.
 - There is almost no gap between the worst in-scope top-1 distance (1.372) and the best out-of-scope top-1 distance (1.391), so a "no result" distance cutoff is only a soft signal.
+
+### Experiment tracking - MLflow (optional)
+
+`rag/tracking.py` logs each evaluation as an MLflow run, so embedding models and retrieval changes can be compared over time. MLflow is an optional extra; the app and the tests do not need it.
+
+```bash
+uv sync --extra tracking
+uv run python -m rag.eval --mlflow                                   # log to a local mlflow.db
+uv run python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
+uv run mlflow ui --backend-store-uri sqlite:///mlflow.db              # open http://127.0.0.1:5000
+```
+
+Each run stores: **params** (embedding model, dataset size and hash, headline n, raw attraction count), the git commit as a tag, **metrics** (headline and per-slice Hit/Recall/Precision/nDCG@K and MRR, e.g. `headline.hit_at_3`, `slice.arabic.mrr`; filter violations, duplicates, out-of-scope distances, index health) and the full JSON report as the `eval_report.json` artifact. Runs with the same `dataset_hash` are directly comparable. Use `--tracking-uri` or `MLFLOW_TRACKING_URI` to point at a shared MLflow server.
 
 ---
 
@@ -342,9 +342,32 @@ The only file that talks to a language model. Providers are tried in order (`LLM
 uv run pytest -q
 ```
 
-110 tests, with every model call and network request faked: data lookups and prices; opening-hours edge cases; travel estimates; the scheduler (an independent checker re-validates every stop); retrieval adapter; intent extraction; the planner pipeline, clarification wording and reply guard; personalised recommendations; online place lookup (parsing, caching, failures) and registration; plan editing; the LLM provider/model fallback; and the API (chat, cache, analytics, pages).
+About 140 tests, with every model call and network request faked: data lookups and prices; opening-hours edge cases; travel estimates; the scheduler (an independent checker re-validates every stop); retrieval adapter; intent extraction; the planner pipeline, clarification wording and reply guard; personalised recommendations; online place lookup (parsing, caching, failures) and registration; plan editing; the LLM provider/model fallback; the evaluation metrics and MLflow logging; request monitoring; and the API (chat, cache, analytics, pages).
 
 Not covered automatically: real model calls, real Chroma retrieval and live Wikivoyage data. Check those by running the app.
+
+### Monitoring
+
+Every `/api/v1/chat` writes one JSON line to `data/analytics.jsonl` (never the message text) and one log line to stderr (level from `LOG_LEVEL`, default `INFO`). Besides usage, each event now records the health of that request, collected by `agents/telemetry.py`: LLM calls, failures, models that failed before one answered (fallbacks), LLM time, the best retrieval distance and whether retrieval came back empty.
+
+`GET /api/v1/analytics` returns these next to the usage numbers, for the current and the previous period:
+
+| Field | Meaning |
+|---|---|
+| `error_rate` | share of chats that returned `ok: false` |
+| `p95_response_ms` | 95th percentile of fresh (not cached) answers |
+| `llm_failure_rate` | share of LLM-using chats where a call failed on every model |
+| `llm_fallback_rate` | share where the primary model failed and another answered: an early warning for quota or outages |
+| `empty_retrieval_rate` | share where retrieval returned nothing |
+| `avg_top1_distance` | mean best Chroma distance (lower is closer); a rise over time means worse retrieval |
+
+Events logged before these fields existed still load and count as healthy.
+
+### Quality gate and CI
+
+`uv run python -m rag.eval --min-hit3 0.90 --min-mrr 0.85` exits with code 1 when the headline Hit@3 or MRR@5 is below the minimum.
+
+GitHub Actions (`.github/workflows/`): `ci.yml` validates the evaluation dataset and runs the tests on every push to `main` and every pull request. `rag-eval.yml` builds the index and runs the gated evaluation when `rag/` or the dataset change (or by hand from the Actions tab), and uploads `eval-report.json`.
 
 ## 11. Known limitations
 
