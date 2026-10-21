@@ -37,5 +37,9 @@ npm-debug.log*
 ui design.zip
 
 
+# MLflow tracking data (rag/tracking.py)
+mlflow.db
+mlruns/
+
 # Places looked up online for towns outside the dataset (agents/places_online.py)
 data/places_cache.json

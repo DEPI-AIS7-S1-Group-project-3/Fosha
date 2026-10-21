@@ -4,6 +4,7 @@ Usage (from the repo root):
     uv run python -m rag.eval                  # full evaluation
     uv run python -m rag.eval --validate       # check the dataset only (no model, no DB)
     uv run python -m rag.eval --json out.json  # also save a machine-readable report
+    uv run python -m rag.eval --mlflow         # also log the run to MLflow (see rag/tracking.py)
 
 What it measures
 ----------------
@@ -385,10 +386,18 @@ def print_report(health: Optional[Dict[str, Any]], results: List[Dict[str, Any]]
 
 def evaluate_retriever(search_fn: Optional[Callable[..., List[Dict[str, Any]]]] = None,
                        json_path: Optional[str] = None,
-                       skip_health: bool = False) -> Dict[str, Any]:
+                       skip_health: bool = False,
+                       mlflow_options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Run the evaluation. `mlflow_options` (experiment / run_name / tracking_uri, all
+    optional) turns on MLflow logging; None leaves it off."""
     problems = validate_dataset()
     if problems:
         raise SystemExit("Dataset is inconsistent:\n  " + "\n  ".join(problems))
+
+    if mlflow_options is not None:
+        from rag import tracking
+        if not tracking.mlflow_available():  # fail before the slow part, not after it
+            raise SystemExit("MLflow is not installed. Run: uv sync --extra tracking")
 
     if search_fn is None:
         from rag.retriever import search_attractions
@@ -399,12 +408,18 @@ def evaluate_retriever(search_fn: Optional[Callable[..., List[Dict[str, Any]]]] 
     summary = summarize(results)
     print_report(health, results, summary)
 
+    from rag.tracking import dataset_fingerprint
     report = {"embedding_model": EMBEDDING_MODEL_NAME, "index_health": health,
+              "dataset_size": len(EVAL_DATASET), "dataset_hash": dataset_fingerprint(EVAL_DATASET),
               "summary": summary, "cases": results}
     if json_path:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(report, f, ensure_ascii=False, indent=2)
         print(f"Saved JSON report to {json_path}")
+    if mlflow_options is not None:
+        run_id = tracking.log_eval_run(report, **mlflow_options)
+        print(f"Logged MLflow run {run_id} "
+              f"(UI: uv run mlflow ui --backend-store-uri {tracking.resolve_tracking_uri(mlflow_options.get('tracking_uri'))})")
     return report
 
 
@@ -413,6 +428,12 @@ if __name__ == "__main__":
     parser.add_argument("--validate", action="store_true",
                         help="only check that the labelled dataset is consistent")
     parser.add_argument("--json", metavar="PATH", help="save a JSON report")
+    parser.add_argument("--mlflow", action="store_true",
+                        help="log metrics, params and the report to MLflow (needs: uv sync --extra tracking)")
+    parser.add_argument("--experiment", default=None, help="MLflow experiment name")
+    parser.add_argument("--run-name", default=None, help="MLflow run name (default: the embedding model)")
+    parser.add_argument("--tracking-uri", default=None,
+                        help="MLflow tracking URI (default: $MLFLOW_TRACKING_URI or a local mlflow.db)")
     args = parser.parse_args()
 
     if args.validate:
@@ -421,4 +442,9 @@ if __name__ == "__main__":
             raise SystemExit("Dataset problems:\n  " + "\n  ".join(issues))
         print(f"Dataset OK: {len(EVAL_DATASET)} cases, all ids and filters consistent.")
     else:
-        evaluate_retriever(json_path=args.json)
+        options = None
+        if args.mlflow:
+            from rag.tracking import DEFAULT_EXPERIMENT
+            options = {"experiment": args.experiment or DEFAULT_EXPERIMENT,
+                       "run_name": args.run_name, "tracking_uri": args.tracking_uri}
+        evaluate_retriever(json_path=args.json, mlflow_options=options)

@@ -208,6 +208,19 @@ Latest results on a healthy index (30 rows, 30/30 attractions):
 Headline Hit@1 is 90.3%. Filter integrity: 0 violations. Duplicates in top-5: 0.
 
 ### Comparing embedding models
+### Experiment tracking - MLflow (optional)
+
+`rag/tracking.py` logs each evaluation as an MLflow run, so embedding models and retrieval changes can be compared over time. MLflow is an optional extra; the app and the tests do not need it.
+
+```bash
+uv sync --extra tracking
+uv run python -m rag.eval --mlflow                                   # log to a local mlflow.db
+uv run python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
+uv run mlflow ui --backend-store-uri sqlite:///mlflow.db              # open http://127.0.0.1:5000
+```
+
+Each run stores: **params** (embedding model, dataset size and hash, headline n, raw attraction count), the git commit as a tag, **metrics** (headline and per-slice Hit/Recall/Precision/nDCG@K and MRR, e.g. `headline.hit_at_3`, `slice.arabic.mrr`; filter violations, duplicates, out-of-scope distances, index health) and the full JSON report as the `eval_report.json` artifact. Runs with the same `dataset_hash` are directly comparable. Use `--tracking-uri` or `MLFLOW_TRACKING_URI` to point at a shared MLflow server.
+
 The model is read from the `RAG_EMBEDDING_MODEL` environment variable (default `all-MiniLM-L6-v2`). Ingest, the retriever and the evaluation all use it, and each non-default model gets its own index folder (`data/chroma_db_<model>/`), so indexes never mix and the default one is never overwritten.
 
 ```powershell
