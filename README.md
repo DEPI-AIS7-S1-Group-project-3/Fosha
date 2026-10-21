@@ -31,11 +31,12 @@
 
 ## 3. Quick start
 
-Requirements: Python 3.13 with [uv](https://docs.astral.sh/uv/), and Node 18+ (only to rebuild the web app).
+Requirements: Python 3.12 (see `.python-version`; the project requires `<3.13`) with [uv](https://docs.astral.sh/uv/), and Node 18+ (only to rebuild the web app).
 
 ```bash
-uv sync                          # Python dependencies
-cp .env.example .env             # then add at least one key (below)
+uv sync                          # Python dependencies (add --extra tracking for MLflow)
+uv run python -m rag.ingest      # build the vector index (once, and again after changing the embedding model)
+cp .env.example .env             # Windows: copy .env.example .env, then add at least one key
 cd frontend && npm install && npm run build && cd ..   # the web app (frontend/dist is also committed)
 ```
 
@@ -47,15 +48,55 @@ GEMINI_MODEL=gemini-3-flash-preview
 ```
 `.env` is gitignored: never commit it or put a real key in `.env.example`.
 
-Run **one** of these (each starts a single server that serves both the API and the web app), then open **http://localhost:8000** (dashboard: **http://localhost:8000/dashboard**):
+### Running the app
 
-| Mode | Command | Needs |
-|---|---|---|
-| Full | `uv run uvicorn api.server:app --reload` | an LLM key + the Chroma index (`uv run python -m rag.ingest`, once) |
-| Real LLM, keyword search | `REHLA_SEARCH=keyword uv run uvicorn api.server:app` | an LLM key (no index; works where `sentence-transformers` can't install, e.g. Intel Macs) |
-| Offline demo | `REHLA_DEMO=1 uv run uvicorn api.server:app` | nothing: rule-based understanding and template replies |
+Run **one** of these modes (each starts a single server that serves both the API and the web app), then open **http://localhost:8000** (dashboard: **http://localhost:8000/dashboard**).
 
-Other useful commands: `uv run pytest -q` (tests), `uv run python -m agents.planner "3 days in Luxor"` (planner from the terminal), `uv run python -m api.seed` / `--clear` (sample dashboard events; they're excluded from the dashboard unless asked for).
+**Full mode**: real LLM and Chroma vector search. Needs an LLM key and the index from `rag.ingest`.
+
+```bash
+# bash / macOS / Linux
+REHLA_SEARCH=vector uv run uvicorn api.server:app --reload
+```
+```bat
+:: Windows cmd
+set REHLA_SEARCH=vector
+uv run uvicorn api.server:app --reload
+```
+```powershell
+# PowerShell
+$env:REHLA_SEARCH="vector"
+uv run uvicorn api.server:app --reload
+```
+
+**Keyword mode**: real LLM, no index. This is the default when `REHLA_SEARCH` is not set, so plain `uvicorn api.server:app` does **not** use Chroma. It also works where `sentence-transformers` cannot install (for example Intel Macs).
+
+```bash
+uv run uvicorn api.server:app --reload
+```
+
+**Offline demo**: no keys needed; rule-based understanding and template replies (LLM health metrics stay empty in this mode).
+
+```bash
+REHLA_DEMO=1 uv run uvicorn api.server:app --reload     # cmd: set REHLA_DEMO=1    PowerShell: $env:REHLA_DEMO="1"
+```
+
+Check which search mode is active:
+
+```bash
+curl http://localhost:8000/api/v1/health
+# {"ok": true, "demo": false, "search": "vector"}
+```
+
+Variables set with `set` or `$env:` last for the current terminal session only. Clear one with `set REHLA_SEARCH=` (cmd) or `Remove-Item Env:REHLA_SEARCH` (PowerShell).
+
+### Other commands
+
+```bash
+uv run pytest -q                                   # tests (add --extra tracking to include the MLflow tests)
+uv run python -m agents.planner "3 days in Luxor"  # the planner from the terminal
+uv run python -m api.seed                          # sample dashboard events (--clear removes them; excluded from the dashboard unless asked for)
+```
 
 ### Deploying (one web service)
 
@@ -174,7 +215,7 @@ Each record has: `id`, `name`, `city`, `region`, `category`, `description`, `ope
 ### Ingestion - `rag/ingest.py`
 - Builds one text document per attraction (name, region, category, description, hours, prices, duration).
 - Stores metadata for filtering: `id`, `name`, `region`, `category`, both prices, `estimated_duration_hours`.
-- Embeds with `all-MiniLM-L6-v2` (English-only sentence-transformer) and persists to ChromaDB in `data/chroma_db/`.
+- Embeds with `paraphrase-multilingual-MiniLM-L12-v2` (multilingual sentence-transformer, vectors normalised) and persists to ChromaDB in `data/chroma_db/`. Ingest and the retriever both pass `normalize_embeddings=True`; the distance cutoff in `agents/retrieval_adapter.py` assumes unit vectors.
 - Deletes the existing index before rebuilding. Without this, every run appended another copy and the index grew to 100 rows for 30 places.
 
 ### Retrieval - `rag/retriever.py`
@@ -195,52 +236,83 @@ uv run python -m rag.eval --json out.json
 ```
 51 labelled queries with graded relevance (2 = the place the query is about, 1 = acceptable), in five slices: semantic, filtered, intent, Arabic and out-of-scope. It also checks index health (every attraction exactly once), filter integrity and duplicate results.
 
-Latest results on a healthy index (30 rows, 30/30 attractions):
+Latest results on a healthy index (30 rows, 30/30 attractions), default model `paraphrase-multilingual-MiniLM-L12-v2` with normalised vectors:
 
 | Slice | n | Hit@3 | Recall@3 | nDCG@3 | MRR |
 |---|---|---|---|---|---|
-| Headline (semantic + intent, unfiltered) | 31 | 96.8% | 82.8% | 86.9% | 0.935 (MRR@5) |
-| Semantic | 27 | 96.3% | 82.1% | 87.3% | 0.944 |
-| Filtered | 10 | 100% | 91.7% | 94.8% | 1.000 |
-| Intent | 4 | 100% | 87.5% | 84.5% | 0.875 |
-| **Arabic** | 6 | **50.0%** | 44.4% | 24.9% | 0.222 |
+| Headline (semantic + intent, unfiltered) | 31 | 96.8% | 82.5% | 85.6% | 0.930 (MRR@5) |
+| Semantic | 27 | 96.3% | 82.7% | 86.0% | 0.938 |
+| Filtered | 10 | 100% | 91.7% | 94.7% | 1.000 |
+| Intent | 4 | 100% | 81.2% | 83.0% | 0.875 |
+| **Arabic** | 6 | **83.3%** | 66.7% | 65.8% | 0.764 |
 
 Headline Hit@1 is 90.3%. Filter integrity: 0 violations. Duplicates in top-5: 0.
 
 ### Comparing embedding models
-The model is read from the `RAG_EMBEDDING_MODEL` environment variable (default `all-MiniLM-L6-v2`). Ingest, the retriever and the evaluation all use it, and each non-default model gets its own index folder (`data/chroma_db_<model>/`), so indexes never mix and the default one is never overwritten.
 
-```powershell
-# PowerShell: build and evaluate a multilingual candidate
-$env:RAG_EMBEDDING_MODEL="paraphrase-multilingual-MiniLM-L12-v2"
+The model is read from the `RAG_EMBEDDING_MODEL` environment variable (default `paraphrase-multilingual-MiniLM-L12-v2`). Ingest, the retriever and the evaluation all use it, and each non-default model gets its own index folder (`data/chroma_db_<model>/`), so indexes never mix and the default one is never overwritten. After changing the default in `rag/config.py`, rebuild the default index with `uv run python -m rag.ingest`: old and new vectors have the same size (384), so a stale index gives wrong results without any error.
+
+Results of the three runs that led to the current default (headline = unfiltered semantic + intent queries):
+
+| Run | Headline Hit@3 | Headline MRR@5 | Arabic Hit@3 | Arabic MRR |
+|---|---|---|---|---|
+| `all-MiniLM-L6-v2` (previous default) | 96.8% | 0.935 | 50.0% | 0.222 |
+| `paraphrase-multilingual-MiniLM-L12-v2`, not normalised | 93.5% | 0.903 | 83.3% | 0.700 |
+| `paraphrase-multilingual-MiniLM-L12-v2`, normalised (current default) | 96.8% | 0.930 | 83.3% | 0.764 |
+
+To compare against the previous model, evaluate it explicitly (the report header prints the model used; check it, because a variable that was not applied silently evaluates the default):
+
+```bat
+:: Windows cmd
+set RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2
 uv run python -m rag.ingest
-uv run python -m rag.eval --json multilingual.json
+uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
+set RAG_EMBEDDING_MODEL=
+```
+```powershell
+# PowerShell
+$env:RAG_EMBEDDING_MODEL="all-MiniLM-L6-v2"
+uv run python -m rag.ingest
+uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
 Remove-Item Env:RAG_EMBEDDING_MODEL      # back to the default model
 ```
 ```bash
 # bash
-RAG_EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2 uv run python -m rag.ingest
-RAG_EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2 uv run python -m rag.eval --json multilingual.json
+RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2 uv run python -m rag.ingest
+RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2 uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
 ```
-The report header prints the model used. Compare the **Arabic** slice (baseline Hit@3 50.0%) and the **headline** English numbers: a multilingual model is only worth adopting if Arabic improves without a clear drop in English. Models that need `query:` / `passage:` prefixes (the e5 family) are not supported by this switch.
+
+A model is only worth adopting if the **Arabic** slice improves without a clear drop in the **headline** English numbers. Models that need `query:` / `passage:` prefixes (the e5 family) are not supported by this switch.
 
 Findings:
-- English retrieval is strong. The one English miss is *"Step Pyramid and the Imhotep Museum"* (Saqqara).
-- Arabic retrieval with this English-only model is not usable directly. This is why the agent translates Arabic queries to English before searching.
-- There is almost no gap between the worst in-scope top-1 distance (1.372) and the best out-of-scope top-1 distance (1.391), so a "no result" distance cutoff is only a soft signal.
+- English retrieval stays strong. The one English miss is *"papyri, sarcophagi, jewelry and royal statues"* (the previous model missed *"Step Pyramid and the Imhotep Museum"* instead). Arabic improved from 3 misses to 1: *"معبد الكرنك في الأقصر"*.
+- Without normalisation the multilingual model's Chroma distances were about 20-34 instead of about 1, which breaks the distance cutoff (every result looked "too far") and made the in-scope and out-of-scope ranges overlap heavily. Normalised vectors fixed both and brought the English numbers back to the previous level.
+- With normalised vectors the in-scope and out-of-scope top-1 distances still overlap slightly (worst in-scope 1.225, best out-of-scope 1.207; previously 1.372 and 1.391), so a "no result" distance cutoff is only a soft signal. The planner leaves out-of-scope requests to the intent step, and the cutoff in `agents/retrieval_adapter.py` stays at 1.38 (no in-scope case is above it).
+- The labelled sets are small (6 Arabic and 4 intent cases): one case moves a slice by 17-25 points, so treat these numbers as a direction, not a precise measurement.
+- The agent still builds an English search query in the intent step (`agents/intent.py`), so the Arabic gain only reaches users if that query is Arabic or bilingual. The end-to-end evaluation (`agents/eval_e2e.py` on the `feat/arabic-e2e-eval` branch) measures that real path.
 
 ### Experiment tracking - MLflow (optional)
 
-`rag/tracking.py` logs each evaluation as an MLflow run, so embedding models and retrieval changes can be compared over time. MLflow is an optional extra; the app and the tests do not need it.
+`rag/tracking.py` logs each evaluation as an MLflow run, so embedding models and retrieval changes can be compared over time. MLflow is an optional extra; the app and the tests do not need it. Run everything from the repository root.
 
 ```bash
 uv sync --extra tracking
-uv run python -m rag.eval --mlflow                                   # log to a local mlflow.db
-uv run python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
-uv run mlflow ui --backend-store-uri sqlite:///mlflow.db              # open http://127.0.0.1:5000
+uv run python -m rag.ingest                                   # the index must exist before evaluating
+uv run --extra tracking python -m rag.eval --mlflow                                   # log to a local mlflow.db
+uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
 ```
 
-Each run stores: **params** (embedding model, dataset size and hash, headline n, raw attraction count), the git commit as a tag, **metrics** (headline and per-slice Hit/Recall/Precision/nDCG@K and MRR, e.g. `headline.hit_at_3`, `slice.arabic.mrr`; filter violations, duplicates, out-of-scope distances, index health) and the full JSON report as the `eval_report.json` artifact. Runs with the same `dataset_hash` are directly comparable. Use `--tracking-uri` or `MLFLOW_TRACKING_URI` to point at a shared MLflow server.
+Open the MLflow UI (in a separate terminal; stop it with `Ctrl+C`):
+
+```bash
+uv run --extra tracking mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+Then open **http://127.0.0.1:5000**, choose the `rehlaguide-rag-eval` experiment, tick two or more runs and press **Compare**. Use the relative `sqlite:///mlflow.db` URI: an absolute path containing spaces breaks it. If port 5000 is busy, add `--port 5001`. Runs are stored in `mlflow.db` (gitignored). Use `--tracking-uri` or `MLFLOW_TRACKING_URI` to point at a shared MLflow server.
+
+Each run stores: **params** (embedding model, dataset size and hash, headline n, raw attraction count), the git commit as a tag, **metrics** (headline and per-slice Hit/Recall/Precision/nDCG@K and MRR, e.g. `headline.hit_at_3`, `slice.arabic.mrr`; filter violations, duplicates, out-of-scope distances, index health) and the full JSON report as the `eval_report.json` artifact. Runs with the same `dataset_hash` are directly comparable.
+
+Note: `pyproject.toml` pins `scipy<1.18` in the `tracking` extra. The project forces `numpy<2` (`override-dependencies`, which makes uv ignore the numpy requirement of other packages), and SciPy 1.18 needs NumPy 2.
 
 ---
 
@@ -384,7 +456,7 @@ GitHub Actions (`.github/workflows/`): `ci.yml` validates the evaluation dataset
 
 1. Day-trip travel time for far attractions; transfers between cities.
 2. Better grouping of nearby places within a day.
-3. Arabic-capable embedding model so Arabic queries don't rely on translation.
+3. Measure Arabic end to end (`agents/eval_e2e.py`) and decide whether retrieval should use the original Arabic text or both languages, now that the embedding model is multilingual.
 4. Accounts and saved trips.
 
 ## 13. Data sources and credits
