@@ -43,7 +43,10 @@ def build_vector_store():
     if CHROMA_DB_DIR.exists():
         shutil.rmtree(CHROMA_DB_DIR)
 
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
+    embeddings = HuggingFaceEmbeddings(
+       model_name=EMBEDDING_MODEL_NAME,
+       encode_kwargs={"normalize_embeddings": True},
+   )
     vector_store = Chroma.from_documents(
         documents=documents,
         embedding=embeddings,

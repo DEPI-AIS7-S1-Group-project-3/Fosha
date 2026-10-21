@@ -12,7 +12,10 @@ def get_vector_store():
 
     After re-running ingest in the same process, call get_vector_store.cache_clear().
     """
-    embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
+    embeddings = HuggingFaceEmbeddings(
+       model_name=EMBEDDING_MODEL_NAME,
+       encode_kwargs={"normalize_embeddings": True},
+   )
     return Chroma(
         persist_directory=str(CHROMA_DB_DIR),
         embedding_function=embeddings

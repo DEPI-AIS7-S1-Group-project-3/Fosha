@@ -32,6 +32,7 @@ build-backend = "uv_build"
 # Experiment tracking for `python -m rag.eval --mlflow` (not needed to run the app)
 tracking = [
     "mlflow>=2.14",
+    "scipy<1.18",
 ]
 
 [dependency-groups]
