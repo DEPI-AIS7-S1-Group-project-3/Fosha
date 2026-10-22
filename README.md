@@ -244,7 +244,9 @@ Latest results on a healthy index (30 rows, 30/30 attractions), default model `p
 | Semantic | 27 | 96.3% | 82.7% | 86.0% | 0.938 |
 | Filtered | 10 | 100% | 91.7% | 94.7% | 1.000 |
 | Intent | 4 | 100% | 81.2% | 83.0% | 0.875 |
-| **Arabic** | 6 | **83.3%** | 66.7% | 65.8% | 0.764 |
+| **Arabic** | 28 | **64.3%** | 55.4% | 54.3% | 0.568 |
+
+Note: the Arabic slice has 28 cases (22 Egyptian-dialect and conversational queries were added to the original 6). The 83.3% quoted for the original 6 cases was optimistic: on the wider slice Hit@3 is 64.3%, still well above the English-only model's 50.0% on 6 cases but far from the English numbers.
 
 Headline Hit@1 is 90.3%. Filter integrity: 0 violations. Duplicates in top-5: 0.
 
@@ -258,7 +260,7 @@ Results of the three runs that led to the current default (headline = unfiltered
 |---|---|---|---|---|
 | `all-MiniLM-L6-v2` (previous default) | 96.8% | 0.935 | 50.0% | 0.222 |
 | `paraphrase-multilingual-MiniLM-L12-v2`, not normalised | 93.5% | 0.903 | 83.3% | 0.700 |
-| `paraphrase-multilingual-MiniLM-L12-v2`, normalised (current default) | 96.8% | 0.930 | 83.3% | 0.764 |
+| `paraphrase-multilingual-MiniLM-L12-v2`, normalised (current default) | 96.8% | 0.930 | 83.3% (6 cases) / 64.3% (28 cases) | 0.764 / 0.568 |
 
 To compare against the previous model, evaluate it explicitly (the report header prints the model used; check it, because a variable that was not applied silently evaluates the default):
 
@@ -285,7 +287,7 @@ RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2 uv run --extra tracking python -m rag.eval 
 A model is only worth adopting if the **Arabic** slice improves without a clear drop in the **headline** English numbers. Models that need `query:` / `passage:` prefixes (the e5 family) are not supported by this switch.
 
 Findings:
-- English retrieval stays strong. The one English miss is *"papyri, sarcophagi, jewelry and royal statues"* (the previous model missed *"Step Pyramid and the Imhotep Museum"* instead). Arabic improved from 3 misses to 1: *"معبد الكرنك في الأقصر"*.
+- English retrieval stays strong. The one English miss is *"papyri, sarcophagi, jewelry and royal statues"* (the previous model missed *"Step Pyramid and the Imhotep Museum"* instead). On the original 6 Arabic cases, misses went from 3 to 1: *"معبد الكرنك في الأقصر"*.
 - Without normalisation the multilingual model's Chroma distances were about 20-34 instead of about 1, which breaks the distance cutoff (every result looked "too far") and made the in-scope and out-of-scope ranges overlap heavily. Normalised vectors fixed both and brought the English numbers back to the previous level.
 - With normalised vectors the in-scope and out-of-scope top-1 distances still overlap slightly (worst in-scope 1.225, best out-of-scope 1.207; previously 1.372 and 1.391), so a "no result" distance cutoff is only a soft signal. The planner leaves out-of-scope requests to the intent step, and the cutoff in `agents/retrieval_adapter.py` stays at 1.38 (no in-scope case is above it).
 - The labelled sets are small (6 Arabic and 4 intent cases): one case moves a slice by 17-25 points, so treat these numbers as a direction, not a precise measurement.
@@ -452,7 +454,7 @@ Events logged before these fields existed still load and count as healthy.
 
 ### Quality gate and CI
 
-`uv run python -m rag.eval --min-hit3 0.90 --min-mrr 0.85` exits with code 1 when the headline Hit@3 or MRR@5 is below the minimum.
+`uv run python -m rag.eval --min-hit3 0.90 --min-mrr 0.85` exits with code 1 when the headline Hit@3 or MRR@5 is below the minimum. `--min-arabic-hit3 0.70` does the same for the Arabic slice, so an Arabic regression cannot hide behind good English numbers.
 
 GitHub Actions (`.github/workflows/`): `ci.yml` validates the evaluation dataset and runs the tests on every push to `main` and every pull request. `rag-eval.yml` builds the index and runs the gated evaluation when `rag/` or the dataset change (or by hand from the Actions tab), and uploads `eval-report.json`.
 

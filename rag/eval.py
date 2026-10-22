@@ -6,6 +6,7 @@ Usage (from the repo root):
     uv run python -m rag.eval --json out.json  # also save a machine-readable report
     uv run python -m rag.eval --mlflow         # also log the run to MLflow (see rag/tracking.py)
     uv run python -m rag.eval --min-hit3 0.9   # exit 1 if headline Hit@3 < 0.9 (quality gate for CI)
+    uv run python -m rag.eval --min-arabic-hit3 0.7   # same, for the Arabic slice
 
 What it measures
 ----------------
@@ -26,6 +27,7 @@ import argparse
 import json
 import math
 import statistics
+import sys
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional
 
@@ -138,6 +140,51 @@ EVAL_DATASET: List[Dict[str, Any]] = [
      "filters": {}, "relevant": {21: 2}},
     {"id": "ar-06", "type": "arabic", "query": "معبد أبو سمبل",
      "filters": {}, "relevant": {17: 2}},
+    # Egyptian-dialect and conversational phrasing (added to widen the Arabic slice)
+    {"id": "ar-07", "type": "arabic", "query": "عايز اشوف الهرم الاكبر",
+     "filters": {}, "relevant": {5: 2, 6: 1, 7: 1}},
+    {"id": "ar-08", "type": "arabic", "query": "فين متحف الاثار المصرية القديمة",
+     "filters": {}, "relevant": {1: 2, 2: 1}},
+    {"id": "ar-09", "type": "arabic", "query": "وادي الملوك",
+     "filters": {}, "relevant": {11: 2}},
+    {"id": "ar-10", "type": "arabic", "query": "معبد حتشبسوت في الاقصر",
+     "filters": {}, "relevant": {12: 2, 14: 1}},
+    {"id": "ar-11", "type": "arabic", "query": "معبد فيلة في اسوان",
+     "filters": {}, "relevant": {16: 2}},
+    {"id": "ar-12", "type": "arabic", "query": "معبد ادفو",
+     "filters": {}, "relevant": {19: 2}},
+    {"id": "ar-13", "type": "arabic", "query": "مكتبة الاسكندرية",
+     "filters": {}, "relevant": {22: 2}},
+    {"id": "ar-14", "type": "arabic", "query": "مقابر كوم الشقافة تحت الارض",
+     "filters": {}, "relevant": {23: 2}},
+    {"id": "ar-15", "type": "arabic", "query": "الصحراء البيضاء والتخييم",
+     "filters": {}, "relevant": {30: 2}},
+    {"id": "ar-16", "type": "arabic", "query": "رحلة لواحة سيوة",
+     "filters": {}, "relevant": {28: 2, 29: 1}},
+    {"id": "ar-17", "type": "arabic", "query": "دير سانت كاترين وجبل موسى",
+     "filters": {}, "relevant": {25: 2}},
+    {"id": "ar-18", "type": "arabic", "query": "جزيرة الجفتون والسنوركل",
+     "filters": {}, "relevant": {27: 2}},
+    {"id": "ar-19", "type": "arabic", "query": "اكواريوم الغردقة",
+     "filters": {}, "relevant": {26: 2}},
+    {"id": "ar-20", "type": "arabic", "query": "راس محمد في شرم الشيخ",
+     "filters": {}, "relevant": {24: 2}},
+    {"id": "ar-21", "type": "arabic", "query": "المتحف القبطي",
+     "filters": {}, "relevant": {3: 2}},
+    {"id": "ar-22", "type": "arabic", "query": "متحف الحضارة في الفسطاط",
+     "filters": {}, "relevant": {2: 2}},
+    {"id": "ar-23", "type": "arabic", "query": "متحف النوبة",
+     "filters": {}, "relevant": {15: 2}},
+    {"id": "ar-24", "type": "arabic", "query": "معبد كوم امبو",
+     "filters": {}, "relevant": {18: 2}},
+    {"id": "ar-25", "type": "arabic", "query": "سقارة والهرم المدرج",
+     "filters": {}, "relevant": {6: 2}},
+    {"id": "ar-26", "type": "arabic", "query": "عايز اروح مكان فيه مقابر الفراعنة",
+     "filters": {}, "relevant": {11: 2, 5: 1, 6: 1, 7: 1}},
+    {"id": "ar-27", "type": "arabic", "query": "مكان حلو للاطفال يشوفوا فيه سمك وحيوانات البحر",
+     "filters": {}, "relevant": {26: 2, 24: 1}},
+    {"id": "ar-28", "type": "arabic", "query": "يوم على المركب والبحر في الغردقة",
+     "filters": {}, "relevant": {27: 2}},
 
     # ---------------- out of scope: nothing relevant exists ------------------
     {"id": "oos-01", "type": "out_of_scope", "query": "best sushi restaurant in Tokyo",
@@ -147,6 +194,10 @@ EVAL_DATASET: List[Dict[str, Any]] = [
     {"id": "oos-03", "type": "out_of_scope", "query": "Eiffel Tower and the Louvre in Paris",
      "filters": {}, "relevant": {}},
     {"id": "oos-04", "type": "out_of_scope", "query": "football match results yesterday",
+     "filters": {}, "relevant": {}},
+    {"id": "oos-05", "type": "out_of_scope", "query": "احسن مطعم سوشي في طوكيو",
+     "filters": {}, "relevant": {}},
+    {"id": "oos-06", "type": "out_of_scope", "query": "نتيجة مباراة الاهلي امبارح",
      "filters": {}, "relevant": {}},
 ]
 
@@ -385,15 +436,38 @@ def print_report(health: Optional[Dict[str, Any]], results: List[Dict[str, Any]]
     print("=" * 72)
 
 
+def ensure_utf8_output(stream: Any = None) -> None:
+    """Make printing Arabic safe on consoles whose default encoding is not UTF-8.
+
+    On Windows the console encoding is often cp1252, and printing the Arabic queries in
+    the failure list crashed the run before the MLflow logging step. No-op for streams
+    that cannot be reconfigured (e.g. when output is captured)."""
+    stream = stream if stream is not None else sys.stdout
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8", errors="replace")
+
+
 def check_thresholds(summary: Dict[str, Any], min_hit3: Optional[float] = None,
-                     min_mrr: Optional[float] = None) -> List[str]:
-    """Quality gate for CI: returns one message per headline metric below its minimum."""
+                     min_mrr: Optional[float] = None,
+                     min_arabic_hit3: Optional[float] = None) -> List[str]:
+    """Quality gate for CI: returns one message per metric below its minimum.
+
+    min_hit3 / min_mrr apply to the headline (English, unfiltered) queries;
+    min_arabic_hit3 applies to the Arabic slice, so a regression in Arabic retrieval
+    cannot hide behind good English numbers."""
     headline = summary["headline"]
     failures = []
     if min_hit3 is not None and headline["hit@3"] < min_hit3:
         failures.append(f"headline Hit@3 {headline['hit@3']:.3f} is below the minimum {min_hit3:.3f}")
     if min_mrr is not None and headline["mrr"] < min_mrr:
         failures.append(f"headline MRR {headline['mrr']:.3f} is below the minimum {min_mrr:.3f}")
+    if min_arabic_hit3 is not None:
+        arabic = summary.get("by_type", {}).get("arabic")
+        if arabic is None:
+            failures.append("no Arabic cases were scored, so --min-arabic-hit3 cannot be checked")
+        elif arabic["hit@3"] < min_arabic_hit3:
+            failures.append(f"Arabic Hit@3 {arabic['hit@3']:.3f} is below the minimum {min_arabic_hit3:.3f}")
     return failures
 
 
@@ -437,6 +511,7 @@ def evaluate_retriever(search_fn: Optional[Callable[..., List[Dict[str, Any]]]] 
 
 
 if __name__ == "__main__":
+    ensure_utf8_output()
     parser = argparse.ArgumentParser(description="Evaluate the RehlaGuide retriever.")
     parser.add_argument("--validate", action="store_true",
                         help="only check that the labelled dataset is consistent")
@@ -451,6 +526,8 @@ if __name__ == "__main__":
                         help="fail (exit code 1) if the headline Hit@3 is below this value, e.g. 0.9")
     parser.add_argument("--min-mrr", type=float, default=None,
                         help="fail (exit code 1) if the headline MRR@5 is below this value")
+    parser.add_argument("--min-arabic-hit3", type=float, default=None,
+                        help="fail (exit code 1) if the Arabic-slice Hit@3 is below this value")
     args = parser.parse_args()
 
     if args.validate:
@@ -465,6 +542,6 @@ if __name__ == "__main__":
             options = {"experiment": args.experiment or DEFAULT_EXPERIMENT,
                        "run_name": args.run_name, "tracking_uri": args.tracking_uri}
         final = evaluate_retriever(json_path=args.json, mlflow_options=options)
-        problems = check_thresholds(final["summary"], args.min_hit3, args.min_mrr)
+        problems = check_thresholds(final["summary"], args.min_hit3, args.min_mrr, args.min_arabic_hit3)
         if problems:
             raise SystemExit("Quality gate failed:\n  " + "\n  ".join(problems))

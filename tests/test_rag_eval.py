@@ -87,6 +87,43 @@ def test_check_thresholds():
     assert len(both) == 2 and "Hit@3" in both[0] and "MRR" in both[1]
 
 
+def test_check_thresholds_arabic_slice():
+    summary = {"headline": {"hit@3": 0.95, "mrr": 0.9},
+               "by_type": {"arabic": {"n": 28, "hit@3": 0.70}}}
+    assert rag_eval.check_thresholds(summary, min_arabic_hit3=0.70) == []
+    low = rag_eval.check_thresholds(summary, min_arabic_hit3=0.80)
+    assert len(low) == 1 and "Arabic Hit@3" in low[0]
+    # a good headline must not hide a bad Arabic slice
+    assert rag_eval.check_thresholds(summary, min_hit3=0.9, min_arabic_hit3=0.80) == low
+    missing = rag_eval.check_thresholds({"headline": summary["headline"], "by_type": {}}, min_arabic_hit3=0.5)
+    assert len(missing) == 1 and "no Arabic cases" in missing[0]
+
+
+def test_arabic_slice_is_wide_enough_to_gate():
+    arabic = [c for c in rag_eval.EVAL_DATASET if c["type"] == "arabic"]
+    assert len(arabic) >= 20  # one case must not swing the slice by 17+ points
+    assert len({c["query"] for c in arabic}) == len(arabic)
+    assert any(c["type"] == "out_of_scope" and any("\u0600" <= ch <= "\u06ff" for ch in c["query"])
+               for c in rag_eval.EVAL_DATASET)
+
+
+def test_ensure_utf8_output_lets_a_cp1252_console_print_arabic():
+    import io
+
+    stream = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    with pytest.raises(UnicodeEncodeError):
+        stream.write("معبد")  # what crashed rag.eval on Windows
+    stream = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    rag_eval.ensure_utf8_output(stream)
+    stream.write("معبد")
+    stream.flush()
+    assert stream.buffer.getvalue().decode("utf-8") == "معبد"
+
+
+def test_ensure_utf8_output_ignores_streams_that_cannot_be_reconfigured():
+    rag_eval.ensure_utf8_output(object())  # must not raise
+
+
 # ----------------------------------------------------------------- tracking --
 def test_metric_name_replaces_at_sign():
     assert tracking.metric_name("headline", "hit@3") == "headline.hit_at_3"
