@@ -22,7 +22,7 @@ def teardown_module(module):
 
 def test_default_model_keeps_original_index_folder(monkeypatch):
     cfg = reload_config(monkeypatch, None)
-    assert cfg.EMBEDDING_MODEL_NAME == "all-MiniLM-L6-v2"
+    assert cfg.EMBEDDING_MODEL_NAME == "paraphrase-multilingual-MiniLM-L12-v2"
     assert cfg.CHROMA_DB_DIR == cfg.DATA_DIR / "chroma_db"
 
 
@@ -41,13 +41,22 @@ def test_other_model_gets_its_own_sibling_folder(monkeypatch):
 
 def test_vector_store_is_built_once(monkeypatch):
     built = []
-    monkeypatch.setattr(retriever, "HuggingFaceEmbeddings", lambda model_name: built.append("emb") or object())
+    captured = {}
+
+    def fake_embeddings(**kwargs):
+        captured.update(kwargs)
+        built.append("emb")
+        return object()
+
+    monkeypatch.setattr(retriever, "HuggingFaceEmbeddings", fake_embeddings)
     monkeypatch.setattr(retriever, "Chroma", lambda **kw: built.append("chroma") or object())
     retriever.get_vector_store.cache_clear()
     first = retriever.get_vector_store()
     second = retriever.get_vector_store()
     assert first is second
     assert built == ["emb", "chroma"]
+    # Vectors must be normalised: the distance cutoff in agents/retrieval_adapter.py assumes unit vectors
+    assert captured["encode_kwargs"] == {"normalize_embeddings": True}
     retriever.get_vector_store.cache_clear()
     retriever.get_vector_store()
     assert built == ["emb", "chroma", "emb", "chroma"]
