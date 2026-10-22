@@ -23,10 +23,9 @@ jobs:
       - name: Build the index
         run: uv run python -m rag.ingest
       - name: Evaluate retrieval
-        # Baseline (multilingual model, normalised): headline Hit@3 96.8%, MRR@5 0.930.
-        # The Arabic gate is provisional: calibrate it from a local run on the 28-case Arabic slice
-        # (set it 5-10 points below the measured Arabic Hit@3).
-        run: uv run python -m rag.eval --json eval-report.json --min-hit3 0.90 --min-mrr 0.85 --min-arabic-hit3 0.70
+        # Baseline (multilingual model, normalised): headline Hit@3 96.8%, MRR@5 0.930,
+        # Arabic Hit@3 64.3% on the 28-case Arabic slice. The Arabic gate sits ~9 points below that.
+        run: uv run python -m rag.eval --json eval-report.json --min-hit3 0.90 --min-mrr 0.85 --min-arabic-hit3 0.55
       - name: Upload the report
         if: always()
         uses: actions/upload-artifact@v4
