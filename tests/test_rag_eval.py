@@ -126,6 +126,31 @@ def test_build_params_drops_missing_values():
     assert p == {"embedding_model": "m", "dataset_size": 5, "headline_n": 3}
 
 
+def test_build_params_records_slice_sizes():
+    p = tracking.build_params({"summary": {"by_type": {"arabic": {"n": 6, "hit@3": 0.8}, "intent": {"n": 4}}}})
+    assert p == {"n_arabic": 6, "n_intent": 4}
+
+
+def test_select_key_metrics_keeps_only_the_key_ones():
+    summary = rag_eval.summarize(rag_eval.run_cases(_fake_search))
+    full = tracking.flatten_metrics(summary, {"healthy": True, "indexed_rows": 30})
+    key = tracking.select_key_metrics(full)
+    assert set(key) <= set(tracking.KEY_METRICS)
+    assert list(key) == [m for m in tracking.KEY_METRICS if m in full]  # order follows KEY_METRICS
+    for wanted in ("headline.hit_at_3", "headline.mrr", "slice.arabic.hit_at_3", "index_healthy"):
+        assert wanted in key
+    for dropped in ("headline.precision_at_3", "slice.semantic.ndcg_at_5", "slice.arabic.n", "index_rows"):
+        assert dropped in full and dropped not in key
+    assert len(key) < len(full)
+
+
+def test_every_key_metric_is_a_real_metric_name():
+    """A typo in KEY_METRICS would silently drop a metric from MLflow, so each name must exist."""
+    summary = rag_eval.summarize(rag_eval.run_cases(_fake_search))
+    full = tracking.flatten_metrics(summary, {"healthy": True, "indexed_rows": 30})
+    assert [m for m in tracking.KEY_METRICS if m not in full] == []
+
+
 def test_resolve_tracking_uri_priority(monkeypatch):
     monkeypatch.delenv("MLFLOW_TRACKING_URI", raising=False)
     assert tracking.resolve_tracking_uri() == tracking.DEFAULT_TRACKING_URI
@@ -157,4 +182,8 @@ def test_log_eval_run_end_to_end(tmp_path):
     assert run.data.params["embedding_model"] == report["embedding_model"]
     assert run.data.params["dataset_hash"] == report["dataset_hash"]
     assert run.data.metrics["headline.hit_at_3"] == pytest.approx(report["summary"]["headline"]["hit@3"])
+    # only the key metrics reach MLflow; the full set stays in the JSON artifact
+    assert set(run.data.metrics) <= set(tracking.KEY_METRICS)
+    assert "headline.precision_at_3" not in run.data.metrics
+    assert run.data.params["n_arabic"] == str(report["summary"]["by_type"]["arabic"]["n"])
     assert [a.path for a in client.list_artifacts(run.info.run_id)] == ["eval_report.json"]

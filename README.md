@@ -310,7 +310,22 @@ uv run --extra tracking mlflow ui --backend-store-uri sqlite:///mlflow.db
 
 Then open **http://127.0.0.1:5000**, choose the `rehlaguide-rag-eval` experiment, tick two or more runs and press **Compare**. Use the relative `sqlite:///mlflow.db` URI: an absolute path containing spaces breaks it. If port 5000 is busy, add `--port 5001`. Runs are stored in `mlflow.db` (gitignored). Use `--tracking-uri` or `MLFLOW_TRACKING_URI` to point at a shared MLflow server.
 
-Each run stores: **params** (embedding model, dataset size and hash, headline n, raw attraction count), the git commit as a tag, **metrics** (headline and per-slice Hit/Recall/Precision/nDCG@K and MRR, e.g. `headline.hit_at_3`, `slice.arabic.mrr`; filter violations, duplicates, out-of-scope distances, index health) and the full JSON report as the `eval_report.json` artifact. Runs with the same `dataset_hash` are directly comparable.
+Each run stores: **params** (embedding model, dataset size and hash, headline n, raw attraction count, the number of cases per slice such as `n_arabic`), the git commit as a tag, **11 key metrics** and the full JSON report as the `eval_report.json` artifact (every metric at every K for every slice, and every case with expected vs retrieved ids). The key metrics (`KEY_METRICS` in `rag/tracking.py`):
+
+| Metric | Meaning | Expected |
+|---|---|---|
+| `headline.hit_at_3` | a relevant place is in the top 3 (the main number) | higher is better |
+| `headline.hit_at_1` | the first result is relevant | higher is better |
+| `headline.mrr` | how high the first relevant place ranks (MRR@5) | higher is better |
+| `headline.ndcg_at_3` | ranking quality when several places are relevant | higher is better |
+| `slice.arabic.hit_at_3`, `slice.arabic.mrr` | the same on the Arabic queries | higher is better |
+| `filter_violations` | a result that breaks its region/category/duration filter | 0 |
+| `cases_with_duplicates` | the same place twice in the top 5 | 0 |
+| `index_healthy` | every attraction indexed exactly once | 1 |
+| `distance.in_scope_top1_max` | worst top-1 distance of a valid request | lower; below the next row |
+| `distance.out_of_scope_top1_min` | best top-1 distance of an out-of-scope request | higher |
+
+Precision@K is left out on purpose: most queries have one or two relevant places, so it cannot approach 1 and says little. Runs with the same `dataset_hash` are directly comparable.
 
 Note: `pyproject.toml` pins `scipy<1.18` in the `tracking` extra. The project forces `numpy<2` (`override-dependencies`, which makes uv ignore the numpy requirement of other packages), and SciPy 1.18 needs NumPy 2.
 

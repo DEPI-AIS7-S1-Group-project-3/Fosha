@@ -8,10 +8,10 @@ MLflow is an optional dependency: nothing here is imported unless you run
     uv run mlflow ui --backend-store-uri sqlite:///mlflow.db     # http://127.0.0.1:5000
 
 Each evaluation becomes one run holding:
-* params   - embedding model, dataset size and hash, index size, git commit
-* metrics  - headline and per-slice Hit/Recall/Precision/nDCG/MRR, filter
-             integrity, duplicates and the out-of-scope distance calibration
-* artifact - the full JSON report (every case, with expected vs retrieved ids)
+* params   - embedding model, dataset size and hash, index size, slice sizes, git commit
+* metrics  - only the KEY_METRICS below (11 numbers), so runs are easy to read and compare
+* artifact - the full JSON report: every metric at every K for every slice, and every case
+             with expected vs retrieved ids. Nothing is lost by logging fewer metrics.
 """
 import hashlib
 import json
@@ -26,6 +26,25 @@ from rag.config import BASE_DIR
 
 DEFAULT_EXPERIMENT = "rehlaguide-rag-eval"
 DEFAULT_TRACKING_URI = f"sqlite:///{(BASE_DIR / 'mlflow.db').as_posix()}"
+
+# The metrics logged to MLflow. The full set (about 77) stays in the eval_report.json artifact.
+KEY_METRICS = (
+    # retrieval quality on the headline set (unfiltered semantic + intent queries)
+    "headline.hit_at_3",        # a relevant place is in the top 3 (the main number)
+    "headline.hit_at_1",        # the first result is relevant
+    "headline.mrr",             # how high the first relevant place ranks (MRR@5)
+    "headline.ndcg_at_3",       # ranking quality when several places are relevant
+    # Arabic, the reason the multilingual embedding model was chosen
+    "slice.arabic.hit_at_3",
+    "slice.arabic.mrr",
+    # health checks (expected: 0, 0, 1)
+    "filter_violations",        # a result that breaks its region/category/duration filter
+    "cases_with_duplicates",    # the same place twice in the top 5
+    "index_healthy",            # every attraction indexed exactly once
+    # calibration of the "no result" distance cutoff (lower distance = closer)
+    "distance.in_scope_top1_max",       # worst top-1 distance of a valid request
+    "distance.out_of_scope_top1_min",   # best top-1 distance of an out-of-scope request
+)
 
 
 def mlflow_available() -> bool:
@@ -86,6 +105,11 @@ def flatten_metrics(summary: Dict[str, Any], health: Optional[Dict[str, Any]] = 
     return metrics
 
 
+def select_key_metrics(metrics: Dict[str, float]) -> Dict[str, float]:
+    """Keep only KEY_METRICS (in that order); a key the report does not have is skipped."""
+    return {name: metrics[name] for name in KEY_METRICS if name in metrics}
+
+
 def build_params(report: Dict[str, Any]) -> Dict[str, Any]:
     params: Dict[str, Any] = {
         "embedding_model": report.get("embedding_model"),
@@ -96,6 +120,9 @@ def build_params(report: Dict[str, Any]) -> Dict[str, Any]:
     health = report.get("index_health")
     if health:
         params["raw_attractions"] = health.get("raw_attractions")
+    # How many labelled cases each slice has: a size, not a quality metric (e.g. n_arabic=6)
+    for slice_name, values in report.get("summary", {}).get("by_type", {}).items():
+        params[f"n_{slice_name}"] = values.get("n")
     return {k: v for k, v in params.items() if v is not None}
 
 
@@ -113,7 +140,8 @@ def log_eval_run(report: Dict[str, Any], experiment: str = DEFAULT_EXPERIMENT,
         commit = git_commit()
         if commit:
             mlflow.set_tag("git_commit", commit)
-        mlflow.log_metrics(flatten_metrics(report.get("summary", {}), report.get("index_health")))
+        all_metrics = flatten_metrics(report.get("summary", {}), report.get("index_health"))
+        mlflow.log_metrics(select_key_metrics(all_metrics))
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "eval_report.json"
             path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
