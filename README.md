@@ -246,6 +246,8 @@ Latest results on a healthy index (30 rows, 30/30 attractions), default model `p
 | Intent | 4 | 100% | 81.2% | 83.0% | 0.875 |
 | **Arabic** | 6 | **83.3%** | 66.7% | 65.8% | 0.764 |
 
+Note: the Arabic row above was measured on the original 6 Arabic cases. The slice now has 28 (Egyptian-dialect queries added), so re-run `rag.eval` and refresh that row.
+
 Headline Hit@1 is 90.3%. Filter integrity: 0 violations. Duplicates in top-5: 0.
 
 ### Comparing embedding models
@@ -452,7 +454,7 @@ Events logged before these fields existed still load and count as healthy.
 
 ### Quality gate and CI
 
-`uv run python -m rag.eval --min-hit3 0.90 --min-mrr 0.85` exits with code 1 when the headline Hit@3 or MRR@5 is below the minimum.
+`uv run python -m rag.eval --min-hit3 0.90 --min-mrr 0.85` exits with code 1 when the headline Hit@3 or MRR@5 is below the minimum. `--min-arabic-hit3 0.70` does the same for the Arabic slice, so an Arabic regression cannot hide behind good English numbers.
 
 GitHub Actions (`.github/workflows/`): `ci.yml` validates the evaluation dataset and runs the tests on every push to `main` and every pull request. `rag-eval.yml` builds the index and runs the gated evaluation when `rag/` or the dataset change (or by hand from the Actions tab), and uploads `eval-report.json`.
 
