@@ -107,6 +107,23 @@ def test_arabic_slice_is_wide_enough_to_gate():
                for c in rag_eval.EVAL_DATASET)
 
 
+def test_ensure_utf8_output_lets_a_cp1252_console_print_arabic():
+    import io
+
+    stream = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    with pytest.raises(UnicodeEncodeError):
+        stream.write("معبد")  # what crashed rag.eval on Windows
+    stream = io.TextIOWrapper(io.BytesIO(), encoding="cp1252")
+    rag_eval.ensure_utf8_output(stream)
+    stream.write("معبد")
+    stream.flush()
+    assert stream.buffer.getvalue().decode("utf-8") == "معبد"
+
+
+def test_ensure_utf8_output_ignores_streams_that_cannot_be_reconfigured():
+    rag_eval.ensure_utf8_output(object())  # must not raise
+
+
 # ----------------------------------------------------------------- tracking --
 def test_metric_name_replaces_at_sign():
     assert tracking.metric_name("headline", "hit@3") == "headline.hit_at_3"

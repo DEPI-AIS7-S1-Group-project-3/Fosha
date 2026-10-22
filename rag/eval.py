@@ -27,6 +27,7 @@ import argparse
 import json
 import math
 import statistics
+import sys
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional
 
@@ -435,6 +436,18 @@ def print_report(health: Optional[Dict[str, Any]], results: List[Dict[str, Any]]
     print("=" * 72)
 
 
+def ensure_utf8_output(stream: Any = None) -> None:
+    """Make printing Arabic safe on consoles whose default encoding is not UTF-8.
+
+    On Windows the console encoding is often cp1252, and printing the Arabic queries in
+    the failure list crashed the run before the MLflow logging step. No-op for streams
+    that cannot be reconfigured (e.g. when output is captured)."""
+    stream = stream if stream is not None else sys.stdout
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8", errors="replace")
+
+
 def check_thresholds(summary: Dict[str, Any], min_hit3: Optional[float] = None,
                      min_mrr: Optional[float] = None,
                      min_arabic_hit3: Optional[float] = None) -> List[str]:
@@ -498,6 +511,7 @@ def evaluate_retriever(search_fn: Optional[Callable[..., List[Dict[str, Any]]]] 
 
 
 if __name__ == "__main__":
+    ensure_utf8_output()
     parser = argparse.ArgumentParser(description="Evaluate the RehlaGuide retriever.")
     parser.add_argument("--validate", action="store_true",
                         help="only check that the labelled dataset is consistent")
