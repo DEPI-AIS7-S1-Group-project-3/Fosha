@@ -11,7 +11,7 @@ What it adds on top of rag.retriever.search_attractions:
 from dataclasses import asdict
 from typing import Any, Callable, Dict, List, Optional
 
-from agents import telemetry
+from agents import telemetry, tracing
 from agents.attractions import get_attraction, load_attractions
 
 # Chroma distance, lower = closer. From Member 1's eval: worst in-scope top-1 was
@@ -43,6 +43,30 @@ def search_attractions(
     top_k: int = 5,
     apply_cutoff: bool = True,
     search_fn: Optional[Callable[..., List[Dict[str, Any]]]] = None,
+) -> Dict[str, Any]:
+    """Tool contract (documented on _search_attractions). This wrapper only adds a tracing
+    step (agents/tracing.py): counts and flags, never the query text."""
+    with tracing.observation("retrieval.search", as_type="retriever") as span:
+        result = _search_attractions(query, region, category, max_duration_hours, top_k, apply_cutoff, search_fn)
+        top = result.get("results") or []
+        span.update(metadata={
+            "ok": bool(result.get("ok")), "n_results": len(top), "top_k": top_k,
+            "top1_distance": top[0]["distance"] if top else None,
+            "dropped_too_far": result.get("dropped_too_far", 0), "apply_cutoff": apply_cutoff,
+            "query_chars": len(query) if isinstance(query, str) else 0,
+            "region_filter": bool(region), "category_filter": bool(category),
+        })
+    return result
+
+
+def _search_attractions(
+    query: str,
+    region: Optional[str],
+    category: Optional[str],
+    max_duration_hours: Optional[float],
+    top_k: int,
+    apply_cutoff: bool,
+    search_fn: Optional[Callable[..., List[Dict[str, Any]]]],
 ) -> Dict[str, Any]:
     """Tool contract. Returns one of:
         {"ok": True, "results": [{"attraction": {...}, "distance": 0.93}, ...],
