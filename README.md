@@ -154,6 +154,7 @@ RehlaGuide/
 │   ├── recommendations.py       personalised hotel/transport ranking + clarification wording
 │   ├── places_online.py         any Egyptian town via OpenStreetMap / Wikivoyage / Wikidata
 │   ├── llm.py                   the only file that calls a model (Groq, Gemini)
+│   ├── tracing.py               optional Langfuse tracing (no-op unless keys are set; never sends message text)
 │   ├── attractions.py hours.py pricing.py travel.py retrieval_adapter.py
 │   └── data/                    hours, coordinates, recommendation catalogue
 ├── rag/                         knowledge base: ingest, retriever, evaluation
@@ -169,6 +170,7 @@ RehlaGuide/
 │   └── dist/                    built app served by the API
 ├── data/raw_attractions.json    the curated dataset (30 attractions)
 ├── Dockerfile, render.yaml       one-service deployment (requirements-deploy.txt: web-only deps)
+├── docker-compose.langfuse.yml  self-hosted Langfuse server (settings in .env.langfuse.example)
 ├── docs/                        README screenshots
 └── tests/                       pytest suite (models and network faked)
 ```
@@ -215,7 +217,7 @@ Each record has: `id`, `name`, `city`, `region`, `category`, `description`, `ope
 ### Ingestion - `rag/ingest.py`
 - Builds one text document per attraction (name, region, category, description, hours, prices, duration).
 - Stores metadata for filtering: `id`, `name`, `region`, `category`, both prices, `estimated_duration_hours`.
-- Embeds with `paraphrase-multilingual-mpnet-base-v2` (multilingual sentence-transformer, about 1 GB to download and slower than MiniLM, vectors normalised) and persists to ChromaDB in `data/chroma_db/`. Ingest and the retriever both pass `normalize_embeddings=True`; the distance cutoff in `agents/retrieval_adapter.py` assumes unit vectors.
+- Embeds with `paraphrase-multilingual-MiniLM-L12-v2` (multilingual sentence-transformer, vectors normalised) and persists to ChromaDB in `data/chroma_db/`. Ingest and the retriever both pass `normalize_embeddings=True`; the distance cutoff in `agents/retrieval_adapter.py` assumes unit vectors.
 - Deletes the existing index before rebuilding. Without this, every run appended another copy and the index grew to 100 rows for 30 places.
 
 ### Retrieval - `rag/retriever.py`
@@ -236,64 +238,62 @@ uv run python -m rag.eval --json out.json
 ```
 51 labelled queries with graded relevance (2 = the place the query is about, 1 = acceptable), in five slices: semantic, filtered, intent, Arabic and out-of-scope. It also checks index health (every attraction exactly once), filter integrity and duplicate results.
 
-Latest results on a healthy index (30 rows, 30/30 attractions), default model `paraphrase-multilingual-mpnet-base-v2` with normalised vectors:
+Latest results on a healthy index (30 rows, 30/30 attractions), default model `paraphrase-multilingual-MiniLM-L12-v2` with normalised vectors:
 
 | Slice | n | Hit@3 | Recall@3 | nDCG@3 | MRR |
 |---|---|---|---|---|---|
-| Headline (semantic + intent, unfiltered) | 31 | 100% | 83.6% | 88.9% | 0.984 (MRR@5) |
-| Semantic | 27 | 100% | 85.2% | 89.9% | 0.981 |
-| Filtered | 10 | 100% | 94.2% | 97.3% | 1.000 |
-| Intent | 4 | 100% | 72.9% | 82.2% | 1.000 |
-| **Arabic** | 28 | **64.3%** | 58.9% | 55.2% | 0.593 |
+| Headline (semantic + intent, unfiltered) | 31 | 96.8% | 82.5% | 85.6% | 0.930 (MRR@5) |
+| Semantic | 27 | 96.3% | 82.7% | 86.0% | 0.938 |
+| Filtered | 10 | 100% | 91.7% | 94.7% | 1.000 |
+| Intent | 4 | 100% | 81.2% | 83.0% | 0.875 |
+| **Arabic** | 28 | **64.3%** | 55.4% | 54.3% | 0.568 |
 
-Headline Hit@1 is 96.8%. Filter integrity: 0 violations. Duplicates in top-5: 0. The Arabic slice has 28 cases (6 original plus 22 Egyptian-dialect and conversational queries); the 83.3% once quoted for the original 6 was optimistic.
+Note: the Arabic slice has 28 cases (22 Egyptian-dialect and conversational queries were added to the original 6). The 83.3% quoted for the original 6 cases was optimistic: on the wider slice Hit@3 is 64.3%, still well above the English-only model's 50.0% on 6 cases but far from the English numbers.
+
+Headline Hit@1 is 90.3%. Filter integrity: 0 violations. Duplicates in top-5: 0.
 
 ### Comparing embedding models
 
-The model is read from the `RAG_EMBEDDING_MODEL` environment variable (default `paraphrase-multilingual-mpnet-base-v2`). Ingest, the retriever and the evaluation all use it, and each non-default model gets its own index folder (`data/chroma_db_<model>/`), so indexes never mix and the default one is never overwritten. After changing the default in `rag/config.py`, rebuild the default index with `uv run python -m rag.ingest`: old and new vectors have the same size (384), so a stale index gives wrong results without any error.
+The model is read from the `RAG_EMBEDDING_MODEL` environment variable (default `paraphrase-multilingual-MiniLM-L12-v2`). Ingest, the retriever and the evaluation all use it, and each non-default model gets its own index folder (`data/chroma_db_<model>/`), so indexes never mix and the default one is never overwritten. After changing the default in `rag/config.py`, rebuild the default index with `uv run python -m rag.ingest`: old and new vectors have the same size (384), so a stale index gives wrong results without any error.
 
-Runs that led to the current default (headline = unfiltered semantic + intent queries; the first three were scored when the Arabic slice had 6 cases, the last three on the 28-case slice):
+Results of the three runs that led to the current default (headline = unfiltered semantic + intent queries):
 
 | Run | Headline Hit@3 | Headline MRR@5 | Arabic Hit@3 | Arabic MRR |
 |---|---|---|---|---|
-| `all-MiniLM-L6-v2` (first default, 6 Arabic cases) | 96.8% | 0.935 | 50.0% | 0.222 |
-| `paraphrase-multilingual-MiniLM-L12-v2`, not normalised (6 cases) | 93.5% | 0.903 | 83.3% | 0.700 |
-| `paraphrase-multilingual-MiniLM-L12-v2`, normalised (6 cases) | 96.8% | 0.930 | 83.3% | 0.764 |
-| `paraphrase-multilingual-MiniLM-L12-v2`, normalised (28 cases) | 96.8% | 0.930 | 64.3% | 0.568 |
-| `paraphrase-multilingual-mpnet-base-v2` + Arabic names in the documents (tried, not adopted) | 96.8% | 0.937 | 75.0% | 0.622 |
-| **`paraphrase-multilingual-mpnet-base-v2`, normalised (current default)** | **100%** | **0.984** | 64.3% | 0.593 |
+| `all-MiniLM-L6-v2` (previous default) | 96.8% | 0.935 | 50.0% | 0.222 |
+| `paraphrase-multilingual-MiniLM-L12-v2`, not normalised | 93.5% | 0.903 | 83.3% | 0.700 |
+| `paraphrase-multilingual-MiniLM-L12-v2`, normalised (current default) | 96.8% | 0.930 | 83.3% (6 cases) / 64.3% (28 cases) | 0.764 / 0.568 |
 
-To compare against the previous default, evaluate it explicitly (the report header prints the model used; check it, because a variable that was not applied silently evaluates the default):
+To compare against the previous model, evaluate it explicitly (the report header prints the model used; check it, because a variable that was not applied silently evaluates the default):
 
 ```bat
 :: Windows cmd
-set RAG_EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2
+set RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2
 uv run python -m rag.ingest
-uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-multilingual --experiment rehlaguide-rag-eval
+uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
 set RAG_EMBEDDING_MODEL=
 ```
 ```powershell
 # PowerShell
-$env:RAG_EMBEDDING_MODEL="paraphrase-multilingual-MiniLM-L12-v2"
+$env:RAG_EMBEDDING_MODEL="all-MiniLM-L6-v2"
 uv run python -m rag.ingest
-uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-multilingual --experiment rehlaguide-rag-eval
+uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
 Remove-Item Env:RAG_EMBEDDING_MODEL      # back to the default model
 ```
 ```bash
 # bash
-RAG_EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2 uv run python -m rag.ingest
-RAG_EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2 uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-multilingual --experiment rehlaguide-rag-eval
+RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2 uv run python -m rag.ingest
+RAG_EMBEDDING_MODEL=all-MiniLM-L6-v2 uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
 ```
 
 A model is only worth adopting if the **Arabic** slice improves without a clear drop in the **headline** English numbers. Models that need `query:` / `passage:` prefixes (the e5 family) are not supported by this switch.
 
 Findings:
-- **mpnet beats the MiniLM models mainly in English:** headline Hit@1 went from 90.3% to 96.8%, MRR@5 from 0.930 to 0.984, and no English query misses the top 3. Arabic Hit@3 did not change (64.3% on 28 cases) and Arabic MRR moved only from 0.568 to 0.593.
-- **Arabic names inside the documents were tried and not adopted.** Adding each place's Arabic name and aliases to the indexed text raised Arabic Hit@3 to 75.0% with mpnet, but lowered headline Hit@1 to 90.3% and nDCG@3 to 0.811 and made the in-scope and out-of-scope distances overlap again. Which of the two changes (model or documents) helped was separated by an English-documents run with the same model.
-- Without normalisation the multilingual models' Chroma distances were about 20-34 instead of about 1, which breaks the distance cutoff (every result looked "too far"). Normalised vectors fixed that.
-- **Distance cutoff:** with mpnet the worst in-scope top-1 distance is 1.057 and the best out-of-scope one 1.118, so a gap exists for the first time, but it is only about 0.06 wide and rests on 4 out-of-scope cases. The cutoff in `agents/retrieval_adapter.py` stays at 1.38 (it removes nothing). Tightening it (to about 1.09) needs more out-of-scope cases and the end-to-end check first. The planner leaves out-of-scope requests to the intent step.
-- The labelled sets are small (4 intent, 4 out-of-scope, 28 Arabic): one Arabic case moves that slice by 3.6 points, so treat the numbers as a direction, not a precise measurement.
-- The agent still builds an English search query in the intent step (`agents/intent.py`), so the Arabic retrieval numbers matter less than the end-to-end result. The end-to-end evaluation (`agents/eval_e2e.py` on the `feat/arabic-e2e-eval` branch) measures that real path.
+- English retrieval stays strong. The one English miss is *"papyri, sarcophagi, jewelry and royal statues"* (the previous model missed *"Step Pyramid and the Imhotep Museum"* instead). On the original 6 Arabic cases, misses went from 3 to 1: *"معبد الكرنك في الأقصر"*.
+- Without normalisation the multilingual model's Chroma distances were about 20-34 instead of about 1, which breaks the distance cutoff (every result looked "too far") and made the in-scope and out-of-scope ranges overlap heavily. Normalised vectors fixed both and brought the English numbers back to the previous level.
+- With normalised vectors the in-scope and out-of-scope top-1 distances still overlap slightly (worst in-scope 1.225, best out-of-scope 1.207; previously 1.372 and 1.391), so a "no result" distance cutoff is only a soft signal. The planner leaves out-of-scope requests to the intent step, and the cutoff in `agents/retrieval_adapter.py` stays at 1.38 (no in-scope case is above it).
+- The labelled sets are small (6 Arabic and 4 intent cases): one case moves a slice by 17-25 points, so treat these numbers as a direction, not a precise measurement.
+- The agent still builds an English search query in the intent step (`agents/intent.py`), so the Arabic gain only reaches users if that query is Arabic or bilingual. The end-to-end evaluation (`agents/eval_e2e.py` on the `feat/arabic-e2e-eval` branch) measures that real path.
 
 ### Experiment tracking - MLflow (optional)
 
@@ -303,7 +303,7 @@ Findings:
 uv sync --extra tracking
 uv run python -m rag.ingest                                   # the index must exist before evaluating
 uv run --extra tracking python -m rag.eval --mlflow                                   # log to a local mlflow.db
-uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-multilingual --experiment rehlaguide-rag-eval
+uv run --extra tracking python -m rag.eval --mlflow --run-name minilm-baseline --experiment rehlaguide-rag-eval
 ```
 
 Open the MLflow UI (in a separate terminal; stop it with `Ctrl+C`):
@@ -453,6 +453,44 @@ Every `/api/v1/chat` writes one JSON line to `data/analytics.jsonl` (never the m
 | `avg_top1_distance` | mean best Chroma distance (lower is closer); a rise over time means worse retrieval |
 
 Events logged before these fields existed still load and count as healthy.
+
+### Tracing with Langfuse (self-hosted, optional)
+
+Monitoring above gives numbers per period. Langfuse gives one **trace per chat**: which step ran, how long it took, which model answered after how many fallbacks, and token counts, so a bad answer can be followed step by step. It is optional and off by default: without keys the app behaves exactly as before.
+
+```
+chat                      one trace per fresh answer (cache hits are not traced)
+├── intent.extract        llm.generate (model, tokens, fallbacks)
+├── retrieval.search      n_results, top1_distance, dropped_too_far
+├── schedule
+└── reply.write           llm.generate (model, tokens, fallbacks)
+```
+
+**Message text is never sent.** Spans carry only counts and flags (prompt length, number of results, language, status). As a second lock, `agents/tracing.py` installs a client-wide mask that replaces every string except a short allow-list (model name, status, language, mode) with `[masked]`, so a future change that passes text by mistake still cannot leak it. Provider error text stays in the server log, not in Langfuse. `top1_distance` is attached to each trace as a score.
+
+**1. Start the server** (Docker, about 2 GB of RAM):
+
+```bash
+cp .env.langfuse.example .env.langfuse        # fill every CHANGEME; secrets: openssl rand -hex 32
+docker compose -f docker-compose.langfuse.yml --env-file .env.langfuse up -d
+# UI: http://localhost:3000  (log in with LANGFUSE_INIT_USER_EMAIL / _PASSWORD)
+```
+
+The first start creates the organisation, the `rehlaguide` project, its API keys and the admin login from `.env.langfuse`. Everything listens on `127.0.0.1` only; set `LANGFUSE_BIND=0.0.0.0` to let teammates in, and put HTTPS in front. Data lives in Docker volumes (`docker compose ... down` keeps it, `down -v` deletes it).
+
+**2. Point the app at it** (in the app's `.env`, the same two keys as in `.env.langfuse`):
+
+```bash
+uv sync --extra observability
+# .env
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_BASE_URL=http://localhost:3000
+```
+
+Start the API as usual; `GET /api/v1/health` shows `"tracing": true` once it is connected. `LANGFUSE_TRACING_ENABLED=false` switches it off without removing the keys, and `LANGFUSE_TRACING_ENVIRONMENT=staging` separates environments inside one project.
+
+Notes: the `observability` extra needs Python 3.11 or newer (the project's Python 3.12 is fine). The hosted Render service in `render.yaml` cannot reach a Langfuse server on your laptop, so tracing there stays off unless Langfuse is hosted somewhere it can reach and the three variables are added. Tests: `tests/test_tracing.py` (the real-SDK test is skipped when the extra is not installed).
 
 ### Quality gate and CI
 

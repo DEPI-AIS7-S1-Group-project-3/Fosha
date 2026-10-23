@@ -43,3 +43,6 @@ mlruns/
 
 # Places looked up online for towns outside the dataset (agents/places_online.py)
 data/places_cache.json
+
+# Self-hosted Langfuse secrets (docker-compose.langfuse.yml)
+.env.langfuse

@@ -34,6 +34,11 @@ tracking = [
     "mlflow>=2.14",
     "scipy<1.18",
 ]
+# Request tracing with a self-hosted Langfuse (agents/tracing.py). Off unless the LANGFUSE_* keys are set.
+# Langfuse needs Python 3.11+, while the project still allows 3.10, hence the marker.
+observability = [
+    "langfuse>=5,<6; python_version >= '3.11'",
+]
 
 [dependency-groups]
 dev = [

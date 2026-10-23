@@ -21,6 +21,7 @@ from agents.pricing import check_ticket_price
 from agents.recommendations import REGION_AR, format_clarification_message, get_recommendations, regions_for_days
 from agents.retrieval_adapter import search_attractions
 from agents.scheduler import build_itinerary
+from agents import tracing
 
 LLMFn = Callable[..., Dict[str, Any]]
 _ARABIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
@@ -248,7 +249,9 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
                 interests=intent.get("interests"), search_query=intent.get("search_query"),
                 budget=intent.get("budget"), travelers=intent.get("travelers"), itinerary=itinerary)
             return {**base, "status": "planned", "itinerary": itinerary, "used_fallback": False, "edited": True}
-    extracted = extract_intent(message, llm)
+    with tracing.observation("intent.extract") as step:
+        extracted = extract_intent(message, llm)
+        step.update(metadata={"ok": bool(extracted["ok"])})
     if not extracted["ok"]:
         return {"ok": False, "error": extracted["error"]}
     intent = extracted["intent"]
@@ -322,8 +325,11 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
 
     # Spread places over the days instead of filling day 1 first (2-4 stops per day).
     per_day = min(4, max(2, math.ceil(len(candidate_ids) / intent["days"])))
-    itinerary = build_itinerary(candidate_ids, intent["days"], first_day=intent["travel_date"],
-                                max_stops_per_day=per_day)
+    with tracing.observation("schedule") as step:
+        itinerary = build_itinerary(candidate_ids, intent["days"], first_day=intent["travel_date"],
+                                    max_stops_per_day=per_day)
+        step.update(metadata={"ok": bool(itinerary["ok"]), "candidates": len(candidate_ids),
+                              "days": intent["days"], "language": lang})
     if not itinerary["ok"]:
         return {"ok": False, "error": itinerary["error"]}
 
@@ -334,7 +340,9 @@ def plan_trip(message: str, llm: LLMFn = generate, search_fn: Optional[Callable[
     )
 
     payload = _payload(itinerary, intent["visitor_type"])
-    written = _write_reply(payload, lang, llm)
+    with tracing.observation("reply.write") as step:
+        written = _write_reply(payload, lang, llm)
+        step.update(metadata={"used_fallback": bool(written["used_fallback"])})
     return done("planned", written["reply"], itinerary=itinerary, used_fallback=written["used_fallback"])
 
 

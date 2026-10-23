@@ -14,7 +14,7 @@ jobs:
         with:
           enable-cache: true
       - name: Install dependencies
-        run: uv sync --frozen --python 3.12
+        run: uv sync --frozen --python 3.12 --extra observability  # includes langfuse so the real-SDK masking test runs
       - name: Check the labelled RAG evaluation dataset
         run: uv run python -m rag.eval --validate
       - name: Run tests

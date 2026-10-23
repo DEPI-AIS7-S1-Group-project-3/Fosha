@@ -21,12 +21,17 @@ import os
 import time
 import urllib.error
 import urllib.request
+from contextvars import ContextVar
 from typing import Any, Dict, List, Optional, Tuple
 
-from agents import telemetry
+from agents import telemetry, tracing
+
+# Token counts of the call that answered, read by generate() for tracing only. A side channel,
+# so the _call_* functions keep returning plain text (tests patch them to return strings).
+_usage: ContextVar[Optional[Dict[str, int]]] = ContextVar("fosha_llm_usage", default=None)
 
 DEFAULTS = {
-    "groq": ("openai/gpt-oss-120b", ("openai/gpt-oss-20b", "qwen/qwen3.8-27b")),
+    "groq": ("openai/gpt-oss-120b", ("openai/gpt-oss-120b", "qwen/qwen3.8-27b")),
     "gemini": ("gemini-3-flash-preview", ("gemini-2.5-flash", "gemini-3.1-flash-lite")),
 }
 KEY_VARS = {"groq": "GROQ_API_KEY", "gemini": "GEMINI_API_KEY"}
@@ -90,6 +95,8 @@ def _call_groq(api_key: str, model: str, prompt: str, system: Optional[str], jso
             data = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:  # keep the status and Groq's reason (e.g. rate limit kind)
         raise RuntimeError(f"{exc.code} {exc.read().decode('utf-8', 'replace')[:300]}") from None
+    usage = data.get("usage") or {}
+    _usage.set({"input": int(usage.get("prompt_tokens") or 0), "output": int(usage.get("completion_tokens") or 0)})
     return (data["choices"][0]["message"].get("content") or "").strip()
 
 
@@ -115,6 +122,10 @@ def _call_gemini(api_key: str, model: str, prompt: str, system: Optional[str], j
         thinking_config=_thinking(types, model),
     )
     response = client.models.generate_content(model=model, contents=prompt, config=config)
+    meta = getattr(response, "usage_metadata", None)
+    if meta is not None:
+        _usage.set({"input": int(getattr(meta, "prompt_token_count", 0) or 0),
+                    "output": int(getattr(meta, "candidates_token_count", 0) or 0)})
     return response.text or ""
 
 
@@ -136,6 +147,7 @@ def _generate(prompt: str, system: Optional[str] = None, json_mode: bool = False
     for provider, model, key in chain:
         call = globals()[CALLERS[provider]]  # looked up at call time so tests can patch it
         for attempt in range(MAX_ATTEMPTS):
+            _usage.set(None)  # a failed attempt must not leak its numbers into the next one
             try:
                 text = call(key, model, prompt, system, json_mode)
             except Exception as exc:  # network, quota, bad key, bad model name, ...
@@ -156,8 +168,20 @@ def generate(prompt: str, system: Optional[str] = None, json_mode: bool = False)
     """Same contract as before; also reports the call (model, latency, fallbacks) to
     agents.telemetry so the API can monitor LLM health."""
     started = time.perf_counter()
-    result = _generate(prompt, system, json_mode)
-    skipped = result.pop("_skipped", 0)  # models that failed before one answered
+    # Tracing gets sizes and flags only: never the prompt or the reply (see agents/tracing.py).
+    with tracing.observation("llm.generate", as_type="generation") as span:
+        result = _generate(prompt, system, json_mode)
+        skipped = result.pop("_skipped", 0)  # models that failed before one answered
+        ok = bool(result.get("ok"))
+        span.update(
+            model=result.get("model"),
+            usage_details=_usage.get() if ok else None,
+            level="ERROR" if not ok else ("WARNING" if skipped else None),
+            status_message=None if ok else "LLM call failed on every model",
+            metadata={"ok": ok, "failed_models": skipped, "json_mode": json_mode,
+                      "prompt_chars": len(prompt), "has_system": bool(system),
+                      "reply_chars": len(result.get("text") or "")},
+        )
     telemetry.record_llm(model=result.get("model"), ok=bool(result.get("ok")),
                          ms=round((time.perf_counter() - started) * 1000),
                          failed_models=skipped, error=result.get("error"))
