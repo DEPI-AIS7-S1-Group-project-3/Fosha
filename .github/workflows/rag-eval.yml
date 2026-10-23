@@ -20,12 +20,17 @@ jobs:
           enable-cache: true
       - name: Install dependencies
         run: uv sync --frozen --python 3.12
+      - name: Cache the embedding model (about 1 GB)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ runner.os }}-paraphrase-multilingual-mpnet-base-v2
       - name: Build the index
         run: uv run python -m rag.ingest
       - name: Evaluate retrieval
-        # Baseline (multilingual model, normalised): headline Hit@3 96.8%, MRR@5 0.930,
-        # Arabic Hit@3 64.3% on the 28-case Arabic slice. The Arabic gate sits ~9 points below that.
-        run: uv run python -m rag.eval --json eval-report.json --min-hit3 0.90 --min-mrr 0.85 --min-arabic-hit3 0.55
+        # Baseline (paraphrase-multilingual-mpnet-base-v2, normalised): headline Hit@3 100%,
+        # MRR@5 0.984; Arabic Hit@3 64.3% on the 28-case Arabic slice. Gates leave room for noise.
+        run: uv run python -m rag.eval --json eval-report.json --min-hit3 0.90 --min-mrr 0.90 --min-arabic-hit3 0.55
       - name: Upload the report
         if: always()
         uses: actions/upload-artifact@v4
