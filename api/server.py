@@ -15,6 +15,7 @@ import os
 import threading
 import time
 from collections import OrderedDict
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -23,7 +24,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from agents import telemetry
+from agents import telemetry, tracing
 from agents.attractions import get_attraction
 from agents.places_online import arabic_area, arabic_description, arabic_name, is_dynamic
 from agents.planner import plan_trip
@@ -40,7 +41,15 @@ CACHEABLE = {"planned", "needs_clarification", "unsupported_region", "out_of_sco
 
 telemetry.configure_logging()
 log = telemetry.log
-app = FastAPI(title="Fosha API (RehlaGuide)", version="0.2.0")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    yield
+    tracing.shutdown()  # send queued Langfuse traces when the server stops (no-op when tracing is off)
+
+
+app = FastAPI(title="Fosha API (RehlaGuide)", version="0.2.0", lifespan=lifespan)
 
 
 class ChatRequest(BaseModel):
@@ -117,7 +126,8 @@ def _run_pipeline(message: str, context: Optional[Dict[str, Any]] = None) -> Dic
 
 @app.get("/api/v1/health")
 def health() -> Dict[str, Any]:
-    return {"ok": True, "demo": DEMO, "search": "keyword" if DEMO or KEYWORD_SEARCH else "vector"}
+    return {"ok": True, "demo": DEMO, "search": "keyword" if DEMO or KEYWORD_SEARCH else "vector",
+            "tracing": tracing.enabled()}
 
 
 @app.post("/api/v1/chat")
@@ -128,11 +138,24 @@ def chat(request: ChatRequest) -> Dict[str, Any]:
     cached = result is not None
     with telemetry.request() as metrics:
         if result is None:
-            try:
-                result = _run_pipeline(request.message, request.context)
-            except Exception as exc:  # plan_trip should not raise; this is a last line of defence
-                log.exception("pipeline crashed")
-                result = {"ok": False, "error": f"Unexpected error: {exc}"}
+            # One Langfuse trace per fresh answer; sends no message text (agents/tracing.py).
+            mode = "demo" if DEMO else ("keyword" if KEYWORD_SEARCH else "vector")
+            with tracing.trace("chat", tags=[mode], mode=mode, is_edit=bool(request.context)) as trace:
+                try:
+                    result = _run_pipeline(request.message, request.context)
+                except Exception as exc:  # plan_trip should not raise; this is a last line of defence
+                    log.exception("pipeline crashed")
+                    result = {"ok": False, "error": f"Unexpected error: {exc}"}
+                summary = metrics.summary()
+                trace.update(
+                    metadata={"ok": bool(result.get("ok")), "status": result.get("status"),
+                              "language": result.get("language"), "mode": mode,
+                              "is_edit": bool(request.context), "llm_calls": summary["llm_calls"],
+                              "llm_fallbacks": summary["llm_fallbacks"]},
+                    level=None if result.get("ok") else "ERROR",
+                    status_message=None if result.get("ok") else "pipeline returned ok=false")
+                if summary["top1_distance"] is not None:
+                    trace.score("top1_distance", summary["top1_distance"])
             if result.get("ok") and result.get("itinerary"):
                 _enrich(result["itinerary"])
             if result.get("ok") and result.get("status") in CACHEABLE and not request.context:
