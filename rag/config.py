@@ -8,9 +8,9 @@ DATA_DIR = BASE_DIR / "data"
 
 RAW_DATA_PATH = DATA_DIR / "raw_attractions.json"
 
-DEFAULT_EMBEDDING_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
+DEFAULT_EMBEDDING_MODEL = "paraphrase-multilingual-mpnet-base-v2"
 # Override per run to compare models, e.g. (PowerShell):
-#   $env:RAG_EMBEDDING_MODEL="paraphrase-multilingual-MiniLM-L12-v2"
+#   $env:RAG_EMBEDDING_MODEL="paraphrase-multilingual-MiniLM-L12-v2"   (Windows cmd: set RAG_EMBEDDING_MODEL=...)
 # Ingest, retriever and eval all read this one setting, so they stay in sync.
 EMBEDDING_MODEL_NAME = os.getenv("RAG_EMBEDDING_MODEL", "").strip() or DEFAULT_EMBEDDING_MODEL
 
