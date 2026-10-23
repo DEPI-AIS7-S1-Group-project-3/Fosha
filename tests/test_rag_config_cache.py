@@ -22,7 +22,7 @@ def teardown_module(module):
 
 def test_default_model_keeps_original_index_folder(monkeypatch):
     cfg = reload_config(monkeypatch, None)
-    assert cfg.EMBEDDING_MODEL_NAME == "paraphrase-multilingual-MiniLM-L12-v2"
+    assert cfg.EMBEDDING_MODEL_NAME == "paraphrase-multilingual-mpnet-base-v2"
     assert cfg.CHROMA_DB_DIR == cfg.DATA_DIR / "chroma_db"
 
 
