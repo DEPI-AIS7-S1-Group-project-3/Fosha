@@ -1,17 +1,13 @@
 {
-    "$schema": "https://openapi.vercel.sh/vercel.json",
-    "framework": "vite",
-    "buildCommand": "cd frontend && npm install && npm run build",
-    "outputDirectory": "frontend/dist",
-    "installCommand": "echo 'skip root install'",
-    "rewrites": [
-        {
-            "source": "/api/:path*",
-            "destination": "$BACKEND_URL/api/:path*"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
-    ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "$BACKEND_URL/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
