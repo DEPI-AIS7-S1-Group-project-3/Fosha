@@ -1,0 +1,19 @@
+# Exclude Python backend from Vercel (deployed separately on Render).
+# Without this, Vercel treats api/ as serverless functions and installs
+# all 5.8 GB of ML dependencies from uv.lock.
+api/
+agents/
+rag/
+src/
+tests/
+data/
+docs/
+*.py
+*.lock
+pyproject.toml
+.python-version
+Dockerfile
+docker-compose*.yml
+render.yaml
+requirements-deploy.txt
+conftest.py
