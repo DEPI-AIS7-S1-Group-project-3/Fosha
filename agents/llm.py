@@ -31,7 +31,7 @@ from agents import telemetry, tracing
 _usage: ContextVar[Optional[Dict[str, int]]] = ContextVar("fosha_llm_usage", default=None)
 
 DEFAULTS = {
-    "groq": ("openai/gpt-oss-120b", ("openai/gpt-oss-20b", "qwen/qwen3.8-27b")),
+    "groq": ("openai/gpt-oss-120b", ("openai/gpt-oss-120b", "qwen/qwen3.8-27b")),
     "gemini": ("gemini-3-flash-preview", ("gemini-2.5-flash", "gemini-3.1-flash-lite")),
 }
 KEY_VARS = {"groq": "GROQ_API_KEY", "gemini": "GEMINI_API_KEY"}
