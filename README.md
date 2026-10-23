@@ -230,27 +230,100 @@ Returns a list of `{"content": str, "metadata": {...}, "relevance_score": float}
 - `relevance_score` is a Chroma **distance**: lower means closer, not higher.
 - Only one region can be passed per call.
 
-### Evaluation - `rag/eval.py`
+### Evaluation: RAG, Agent and Answer quality
+
+Fosha uses three separate evaluation suites because retrieval quality, agent behaviour and final-answer quality are different things. Run them independently and compare runs in MLflow.
+
+#### 1. RAG / Retrieval evaluation — `rag/eval.py`
+
+**Question:** Did the retriever return the right attractions, and rank them near the top?
+
 ```bash
-uv run python -m rag.eval              # full evaluation
-uv run python -m rag.eval --validate   # check the dataset only (no model, no DB)
-uv run python -m rag.eval --json out.json
+uv run python -m rag.eval --validate
+uv run --extra tracking python -m rag.eval --mlflow --json rag_eval_report.json
 ```
-51 labelled queries with graded relevance (2 = the place the query is about, 1 = acceptable), in five slices: semantic, filtered, intent, Arabic and out-of-scope. It also checks index health (every attraction exactly once), filter integrity and duplicate results.
 
-Latest results on a healthy index (30 rows, 30/30 attractions), default model `paraphrase-multilingual-MiniLM-L12-v2` with normalised vectors:
+The labelled retrieval dataset checks ranking quality, Arabic queries, index health, duplicates and filter integrity. Key metrics from the latest reported run:
 
-| Slice | n | Hit@3 | Recall@3 | nDCG@3 | MRR |
-|---|---|---|---|---|---|
-| Headline (semantic + intent, unfiltered) | 31 | 96.8% | 82.5% | 85.6% | 0.930 (MRR@5) |
-| Semantic | 27 | 96.3% | 82.7% | 86.0% | 0.938 |
-| Filtered | 10 | 100% | 91.7% | 94.7% | 1.000 |
-| Intent | 4 | 100% | 81.2% | 83.0% | 0.875 |
-| **Arabic** | 28 | **64.3%** | 55.4% | 54.3% | 0.568 |
+| Metric | Value | Interpretation |
+|---|---:|---|
+| `headline.hit_at_3` | 1.000 | A relevant result appeared in the top 3 for every headline query. |
+| `headline.hit_at_1` | 0.968 | The first result was relevant for about 96.8% of headline queries. |
+| `headline.mrr` | 0.984 | The first relevant result was ranked very high on average. |
+| `headline.ndcg_at_3` | 0.889 | Strong top-3 ranking quality, accounting for relevance grades. |
+| `slice.arabic.hit_at_3` | 0.643 | A relevant result appeared in the top 3 for about 64.3% of Arabic queries. |
+| `slice.arabic.mrr` | 0.593 | Arabic ranking still has room for improvement. |
+| `filter_violations` | 0 | No filter violations were recorded. |
+| `cases_with_duplicates` | 0 | No duplicate-result cases were recorded. |
+| `index_healthy` | 1 | The index health check passed. |
 
-Note: the Arabic slice has 28 cases (22 Egyptian-dialect and conversational queries were added to the original 6). The 83.3% quoted for the original 6 cases was optimistic: on the wider slice Hit@3 is 64.3%, still well above the English-only model's 50.0% on 6 cases but far from the English numbers.
+This MLflow run used 75 evaluation cases and the `paraphrase-multilingual-mpnet-base-v2` embedding model. The headline slice contained 31 cases; the Arabic slice contained 28. Compare runs only after checking their dataset hash, embedding model and configuration.
 
-Headline Hit@1 is 90.3%. Filter integrity: 0 violations. Duplicates in top-5: 0.
+#### 2. Agent evaluation — `rag/eval_agents.py`
+
+**Question:** Did the planner understand the request, choose whether to call retrieval, execute the tool, and handle missing information or failures correctly?
+
+```bash
+uv run python -m rag.eval_agents --validate
+uv run --extra tracking python -m rag.eval_agents --mlflow --json agent_eval_report.json
+```
+
+The current test set contains 8 bilingual scenarios: four itinerary requests, two requests missing required information, and two out-of-scope questions. It also includes a separate injected retrieval-failure check.
+
+| Metric | Value | Interpretation |
+|---|---:|---|
+| `routing_accuracy` | 100% | All 8 cases followed the expected route. |
+| `intent_accuracy` | 100% | The expected intent was identified in all 8 cases. |
+| `status_accuracy` | 100% | The expected outcome/status matched in all 8 cases. |
+| `tool_selection_accuracy` | 100% | Retrieval was called or skipped as expected. |
+| `tool_success_rate` | 100% (5/5) | All 5 recorded tool calls succeeded. |
+| `task_completion_rate` | 100% | All cases passed the suite's task-completion checks. |
+| `planned_itinerary_completion_rate` | 100% | All itinerary cases passed the structural completion check. |
+| `pipeline_success_rate` | 100% | All 8 cases passed the pipeline check. |
+| `error_handling_pass` | Pass (1/1) | The injected retrieval-failure test passed. |
+
+These results are from a small, hand-authored test set. They measure routing, tool execution and structural completion—not whether every attraction is factually correct or every itinerary is useful. Retrieval relevance is measured by the RAG suite; final-answer quality is measured by the answer suite.
+
+#### 3. Answer evaluation — `rag/eval_answers.py`
+
+**Question:** Is the final response relevant, faithful to the available evidence, correct and complete?
+
+```bash
+uv run python -m rag.eval_answers --validate
+uv run --extra tracking python -m rag.eval_answers --mlflow --json answer_eval_report.json
+```
+
+An LLM judge scores final answers across 8 bilingual cases. Latest reported MLflow metrics:
+
+| Metric | Value | Interpretation |
+|---|---:|---|
+| `judge_success_rate` | 100% | The judge returned usable scores for all cases. |
+| `mean_relevance` | 3.875 | Average relevance score reported by the judge. |
+| `mean_faithfulness` | 3.875 | Average faithfulness score reported by the judge. |
+| `mean_correctness` | 3.875 | Average correctness score reported by the judge. |
+| `mean_completeness` | 3.000 | Completeness is the weakest of these four dimensions in this run. |
+| `mean_overall` | 3.656 | Average overall score reported by the judge. |
+| `pipeline_success_rate` | 100% | All 8 cases completed the evaluation pipeline. |
+
+The judge used `groq/openai/gpt-oss-120b` and `groq/openai/gpt-oss-20b`; the dataset hash was `dd84c9ab008f`. Scores are on the evaluator's configured scale, so interpret them using the scoring rubric in `rag/eval_answers.py`, not as percentages.
+
+#### MLflow tracking
+
+Install the optional tracking dependencies and open the local dashboard:
+
+```bash
+uv sync --extra tracking
+uv run --extra tracking mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+Open **http://127.0.0.1:5000** and compare runs in these experiments:
+
+- `rehlaguide-rag-eval` — retrieval and ranking.
+- `rehlaguide-agent-eval` — routing, tool use and task flow.
+- `rehlaguide-answer-eval` — final-answer quality.
+
+A score of 100% in one suite does not imply that the whole application is 100% accurate. The suites measure different failure modes, and results are comparable only when the datasets and evaluation configurations are understood.
+
 
 ### Comparing embedding models
 
