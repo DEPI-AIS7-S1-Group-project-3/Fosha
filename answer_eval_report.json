@@ -1,0 +1,580 @@
+{
+  "evaluation": "end_to_end_answer",
+  "created_at": "2026-10-23T13:04:05.953916+00:00",
+  "dataset_size": 16,
+  "embedding_model": "paraphrase-multilingual-mpnet-base-v2",
+  "summary": {
+    "n": 16,
+    "judge_success_rate": 1.0,
+    "mean_relevance": 2.812,
+    "mean_faithfulness": 4,
+    "mean_correctness": 2.688,
+    "mean_completeness": 2.188,
+    "mean_overall": 2.922,
+    "pipeline_success_rate": 1.0,
+    "by_type": {
+      "in_scope": {
+        "n": 16,
+        "mean_relevance": 2.812,
+        "mean_faithfulness": 4,
+        "mean_correctness": 2.688,
+        "mean_completeness": 2.188,
+        "mean_overall": 2.922
+      }
+    },
+    "by_language": {
+      "arabic": {
+        "n": 8,
+        "mean_relevance": 2.125,
+        "mean_faithfulness": 3.375,
+        "mean_correctness": 2.375,
+        "mean_completeness": 1.75,
+        "mean_overall": 2.406
+      },
+      "english": {
+        "n": 8,
+        "mean_relevance": 3.5,
+        "mean_faithfulness": 4.625,
+        "mean_correctness": 3,
+        "mean_completeness": 2.625,
+        "mean_overall": 3.438
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "en-01-giza-pyramids",
+      "language": "english",
+      "type": "in_scope",
+      "question": "Plan a one-day trip in Giza focused on the Pyramids of Giza and the Sphinx. Keep the itinerary practical and do not make up ticket prices or opening hours.",
+      "reference_criteria": [
+        "Understand Giza as the destination and one day as the duration.",
+        "Prioritize the Pyramids of Giza and the Sphinx, or explain clearly if the planner cannot offer one of them.",
+        "Respect the request for a practical plan.",
+        "Do not invent exact opening hours, ticket prices, transport times, or other unsupported details."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "Explore Greater Cairo, where you’ll marvel at the Giza Pyramids / Great Pyramid, wander through ancient Saqqara, and discover the Serapeum at Saqqara. It’s a compact, unforgettable day of iconic history. Don’t forget to double‑check the opening hours before you go.",
+      "scores": {
+        "relevance": 2,
+        "faithfulness": 3,
+        "correctness": 2,
+        "completeness": 2
+      },
+      "mean_score": 2.25,
+      "judge_ok": true,
+      "judge_model": "gemini/gemini-2.5-flash",
+      "reasons": {
+        "relevance": "The user specifically asked to focus on the Pyramids of Giza and the Sphinx. The answer includes the Pyramids but completely omits the Sphinx, which was a primary focus of the user's request. It also adds Saqqara and Serapeum, which were not explicitly requested by the user as primary focuses.",
+        "faithfulness": "The answer mentions 'Giza Pyramids / Great Pyramid', 'Saqqara', and 'Serapeum at Saqqara', which are all present in the structured itinerary. However, it fails to mention the Sphinx, which was part of the user's request and implicitly part of the 'Giza Pyramids' area, even if not explicitly listed as a separate stop in the structured itinerary. The structured itinerary also includes a warning about opening hours for Giza Pyramids, which the answer correctly advises the user to double-check.",
+        "correctness": "The answer fails to address a key part of the user's request: the Sphinx. While it correctly identifies Giza Pyramids, it deviates by adding Saqqara and Serapeum without prioritizing the Sphinx as requested. The instruction to not make up details is followed regarding opening hours, but the core request for the Sphinx is not met.",
+        "completeness": "The answer is incomplete because it entirely misses the Sphinx, which was a central part of the user's request. It provides a plan for other attractions but not for the one explicitly mentioned alongside the Pyramids."
+      },
+      "overall_reason": "The answer is significantly flawed because it completely omits the Sphinx, which was a primary focus of the user's request. While it correctly includes the Giza Pyramids and advises checking opening hours, its deviation to Saqqara and Serapeum without addressing the Sphinx makes it largely irrelevant and incomplete regarding the user's specific needs. The plan is not practical for the user's stated interests due to this omission.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"en\",\n  \"search_query\": \"one-day trip Giza pyramids and Sphinx\",\n  \"interests\": [\n    \"pyramids\",\n    \"sphinx\",\n    \"history\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 5,\n          \"name\": \"Giza Pyramids / Great Pyramid\",\n          \"start\": \"09:00\",\n          \"end\": \"12:00\",\n          \"duration_min\": 180,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"uncertain\",\n          \"hours_note\": \"Member 1's data mentions a midday closure but gives no times; the official page text I could read lists 07:00-17:00 with no closure. Confirm on the official page.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 6,\n          \"name\": \"Saqqara\",\n          \"start\": \"12:45\",\n          \"end\": \"15:45\",\n          \"duration_min\": 180,\n          \"travel_from_previous_min\": 45,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 8,\n          \"name\": \"Serapeum at Saqqara\",\n          \"start\": \"15:55\",\n          \"end\": \"16:55\",\n          \"duration_min\": 60,\n          \"travel_from_previous_min\": 10,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [\n        \"Opening hours for Giza Pyramids / Great Pyramid are not fully confirmed (Member 1's data mentions a midday closure but gives no times; the official page text I could read lists 07:00-17:00 with no closure. Confirm on the official page.). Check before you go.\"\n      ],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 7,\n      \"name\": \"Dahshur\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 1,\n      \"name\": \"The Egyptian Museum\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 3,\n      \"name\": \"The Coptic Museum\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "en-02-luxor-temples",
+      "language": "english",
+      "type": "in_scope",
+      "question": "I have two days in Luxor and I am especially interested in ancient Egyptian temples. Please organize a two-day itinerary that prioritizes temples and avoids repeating the same attraction.",
+      "reference_criteria": [
+        "Plan for two days in Luxor.",
+        "Prioritize ancient Egyptian temples and historically relevant attractions.",
+        "Avoid recommending the same attraction on both days unless there is a clear reason.",
+        "Any specific schedule details must agree with the structured itinerary and not be fabricated."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "Your two‑day Luxor adventure will take you to the stunning Hatshepsut Temple, the majestic Karnak Temple and the iconic Luxor Temple on day 1, followed by the fascinating Deir al‑Bahari and the legendary Valley of the Kings on day 2. We’ve picked a hotel on the West Bank (Theban hills) because it’s closest to Hatshepsut Temple and Deir al‑Bahari. Enjoy the trip!",
+      "scores": {
+        "relevance": 5,
+        "faithfulness": 5,
+        "correctness": 4,
+        "completeness": 4
+      },
+      "mean_score": 4.5,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "The answer provides a two‑day Luxor itinerary focusing on temples as requested.",
+        "faithfulness": "All listed attractions and the hotel suggestion are present in the trusted structured itinerary; no unsupported facts are introduced.",
+        "correctness": "The plan avoids duplicate attractions and follows the structured schedule, but it includes Valley of the Kings, which is not a temple, slightly deviating from the strict temple‑only priority.",
+        "completeness": "The itinerary lists the required sites and a hotel recommendation, but omits detailed timing information present in the structured itinerary."
+      },
+      "overall_reason": "The answer is highly relevant and faithful to the source, correctly avoids repeats, and mostly meets the criteria, though the inclusion of a non‑temple site and lack of detailed schedule prevent a perfect score.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"en\",\n  \"search_query\": \"two day itinerary luxor temples\",\n  \"interests\": [\n    \"temples\"\n  ],\n  \"region\": \"Luxor\",\n  \"unsupported_region\": null,\n  \"days\": 2,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Luxor\",\n      \"stops\": [\n        {\n          \"attraction_id\": 12,\n          \"name\": \"Hatshepsut Temple\",\n          \"start\": \"09:00\",\n          \"end\": \"11:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"West Bank of the Nile.\"\n        },\n        {\n          \"attraction_id\": 9,\n          \"name\": \"Karnak Temple\",\n          \"start\": \"11:25\",\n          \"end\": \"14:25\",\n          \"duration_min\": 180,\n          \"travel_from_previous_min\": 25,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 10,\n          \"name\": \"Luxor Temple\",\n          \"start\": \"14:45\",\n          \"end\": \"16:45\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": 20,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Hatshepsut Temple: West Bank of the Nile.\"\n      ]\n    },\n    {\n      \"day\": 2,\n      \"weekday\": null,\n      \"area\": \"Luxor\",\n      \"stops\": [\n        {\n          \"attraction_id\": 14,\n          \"name\": \"Deir al-Bahari\",\n          \"start\": \"09:00\",\n          \"end\": \"11:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"Same complex area as Hatshepsut Temple.\"\n        },\n        {\n          \"attraction_id\": 11,\n          \"name\": \"Valley of the Kings\",\n          \"start\": \"11:10\",\n          \"end\": \"14:10\",\n          \"duration_min\": 180,\n          \"travel_from_previous_min\": 10,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"West Bank of the Nile.\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Deir al-Bahari: Same complex area as Hatshepsut Temple.\",\n        \"Valley of the Kings: West Bank of the Nile.\"\n      ]\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 13,\n      \"name\": \"Mummification Museum\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [\n      {\n        \"area\": \"West Bank (Theban hills)\",\n        \"desc\": \"Quiet countryside among sugarcane fields, minutes from the Valley of the Kings.\",\n        \"example\": \"eco-lodges with views of the Theban hills\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"Closest to Hatshepsut Temple and Deir al-Bahari in your plan\",\n          \"Suits your interest in history\"\n        ],\n        \"score\": 6.21\n      },\n      {\n        \"area\": \"East Bank (town centre)\",\n        \"desc\": \"Walk to Luxor Temple, the Corniche promenade, the souk and the train station.\",\n        \"example\": \"Steigenberger Nile Palace\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"Suits your interest in history\"\n        ],\n        \"score\": 6.01\n      }\n    ],\n    \"transport\": [\n      {\n        \"mode\": \"West Bank morning taxi\",\n        \"desc\": \"Book an air-conditioned taxi for the morning loop: Valley of the Kings, Hatshepsut and the Colossi of Memnon.\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"For Hatshepsut Temple and Deir al-Bahari in your plan\",\n          \"Suits your interest in history\"\n        ],\n        \"score\": 7.0\n      },\n      {\n        \"mode\": \"Sunrise hot-air balloon\",\n        \"desc\": \"Float over the West Bank temples at dawn; operators include hotel pick-up.\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"For Hatshepsut Temple and Deir al-Bahari in your plan\",\n          \"Suits your interest in history\"\n        ],\n        \"score\": 7.0\n      },\n      {\n        \"mode\": \"Public Nile ferry\",\n        \"desc\": \"The local ferry crosses between the East and West banks in about 5 minutes for a few pounds.\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"For Hatshepsut Temple and Deir al-Bahari in your plan\"\n        ],\n        \"score\": 4.0\n      },\n      {\n        \"mode\": \"Getting to Luxor\",\n        \"desc\": \"Fly from Cairo in about an hour, or take the overnight sleeper train.\",\n        \"region\": \"Luxor\",\n        \"why\": [],\n        \"score\": 0.0\n      }\n    ],\n    \"based_on\": [\n      \"history\"\n    ]\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "en-03-alexandria-history",
+      "language": "english",
+      "type": "in_scope",
+      "question": "Plan a two-day visit to Alexandria for someone interested in ancient history, archaeological sites, and the city's heritage. Keep the suggestions within Alexandria where possible.",
+      "reference_criteria": [
+        "Understand Alexandria and the two-day duration.",
+        "Recommendations should match ancient history, archaeology, or local heritage.",
+        "Do not silently substitute another city for Alexandria.",
+        "Do not state unsupported exact prices, hours, or travel durations as facts."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "Your two‑day adventure takes you to Alexandria, where you’ll explore the mysterious Catacombs of Kom El Shoqafa and the historic Citadel of Qaitbay. Stay in the Raml Station & Mansheya district—it’s the closest spot to both of these must‑see sites. Enjoy the coastal charm!",
+      "scores": {
+        "relevance": 4,
+        "faithfulness": 5,
+        "correctness": 2,
+        "completeness": 2
+      },
+      "mean_score": 3.25,
+      "judge_ok": true,
+      "judge_model": "gemini/gemini-3.1-flash-lite",
+      "reasons": {
+        "relevance": "The answer addresses the user's request for a two-day trip to Alexandria and mentions relevant historical sites.",
+        "faithfulness": "The information provided (Catacombs, Citadel, and the hotel district) is supported by the trusted context.",
+        "correctness": "The answer implies a full two-day itinerary, but the context shows that the pipeline failed to schedule anything for Day 2, making the answer misleading regarding the actual content provided.",
+        "completeness": "The answer is incomplete because it fails to address the second day of the trip, which the pipeline was unable to plan, and offers no alternative suggestions for the second day."
+      },
+      "overall_reason": "The answer is misleading because it frames the trip as a 'two-day adventure' while only providing content for the first day. It ignores the fact that the pipeline failed to generate a plan for the second day, leaving the user without a complete itinerary.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"en\",\n  \"search_query\": \"ancient history and archaeological sites in Alexandria\",\n  \"interests\": [\n    \"ancient history\",\n    \"archaeological sites\",\n    \"heritage\"\n  ],\n  \"region\": \"Alexandria\",\n  \"unsupported_region\": null,\n  \"days\": 2,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Alexandria\",\n      \"stops\": [\n        {\n          \"attraction_id\": 23,\n          \"name\": \"Catacombs of Kom El Shoqafa\",\n          \"start\": \"09:00\",\n          \"end\": \"10:00\",\n          \"duration_min\": 60,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 21,\n          \"name\": \"Citadel of Qaitbay\",\n          \"start\": \"10:25\",\n          \"end\": \"11:55\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 25,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    },\n    {\n      \"day\": 2,\n      \"weekday\": null,\n      \"area\": \"Alexandria\",\n      \"stops\": [],\n      \"warnings\": [\n        \"Nothing could be scheduled in Alexandria on day 2 between 09:00 and 18:00.\"\n      ],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 22,\n      \"name\": \"Bibliotheca Alexandrina\",\n      \"reason\": \"Not scheduled: it is not open every day, or it does not fit between 09:00 and 18:00. Give a travel date to check specific days.\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [\n      {\n        \"area\": \"Raml Station & Mansheya\",\n        \"desc\": \"Belle-époque streets, walking distance to the Library, the Roman Theatre and old markets.\",\n        \"example\": \"Steigenberger Cecil Hotel\",\n        \"region\": \"Alexandria\",\n        \"why\": [\n          \"Closest to Citadel of Qaitbay and Catacombs of Kom El Shoqafa in your plan\",\n          \"Suits your interest in history and local culture\"\n        ],\n        \"score\": 9.42\n      },\n      {\n        \"area\": \"Corniche & Stanley Bay\",\n        \"desc\": \"Mediterranean views, sea breezes and seafood restaurants.\",\n        \"example\": \"sea-view mid-range hotels\",\n        \"region\": \"Alexandria\",\n        \"why\": [],\n        \"score\": 1.71\n      }\n    ],\n    \"transport\": [\n      {\n        \"mode\": \"Raml tram\",\n        \"desc\": \"The historic blue-and-yellow tram is a slow, cheap way to see the city.\",\n        \"region\": \"Alexandria\",\n        \"why\": [\n          \"Suits your interest in local culture and history\"\n        ],\n        \"score\": 6.0\n      },\n      {\n        \"mode\": \"Along the Corniche\",\n        \"desc\": \"Uber or the yellow-and-black taxis run the Corniche from Qaitbay Citadel to Montaza.\",\n        \"region\": \"Alexandria\",\n        \"why\": [],\n        \"score\": 0.0\n      },\n      {\n        \"mode\": \"Getting to Alexandria\",\n        \"desc\": \"Express trains from Cairo take about 2.5 hours; buses and private cars take the desert road.\",\n        \"region\": \"Alexandria\",\n        \"why\": [],\n        \"score\": 0.0\n      }\n    ],\n    \"based_on\": [\n      \"local culture\",\n      \"history\"\n    ]\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "en-04-cairo-museums",
+      "language": "english",
+      "type": "in_scope",
+      "question": "I have one day in Cairo. Build a museum-focused itinerary because I prefer museums and cultural history over shopping or nightlife.",
+      "reference_criteria": [
+        "Plan for one day in Cairo.",
+        "Prioritize museums and cultural or historical attractions over shopping and nightlife.",
+        "The answer should be organized enough to follow as a day plan.",
+        "Do not claim that a venue is open at a precise time unless supported by the returned plan/context."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "Welcome to your adventure! On day one you’ll be in Greater Cairo, visiting The Egyptian Museum, Museum of Islamic Art, and The Coptic Museum. It’s a perfect start to soak up Egypt’s rich history.",
+      "scores": {
+        "relevance": 4,
+        "faithfulness": 5,
+        "correctness": 4,
+        "completeness": 3
+      },
+      "mean_score": 4,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "The answer directly addresses the request by listing museum-focused attractions for a single day in Cairo.",
+        "faithfulness": "All mentioned museums (The Egyptian Museum, Museum of Islamic Art, The Coptic Museum) are present in the trusted itinerary and no unsupported details are added.",
+        "correctness": "It satisfies the reference criteria: one‑day plan, museum‑centric, no shopping/nightlife claims, and avoids precise opening times not in the context.",
+        "completeness": "While it lists the correct sites, it lacks a detailed schedule (times, travel gaps) that would make it fully actionable as a day plan."
+      },
+      "overall_reason": "The response is relevant, faithful, and mostly correct but could be more complete with a fuller schedule.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"en\",\n  \"search_query\": \"one day museum itinerary in Cairo\",\n  \"interests\": [\n    \"museums\",\n    \"history\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 1,\n          \"name\": \"The Egyptian Museum\",\n          \"start\": \"09:00\",\n          \"end\": \"11:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 4,\n          \"name\": \"Museum of Islamic Art\",\n          \"start\": \"11:20\",\n          \"end\": \"12:50\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 20,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 3,\n          \"name\": \"The Coptic Museum\",\n          \"start\": \"13:20\",\n          \"end\": \"14:50\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 2,\n      \"name\": \"National Museum of Egyptian Civilization (NMEC)\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 6,\n      \"name\": \"Saqqara\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 7,\n      \"name\": \"Dahshur\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "en-05-aswan-relaxed",
+      "language": "english",
+      "type": "in_scope",
+      "question": "I will spend three days in Aswan. I like Nubian culture, the Nile, and historical places, but I want a relaxed pace rather than a packed schedule. Suggest a suitable itinerary.",
+      "reference_criteria": [
+        "Understand Aswan and the three-day duration.",
+        "Reflect the interests in Nubian culture, the Nile, and history where suitable options exist.",
+        "Keep the number and pace of activities relatively relaxed.",
+        "Avoid inventing availability, exact boat schedules, or prices."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "Your three‑day Aswan adventure takes you to the Nubia Museum and the stunning Philae Temple, then on to the iconic Abu Simbel, and finally the quirky Crocodile Museum and majestic Kom Ombo Temple. We’ve even highlighted a top‑rated hotel on Elephantine Island & West Bank, perfect for quick access to the Nubia Museum and Philae Temple. Enjoy the journey!",
+      "scores": {
+        "relevance": 5,
+        "faithfulness": 5,
+        "correctness": 5,
+        "completeness": 4
+      },
+      "mean_score": 4.75,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "The answer provides an itinerary for three days in Aswan as requested.",
+        "faithfulness": "All mentioned sites (Nubia Museum, Philae, Abu Simbel, Crocodile Museum, Kom Ombo) appear in the trusted itinerary; no unsupported facts are added.",
+        "correctness": "The plan reflects Nubian culture, the Nile and historical attractions, keeps a modest number of stops per day, and avoids invented schedules or prices, satisfying the reference criteria.",
+        "completeness": "It lists the main attractions for each day but does not explicitly note the relaxed pacing or daily timing details, so it is slightly less complete than the full structured plan."
+      },
+      "overall_reason": "The answer is accurate, faithful to the provided context, and meets the user’s needs, though it could be a bit more explicit about the relaxed pace and daily timing.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"en\",\n  \"search_query\": \"relaxed itinerary Aswan Nubian culture Nile historical places\",\n  \"interests\": [\n    \"Nubian culture\",\n    \"Nile\",\n    \"history\"\n  ],\n  \"region\": \"Aswan\",\n  \"unsupported_region\": null,\n  \"days\": 3,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Aswan\",\n      \"stops\": [\n        {\n          \"attraction_id\": 15,\n          \"name\": \"Nubia Museum\",\n          \"start\": \"09:00\",\n          \"end\": \"10:30\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Evening session 18:00-21:00 on Thursday and Friday only.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 16,\n          \"name\": \"Philae Temple\",\n          \"start\": \"10:55\",\n          \"end\": \"12:55\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": 25,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"On an island; reached by a short boat ride.\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Philae Temple: On an island; reached by a short boat ride.\"\n      ]\n    },\n    {\n      \"day\": 2,\n      \"weekday\": null,\n      \"area\": \"Aswan\",\n      \"stops\": [\n        {\n          \"attraction_id\": 17,\n          \"name\": \"Abu Simbel\",\n          \"start\": \"09:00\",\n          \"end\": \"11:30\",\n          \"duration_min\": 150,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"Roughly 280 km from Aswan; treat as a full-day trip.\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Abu Simbel: Roughly 280 km from Aswan; treat as a full-day trip.\"\n      ]\n    },\n    {\n      \"day\": 3,\n      \"weekday\": null,\n      \"area\": \"Aswan\",\n      \"stops\": [\n        {\n          \"attraction_id\": 20,\n          \"name\": \"Crocodile Museum\",\n          \"start\": \"09:00\",\n          \"end\": \"09:45\",\n          \"duration_min\": 45,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Museum open until 21:00 but the ticket office closes 20:00; 20:00 used as the conservative end.\",\n          \"place_note\": \"Next to Kom Ombo Temple.\"\n        },\n        {\n          \"attraction_id\": 18,\n          \"name\": \"Kom Ombo Temple\",\n          \"start\": \"09:55\",\n          \"end\": \"11:25\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 10,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"About 45 km north of Aswan.\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Crocodile Museum: Next to Kom Ombo Temple.\",\n        \"Kom Ombo Temple: About 45 km north of Aswan.\"\n      ]\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 19,\n      \"name\": \"Edfu Temple\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [\n      {\n        \"area\": \"Elephantine Island & West Bank\",\n        \"desc\": \"Colourful Nubian guesthouses, home-cooked meals and calm river views.\",\n        \"example\": \"Nubian guesthouses with river terraces\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"Closest to Nubia Museum and Philae Temple in your plan\",\n          \"Suits your interest in local culture, the Nile and a slow pace\"\n        ],\n        \"score\": 9.0\n      },\n      {\n        \"area\": \"Aswan Corniche\",\n        \"desc\": \"Overlooks the granite islands and feluccas, close to the souk and boat landings.\",\n        \"example\": \"Basma Hotel\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"Suits your interest in the Nile and history\"\n        ],\n        \"score\": 7.0\n      }\n    ],\n    \"transport\": [\n      {\n        \"mode\": \"Motor boats\",\n        \"desc\": \"Boats are the everyday way to reach Philae and the islands; agree the price before boarding.\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"For Philae Temple in your plan\",\n          \"Suits your interest in the Nile\"\n        ],\n        \"score\": 7.0\n      },\n      {\n        \"mode\": \"Abu Simbel day trip\",\n        \"desc\": \"Leave before dawn on a shared tourist bus (about 3.5 hours each way) or take the short flight from Aswan.\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"For Abu Simbel in your plan\",\n          \"Suits your interest in history\"\n        ],\n        \"score\": 7.0\n      },\n      {\n        \"mode\": \"Felucca around the islands\",\n        \"desc\": \"Sail past Elephantine and Kitchener's Island in the late afternoon light.\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"Suits your interest in the Nile and a slow pace\"\n        ],\n        \"score\": 6.0\n      },\n      {\n        \"mode\": \"Getting to Aswan\",\n        \"desc\": \"Fly from Cairo, or take the train from Luxor (about 3 hours) or Cairo (overnight).\",\n        \"region\": \"Aswan\",\n        \"why\": [],\n        \"score\": 0.0\n      }\n    ],\n    \"based_on\": [\n      \"local culture\",\n      \"history\",\n      \"the Nile\",\n      \"a slow pace\"\n    ]\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "en-06-family-cairo",
+      "language": "english",
+      "type": "in_scope",
+      "question": "Please plan a family-friendly one-day outing in Cairo with a mix of culture and enjoyable activities. Avoid nightlife and make the plan appropriate for children.",
+      "reference_criteria": [
+        "Plan a one-day outing in Cairo.",
+        "Favor family- and child-appropriate cultural or leisure activities.",
+        "Avoid nightlife and activities clearly unsuitable for children.",
+        "Do not assert age restrictions, operating hours, or prices without support."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "Get ready for a day in Greater Cairo! You’ll explore the Museum of Islamic Art, the Egyptian Museum and the Coptic Museum, soaking up the city’s rich history and culture. It’s a perfect intro to Egypt’s vibrant heritage.",
+      "scores": {
+        "relevance": 3,
+        "faithfulness": 5,
+        "correctness": 2,
+        "completeness": 2
+      },
+      "mean_score": 3,
+      "judge_ok": true,
+      "judge_model": "gemini/gemini-3.1-flash-lite",
+      "reasons": {
+        "relevance": "The answer addresses the request for a one-day outing in Cairo, but fails to provide a plan or schedule, offering only a list of museums.",
+        "faithfulness": "The answer accurately reflects the museums listed in the trusted context.",
+        "correctness": "The answer is technically correct but lacks the structure of an itinerary. It fails to provide a 'mix of enjoyable activities' beyond just visiting three museums in a row, which might be overwhelming for children.",
+        "completeness": "The answer is incomplete. It does not provide a plan, timing, or any sense of an 'outing' beyond listing three locations. It ignores the 'enjoyable activities' part of the prompt, focusing solely on museums."
+      },
+      "overall_reason": "The final answer is a very poor response to a request for a 'plan'. It simply lists three museums without providing any itinerary, timing, or variety of activities, failing to meet the user's need for a structured, family-friendly day out.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"en\",\n  \"search_query\": \"family-friendly one-day outing in Cairo with culture and activities\",\n  \"interests\": [\n    \"culture\",\n    \"family\",\n    \"children\",\n    \"activities\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": null,\n  \"travelers\": \"family\",\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 4,\n          \"name\": \"Museum of Islamic Art\",\n          \"start\": \"09:00\",\n          \"end\": \"10:30\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 1,\n          \"name\": \"The Egyptian Museum\",\n          \"start\": \"10:50\",\n          \"end\": \"12:50\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": 20,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 3,\n          \"name\": \"The Coptic Museum\",\n          \"start\": \"13:20\",\n          \"end\": \"14:50\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 6,\n      \"name\": \"Saqqara\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 7,\n      \"name\": \"Dahshur\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 2,\n      \"name\": \"National Museum of Egyptian Civilization (NMEC)\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "en-07-budget-cairo",
+      "language": "english",
+      "type": "in_scope",
+      "question": "I have one day to explore Cairo on a tight budget. Recommend a practical itinerary focused on public places, culture, and history, and clearly mark any costs as estimates only if you cannot verify them.",
+      "reference_criteria": [
+        "Understand Cairo, one day, and the tight-budget constraint.",
+        "Prefer affordable or public cultural and historical options when available.",
+        "Do not invent precise prices; distinguish estimates from verified information.",
+        "The itinerary should remain realistic and relevant to the user's constraints."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "Get ready to explore Greater Cairo, where you’ll discover the ancient pyramids at Dahshur, the rich heritage of The Coptic Museum, and the stunning collections of the Museum of Islamic Art. It’s a perfect blend of history and culture for an unforgettable day.",
+      "scores": {
+        "relevance": 3,
+        "faithfulness": 5,
+        "correctness": 3,
+        "completeness": 2
+      },
+      "mean_score": 3.25,
+      "judge_ok": true,
+      "judge_model": "gemini/gemini-2.5-flash",
+      "reasons": {
+        "relevance": "The answer correctly identifies the region and some relevant attractions based on the user's interests (culture, history). However, it fails to address the 'tight budget' constraint or provide a practical itinerary as requested.",
+        "faithfulness": "All attractions mentioned in the answer (Dahshur, The Coptic Museum, Museum of Islamic Art) are present in the 'structured itinerary' from the trusted context.",
+        "correctness": "The answer correctly lists attractions that align with culture and history. However, it fails to acknowledge the 'tight budget' constraint and does not provide a practical itinerary with timings or travel details, which was a key part of the user's request.",
+        "completeness": "The answer lists the main attractions but completely omits the practical itinerary aspect, including timings, travel between locations, and any mention of costs or budget considerations, which were explicitly requested by the user."
+      },
+      "overall_reason": "The answer is faithful to the attractions listed in the structured itinerary but falls short on relevance and completeness by not addressing the 'tight budget' constraint or providing a practical, detailed itinerary as requested by the user. It merely lists places without any actionable plan.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"en\",\n  \"search_query\": \"one day itinerary in Cairo on a tight budget\",\n  \"interests\": [\n    \"culture\",\n    \"history\",\n    \"public places\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": \"economy\",\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 7,\n          \"name\": \"Dahshur\",\n          \"start\": \"09:00\",\n          \"end\": \"11:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 3,\n          \"name\": \"The Coptic Museum\",\n          \"start\": \"12:15\",\n          \"end\": \"13:45\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 75,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 4,\n          \"name\": \"Museum of Islamic Art\",\n          \"start\": \"14:15\",\n          \"end\": \"15:45\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 1,\n      \"name\": \"The Egyptian Museum\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 6,\n      \"name\": \"Saqqara\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 2,\n      \"name\": \"National Museum of Egyptian Civilization (NMEC)\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "en-08-cairo-islamic-heritage",
+      "language": "english",
+      "type": "in_scope",
+      "question": "Create a one-day Cairo itinerary centered on Islamic architecture, historic mosques, and the old city's heritage. I prefer cultural visits and walking around historic areas rather than modern malls.",
+      "reference_criteria": [
+        "Plan for one day in Cairo.",
+        "Prioritize Islamic architecture, historic mosques, and heritage areas when available in the planner.",
+        "Do not center the plan on modern malls or unrelated activities.",
+        "Avoid unsupported claims about access, opening times, or entry fees."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "Explore Greater Cairo, where you can wander through the Museum of Islamic Art, discover the Coptic Museum, and marvel at the Egyptian Museum. It’s a perfect blend of history and culture for a memorable first day. Enjoy every moment!",
+      "scores": {
+        "relevance": 2,
+        "faithfulness": 4,
+        "correctness": 2,
+        "completeness": 2
+      },
+      "mean_score": 2.5,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "The answer mentions only three museums and omits historic mosques or Islamic architectural sites, failing to address the user’s request for a mosque‑focused itinerary.",
+        "faithfulness": "The listed attractions (Museum of Islamic Art, Coptic Museum, Egyptian Museum) match the structured itinerary provided, so the claims are supported by the trusted context.",
+        "correctness": "The response does not prioritize Islamic architecture or historic mosques and includes unrelated sites, violating the reference criteria. It also does not avoid modern or unrelated activities.",
+        "completeness": "The answer is overly brief, lacking a schedule, walking routes, or any heritage‑area details expected for a one‑day plan."
+      },
+      "overall_reason": "The answer is partially faithful to the provided itinerary but does not meet the user’s specific request or the reference criteria, resulting in low relevance, correctness, and completeness.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"en\",\n  \"search_query\": \"one-day Cairo itinerary focused on Islamic architecture and historic mosques\",\n  \"interests\": [\n    \"culture\",\n    \"architecture\",\n    \"mosques\",\n    \"walking\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 4,\n          \"name\": \"Museum of Islamic Art\",\n          \"start\": \"09:00\",\n          \"end\": \"10:30\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 3,\n          \"name\": \"The Coptic Museum\",\n          \"start\": \"11:00\",\n          \"end\": \"12:30\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 1,\n          \"name\": \"The Egyptian Museum\",\n          \"start\": \"13:00\",\n          \"end\": \"15:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 6,\n      \"name\": \"Saqqara\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 2,\n      \"name\": \"National Museum of Egyptian Civilization (NMEC)\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 7,\n      \"name\": \"Dahshur\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "ar-01-giza-pyramids",
+      "language": "arabic",
+      "type": "in_scope",
+      "question": "عايز أزور الجيزة في يوم واحد، واهتمامي الأساسي أهرامات الجيزة وأبو الهول. اعملي خطة عملية من غير ما تفترض أسعار تذاكر أو مواعيد فتح مش مؤكدة.",
+      "reference_criteria": [
+        "الإجابة تكون بالعربية وتفهم أن الوجهة الجيزة والمدة يوم واحد.",
+        "تعطي الأولوية لأهرامات الجيزة وأبو الهول، أو توضح إذا لم يستطع المخطط اقتراح أحدهما.",
+        "تقدم خطة عملية قابلة للاتباع.",
+        "لا تخترع أسعار تذاكر أو مواعيد فتح أو أوقات انتقال دقيقة غير مدعومة بالسياق."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "يا سلام على الرحلة! في القاهرة الكبرى هتستمتع بأهرامات الجيزة، سقارة، وسيرابيم في سقارة. ما تنساش تتأكد من مواعيد الفتح قبل ما تروح.",
+      "scores": {
+        "relevance": 2,
+        "faithfulness": 3,
+        "correctness": 2,
+        "completeness": 1
+      },
+      "mean_score": 2,
+      "judge_ok": true,
+      "judge_model": "groq/qwen/qwen3.8-27b",
+      "reasons": {
+        "relevance": "The answer is in Arabic and mentions Giza, but it fails to address the user's primary interest in the Sphinx (Abu al-Hol) and instead focuses on Saqqara and Serapeum, which were not the user's main request.",
+        "faithfulness": "The answer mentions Giza Pyramids, Saqqara, and Serapeum, which are present in the trusted context. However, it omits the specific warning about unconfirmed opening hours for the Giza Pyramids that was explicitly flagged in the context, and it does not mention the Sphinx at all, which is a key part of the user's intent and likely part of the Giza complex in the context's scope (though the context lists 'Giza Pyramids / Great Pyramid' as the stop, the user asked for Sphinx too). The claim 'ما تنساش تتأكد من مواعيد الفتح' is supported by the warnings in the context.",
+        "correctness": "The answer does not provide a practical plan as requested. It is a generic statement rather than an itinerary. It fails to prioritize the Sphinx as requested. It does not contradict the context directly, but it fails to satisfy the reference criteria for providing a practical plan and prioritizing the requested sites.",
+        "completeness": "The answer is extremely incomplete. It lacks any specific times, sequence, or practical details. It misses the Sphinx entirely. It does not provide the 'practical plan' requested."
+      },
+      "overall_reason": "The answer is too brief and fails to meet the core requirements of the prompt. It does not provide a practical plan, ignores the user's specific interest in the Sphinx, and does not utilize the detailed itinerary provided in the trusted context.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"ar\",\n  \"search_query\": \"visit Giza pyramids and Sphinx in one day\",\n  \"interests\": [\n    \"pyramids\",\n    \"historical\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 5,\n          \"name\": \"Giza Pyramids / Great Pyramid\",\n          \"start\": \"09:00\",\n          \"end\": \"12:00\",\n          \"duration_min\": 180,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"uncertain\",\n          \"hours_note\": \"Member 1's data mentions a midday closure but gives no times; the official page text I could read lists 07:00-17:00 with no closure. Confirm on the official page.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 6,\n          \"name\": \"Saqqara\",\n          \"start\": \"12:45\",\n          \"end\": \"15:45\",\n          \"duration_min\": 180,\n          \"travel_from_previous_min\": 45,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 8,\n          \"name\": \"Serapeum at Saqqara\",\n          \"start\": \"15:55\",\n          \"end\": \"16:55\",\n          \"duration_min\": 60,\n          \"travel_from_previous_min\": 10,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [\n        \"Opening hours for Giza Pyramids / Great Pyramid are not fully confirmed (Member 1's data mentions a midday closure but gives no times; the official page text I could read lists 07:00-17:00 with no closure. Confirm on the official page.). Check before you go.\"\n      ],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 7,\n      \"name\": \"Dahshur\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 1,\n      \"name\": \"The Egyptian Museum\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 2,\n      \"name\": \"National Museum of Egyptian Civilization (NMEC)\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "ar-02-luxor-temples",
+      "language": "arabic",
+      "type": "in_scope",
+      "question": "هقضي يومين في الأقصر وبحب المعابد المصرية القديمة جدًا. رتّب لي برنامج اليومين بحيث يركز على المعابد وما يكررش نفس المكان في اليومين.",
+      "reference_criteria": [
+        "الإجابة بالعربية وتخطط ليومين في الأقصر.",
+        "تُعطي الأولوية للمعابد المصرية القديمة والمعالم التاريخية المناسبة.",
+        "تتجنب تكرار نفس المكان في اليومين دون سبب واضح.",
+        "لا تضف تفاصيل دقيقة عن المواعيد أو الأسعار إلا إذا كانت مدعومة بالسياق."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "يا أهلاً بيك في رحلة الأقصر اللي هتنبهر فيها بمعبد الأقصر، ومعبد حتشبسوت، ووادي الملوك. أنصحك تسكن في البر الغربي عشان تكون قريب جداً من معبد حتشبسوت ودير البحري في برنامجك. استمتع بكل لحظة هناك!",
+      "scores": {
+        "relevance": 1,
+        "faithfulness": 1,
+        "correctness": 1,
+        "completeness": 1
+      },
+      "mean_score": 1,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "الإجابة لا تُقدِّم برنامجًا ليومين في الأقصر كما طلب المستخدم، بل تقتصر على جملة قصيرة ولا تُظهر تخطيطًا للرحلة.",
+        "faithfulness": "المحتوى لا يستند إلى السياق الموثوق الذي يحدد برنامجًا مفصَّلًا لليومين ويضيف معلومات غير موجودة في السياق مثل \"معبد حتشبسوت\" فقط دون ذكر باقي المعابد المحددة في الخطة الموثوقة.",
+        "correctness": "الإجابة لا تفي بمعايير المرجع التي تطلب تخطيط يومين، إعطاء الأولوية للمعابد، وتجنب تكرار الأماكن؛ كما أنها تفتقر إلى تفاصيل البرنامج المطلوبة.",
+        "completeness": "الإجابة غير مكتملة تمامًا؛ لا تحتوي على أي جدول زمني، ولا تغطي المعابد المقترحة في السياق، ولا تقدم توصيات أو ملاحظات إضافية مطلوبة."
+      },
+      "overall_reason": "الإجابة غير ملائمة تمامًا للطلب ولا تستند إلى السياق الموثوق، وبالتالي تحصل على أدنى الدرجات في جميع الأبعاد.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"ar\",\n  \"search_query\": \"two day itinerary in Luxor focusing on ancient Egyptian temples\",\n  \"interests\": [\n    \"temples\",\n    \"history\"\n  ],\n  \"region\": \"Luxor\",\n  \"unsupported_region\": null,\n  \"days\": 2,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Luxor\",\n      \"stops\": [\n        {\n          \"attraction_id\": 10,\n          \"name\": \"Luxor Temple\",\n          \"start\": \"09:00\",\n          \"end\": \"11:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 14,\n          \"name\": \"Deir al-Bahari\",\n          \"start\": \"11:25\",\n          \"end\": \"13:25\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": 25,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"Same complex area as Hatshepsut Temple.\"\n        },\n        {\n          \"attraction_id\": 12,\n          \"name\": \"Hatshepsut Temple\",\n          \"start\": \"13:35\",\n          \"end\": \"15:35\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": 10,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"West Bank of the Nile.\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Deir al-Bahari: Same complex area as Hatshepsut Temple.\",\n        \"Hatshepsut Temple: West Bank of the Nile.\"\n      ]\n    },\n    {\n      \"day\": 2,\n      \"weekday\": null,\n      \"area\": \"Luxor\",\n      \"stops\": [\n        {\n          \"attraction_id\": 9,\n          \"name\": \"Karnak Temple\",\n          \"start\": \"09:00\",\n          \"end\": \"12:00\",\n          \"duration_min\": 180,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 11,\n          \"name\": \"Valley of the Kings\",\n          \"start\": \"12:25\",\n          \"end\": \"15:25\",\n          \"duration_min\": 180,\n          \"travel_from_previous_min\": 25,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"West Bank of the Nile.\"\n        },\n        {\n          \"attraction_id\": 13,\n          \"name\": \"Mummification Museum\",\n          \"start\": \"17:00\",\n          \"end\": \"18:00\",\n          \"duration_min\": 60,\n          \"travel_from_previous_min\": 25,\n          \"wait_min\": 70,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Closed between 14:00 and 17:00.\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Valley of the Kings: West Bank of the Nile.\"\n      ]\n    }\n  ],\n  \"unscheduled\": [],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [\n      {\n        \"area\": \"البر الغربي\",\n        \"desc\": \"ريف هادي وسط الغيطان، على بُعد دقايق من وادي الملوك.\",\n        \"example\": \"eco-lodges with views of the Theban hills\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"الأقرب لـHatshepsut Temple وDeir al-Bahari في برنامجك\",\n          \"يناسب اهتمامك بـالتاريخ\"\n        ],\n        \"score\": 6.22\n      },\n      {\n        \"area\": \"البر الشرقي (وسط المدينة)\",\n        \"desc\": \"مشي لمعبد الأقصر والكورنيش والسوق ومحطة القطار.\",\n        \"example\": \"Steigenberger Nile Palace\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"يناسب اهتمامك بـالتاريخ\"\n        ],\n        \"score\": 6.17\n      }\n    ],\n    \"transport\": [\n      {\n        \"mode\": \"تاكسي جولة البر الغربي\",\n        \"desc\": \"احجز تاكسي مكيف لجولة الصبح: وادي الملوك وحتشبسوت وتمثالي ممنون.\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"عشان Deir al-Bahari وHatshepsut Temple في برنامجك\",\n          \"يناسب اهتمامك بـالتاريخ\"\n        ],\n        \"score\": 7.0\n      },\n      {\n        \"mode\": \"منطاد الشروق\",\n        \"desc\": \"اطلع فوق معابد البر الغربي مع الشروق؛ الشركات بتوفر توصيلة من الفندق.\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"عشان Deir al-Bahari وHatshepsut Temple في برنامجك\",\n          \"يناسب اهتمامك بـالتاريخ\"\n        ],\n        \"score\": 7.0\n      },\n      {\n        \"mode\": \"المعدية النيلية\",\n        \"desc\": \"المعدية بتعدي بين البر الشرقي والغربي في حوالي ٥ دقايق بجنيهات قليلة.\",\n        \"region\": \"Luxor\",\n        \"why\": [\n          \"عشان Deir al-Bahari وHatshepsut Temple في برنامجك\"\n        ],\n        \"score\": 4.0\n      },\n      {\n        \"mode\": \"الوصول للأقصر\",\n        \"desc\": \"طيران من القاهرة حوالي ساعة، أو قطار النوم بالليل.\",\n        \"region\": \"Luxor\",\n        \"why\": [],\n        \"score\": 0.0\n      }\n    ],\n    \"based_on\": [\n      \"التاريخ\"\n    ]\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "ar-03-alexandria-heritage",
+      "language": "arabic",
+      "type": "in_scope",
+      "question": "عايز أقضي يومين في إسكندرية، وبحب التاريخ القديم والآثار وتراث المدينة. اقترح لي برنامج مناسب يركز على أماكن داخل إسكندرية قدر الإمكان.",
+      "reference_criteria": [
+        "الإجابة بالعربية وتفهم أن الوجهة الإسكندرية والمدة يومان.",
+        "الاقتراحات ترتبط بالتاريخ القديم أو الآثار أو تراث المدينة.",
+        "لا تستبدل الإسكندرية بمدينة أخرى دون توضيح.",
+        "لا تذكر أسعارًا أو مواعيد أو مدد انتقال دقيقة غير مدعومة."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "يا سلام على برنامجك! يومك في الإسكندرية هتزور سراديب كوم الشقافة وقلعة قايتباي، دول من أهم الحاجات هناك. السكن في محطة الرمل والمنشية قريب من القلعة والسراديب، فهتكون مشوارك سهل ومريح. Enjoy!",
+      "scores": {
+        "relevance": 3,
+        "faithfulness": 5,
+        "correctness": 4,
+        "completeness": 2
+      },
+      "mean_score": 3.5,
+      "judge_ok": true,
+      "judge_model": "groq/qwen/qwen3.8-27b",
+      "reasons": {
+        "relevance": "The answer addresses the user's request for a trip to Alexandria focusing on history and heritage, mentioning relevant sites like the Catacombs and Citadel. However, it fails to address the 'two days' aspect of the request, treating it as a single day or ignoring the second day entirely.",
+        "faithfulness": "All claims in the answer are supported by the trusted context. The mentioned attractions (Catacombs, Citadel) and the hotel area (Ramlah/Mansheya) are explicitly present in the structured itinerary and recommendations.",
+        "correctness": "The answer does not contradict the context. It correctly identifies the locations and the hotel area. It does not invent unsupported prices or precise travel times. It slightly misrepresents the scope by not acknowledging the two-day duration, but the specific facts provided are correct.",
+        "completeness": "The answer is significantly incomplete. The user asked for a two-day program, but the answer only lists activities for one day (or implies a single day visit) and completely omits the second day, which the context notes had no scheduled stops but should have been addressed (e.g., by suggesting the Bibliotheca Alexandrina if dates were known, or acknowledging the limitation). It also lacks a structured day-by-day breakdown."
+      },
+      "overall_reason": "The answer is faithful to the provided context and relevant to the interests, but it fails to meet the core requirement of a two-day itinerary. It only provides details for one day's worth of activities and ignores the second day, making it incomplete for the user's specific request.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"ar\",\n  \"search_query\": \"two days in Alexandria focusing on ancient history and monuments\",\n  \"interests\": [\n    \"history\",\n    \"archaeology\",\n    \"heritage\"\n  ],\n  \"region\": \"Alexandria\",\n  \"unsupported_region\": null,\n  \"days\": 2,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Alexandria\",\n      \"stops\": [\n        {\n          \"attraction_id\": 23,\n          \"name\": \"Catacombs of Kom El Shoqafa\",\n          \"start\": \"09:00\",\n          \"end\": \"10:00\",\n          \"duration_min\": 60,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 21,\n          \"name\": \"Citadel of Qaitbay\",\n          \"start\": \"10:25\",\n          \"end\": \"11:55\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 25,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    },\n    {\n      \"day\": 2,\n      \"weekday\": null,\n      \"area\": \"Alexandria\",\n      \"stops\": [],\n      \"warnings\": [\n        \"Nothing could be scheduled in Alexandria on day 2 between 09:00 and 18:00.\"\n      ],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 22,\n      \"name\": \"Bibliotheca Alexandrina\",\n      \"reason\": \"Not scheduled: it is not open every day, or it does not fit between 09:00 and 18:00. Give a travel date to check specific days.\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [\n      {\n        \"area\": \"محطة الرمل والمنشية\",\n        \"desc\": \"شوارع كلاسيكية قريبة من المكتبة والمسرح الروماني والأسواق القديمة.\",\n        \"example\": \"Steigenberger Cecil Hotel\",\n        \"region\": \"Alexandria\",\n        \"why\": [\n          \"الأقرب لـCitadel of Qaitbay وCatacombs of Kom El Shoqafa في برنامجك\",\n          \"يناسب اهتمامك بـالتاريخ والثقافة المحلية\"\n        ],\n        \"score\": 9.42\n      },\n      {\n        \"area\": \"الكورنيش وخليج ستانلي\",\n        \"desc\": \"إطلالة على البحر المتوسط ونسمة البحر ومطاعم السمك.\",\n        \"example\": \"sea-view mid-range hotels\",\n        \"region\": \"Alexandria\",\n        \"why\": [],\n        \"score\": 1.71\n      }\n    ],\n    \"transport\": [\n      {\n        \"mode\": \"ترام الرمل\",\n        \"desc\": \"الترام التاريخي وسيلة بطيئة ورخيصة تتفرج بيها على المدينة.\",\n        \"region\": \"Alexandria\",\n        \"why\": [\n          \"يناسب اهتمامك بـالثقافة المحلية والتاريخ\"\n        ],\n        \"score\": 6.0\n      },\n      {\n        \"mode\": \"على طول الكورنيش\",\n        \"desc\": \"أوبر أو التاكسي الأصفر والأسود على الكورنيش من قلعة قايتباي للمنتزه.\",\n        \"region\": \"Alexandria\",\n        \"why\": [],\n        \"score\": 0.0\n      },\n      {\n        \"mode\": \"الوصول للإسكندرية\",\n        \"desc\": \"القطارات السريعة من القاهرة حوالي ساعتين ونص؛ والأتوبيسات والعربيات الخاصة على الطريق الصحراوي.\",\n        \"region\": \"Alexandria\",\n        \"why\": [],\n        \"score\": 0.0\n      }\n    ],\n    \"based_on\": [\n      \"الثقافة المحلية\",\n      \"التاريخ\"\n    ]\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "ar-04-cairo-museums",
+      "language": "arabic",
+      "type": "in_scope",
+      "question": "معايا يوم واحد في القاهرة، وعايز أزور متاحف وأماكن ثقافية وتاريخية. مش مهتم بالتسوق أو الخروج بالليل، فخلّي البرنامج مناسب لاهتماماتي.",
+      "reference_criteria": [
+        "الإجابة بالعربية وتخطط ليوم واحد في القاهرة.",
+        "تُركز على المتاحف والثقافة والتاريخ بدلًا من التسوق أو الحياة الليلية.",
+        "تقدم ترتيبًا واضحًا للأنشطة خلال اليوم.",
+        "لا تؤكد مواعيد تشغيل دقيقة دون دعم من سياق النظام."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "يا سلام على برنامجك! هتبدأ في القاهرة الكبرى وتزور المتحف المصري، ومتحف الفن الإسلامي، ومتحف القبطية. رحلة مليانة تاريخ وثقافة، استمتع بيها!",
+      "scores": {
+        "relevance": 4,
+        "faithfulness": 5,
+        "correctness": 4,
+        "completeness": 4
+      },
+      "mean_score": 4.25,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "The answer is in Arabic, suggests a one‑day plan in Cairo focused on museums and culture, matching the user request.",
+        "faithfulness": "All mentioned attractions (Egyptian Museum, Museum of Islamic Art, Coptic Museum) are present in the authoritative itinerary; no unsupported claims are made.",
+        "correctness": "The answer lists the correct museums and avoids specifying exact opening hours, complying with the reference criteria. It does not detail timing, but the ordering is clear enough.",
+        "completeness": "Provides a concise itinerary covering the main museums but lacks explicit sequencing or time slots; however, the user did not require detailed timings."
+      },
+      "overall_reason": "The response adequately fulfills the request with relevant, faithful, and mostly correct information, though it could be more detailed in ordering and timing.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"ar\",\n  \"search_query\": \"one day museum and cultural historic tour in Cairo\",\n  \"interests\": [\n    \"museums\",\n    \"culture\",\n    \"history\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 1,\n          \"name\": \"The Egyptian Museum\",\n          \"start\": \"09:00\",\n          \"end\": \"11:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 4,\n          \"name\": \"Museum of Islamic Art\",\n          \"start\": \"11:20\",\n          \"end\": \"12:50\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 20,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 3,\n          \"name\": \"The Coptic Museum\",\n          \"start\": \"13:20\",\n          \"end\": \"14:50\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 2,\n      \"name\": \"National Museum of Egyptian Civilization (NMEC)\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 6,\n      \"name\": \"Saqqara\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 7,\n      \"name\": \"Dahshur\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "ar-05-aswan-relaxed",
+      "language": "arabic",
+      "type": "in_scope",
+      "question": "هقضي 3 أيام في أسوان، وبحب الثقافة النوبية والنيل والأماكن التاريخية، بس مش عايز البرنامج يبقى زحمة أو مرهق. اعملي جدول هادي يناسب الاهتمامات دي.",
+      "reference_criteria": [
+        "الإجابة بالعربية وتفهم أن الوجهة أسوان والمدة ثلاثة أيام.",
+        "تراعي الاهتمام بالثقافة النوبية والنيل والتاريخ حسب الخيارات المتاحة.",
+        "تحافظ على وتيرة هادئة ولا تحشر أنشطة كثيرة في اليوم الواحد.",
+        "لا تخترع مواعيد رحلات أو أسعارًا أو توافرًا غير مؤكد."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "يا سلام على برنامجك في أسوان! هتزور متحف النوبة ومعبد فيلة، وكمان أبو سمبل ومتحف التماسيح ومعبد كوم أمبو. السكن في جزيرة إلفنتين وغرب أسوان قريب جدًا من المتحف والمعبد، فهتستمتع بوقت أكتر. يلا استمتع بالرحلة!",
+      "scores": {
+        "relevance": 2,
+        "faithfulness": 2,
+        "correctness": 2,
+        "completeness": 2
+      },
+      "mean_score": 2,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "الإجابة تشير إلى أسوان والمدة ثلاثة أيام لكنها لا تقدم جدولاً واضحاً ولا تلتزم بطلب المستخدم لبرنامج هادئ، لذا relevance منخفض.",
+        "faithfulness": "تذكر الأماكن الموجودة في السياق لكن لا توضح مواعيد أو توزيع الأيام كما هو موضح في الخطة الموثوقة، وبالتالي بعض الادعاءات غير مدعومة بالكامل.",
+        "correctness": "الإجابة لا تحافظ على وتيرة هادئة وتقترح زيارة عدد كبير من المعالم في يوم واحد، مخالفاً للمعايير المطلوبة ولا تقدم تفاصيل النقل أو الإقامة المطلوبة.",
+        "completeness": "الإجابة مختصرة جداً ولا تشمل جدولاً يومياً أو توصيات للأنشطة الهادئة أو تفاصيل الإقامة، لذا هي غير مكتملة."
+      },
+      "overall_reason": "الإجابة لا تلبي معايير السؤال ولا تتطابق مع الخطة الموثوقة؛ لذلك تحصل على درجات منخفضة في جميع الأبعاد.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"ar\",\n  \"search_query\": \"3 days in Aswan focusing on Nubian culture, the Nile and historical sites, relaxed itinerary\",\n  \"interests\": [\n    \"culture\",\n    \"history\",\n    \"Nubian\",\n    \"river\"\n  ],\n  \"region\": \"Aswan\",\n  \"unsupported_region\": null,\n  \"days\": 3,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Aswan\",\n      \"stops\": [\n        {\n          \"attraction_id\": 15,\n          \"name\": \"Nubia Museum\",\n          \"start\": \"09:00\",\n          \"end\": \"10:30\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Evening session 18:00-21:00 on Thursday and Friday only.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 16,\n          \"name\": \"Philae Temple\",\n          \"start\": \"10:55\",\n          \"end\": \"12:55\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": 25,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"On an island; reached by a short boat ride.\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Philae Temple: On an island; reached by a short boat ride.\"\n      ]\n    },\n    {\n      \"day\": 2,\n      \"weekday\": null,\n      \"area\": \"Aswan\",\n      \"stops\": [\n        {\n          \"attraction_id\": 17,\n          \"name\": \"Abu Simbel\",\n          \"start\": \"09:00\",\n          \"end\": \"11:30\",\n          \"duration_min\": 150,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"Roughly 280 km from Aswan; treat as a full-day trip.\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Abu Simbel: Roughly 280 km from Aswan; treat as a full-day trip.\"\n      ]\n    },\n    {\n      \"day\": 3,\n      \"weekday\": null,\n      \"area\": \"Aswan\",\n      \"stops\": [\n        {\n          \"attraction_id\": 20,\n          \"name\": \"Crocodile Museum\",\n          \"start\": \"09:00\",\n          \"end\": \"09:45\",\n          \"duration_min\": 45,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Museum open until 21:00 but the ticket office closes 20:00; 20:00 used as the conservative end.\",\n          \"place_note\": \"Next to Kom Ombo Temple.\"\n        },\n        {\n          \"attraction_id\": 18,\n          \"name\": \"Kom Ombo Temple\",\n          \"start\": \"09:55\",\n          \"end\": \"11:25\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 10,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"\",\n          \"place_note\": \"About 45 km north of Aswan.\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": [\n        \"Crocodile Museum: Next to Kom Ombo Temple.\",\n        \"Kom Ombo Temple: About 45 km north of Aswan.\"\n      ]\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 19,\n      \"name\": \"Edfu Temple\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [\n      {\n        \"area\": \"جزيرة إلفنتين وغرب أسوان\",\n        \"desc\": \"بيوت نوبية ملونة وأكل بيتي وإطلالات هادية على النيل.\",\n        \"example\": \"Nubian guesthouses with river terraces\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"الأقرب لـNubia Museum وPhilae Temple في برنامجك\",\n          \"يناسب اهتمامك بـالثقافة المحلية, النيل والهدوء\"\n        ],\n        \"score\": 9.0\n      },\n      {\n        \"area\": \"كورنيش أسوان\",\n        \"desc\": \"يطل على جزر الجرانيت والفلايك، قريب من السوق ومراسي المراكب.\",\n        \"example\": \"Basma Hotel\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"يناسب اهتمامك بـالنيل والتاريخ\"\n        ],\n        \"score\": 7.0\n      }\n    ],\n    \"transport\": [\n      {\n        \"mode\": \"اللانشات النيلية\",\n        \"desc\": \"المراكب هي الوسيلة اليومية لفيلة والجزر؛ اتفق على السعر قبل ما تركب.\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"عشان Philae Temple في برنامجك\",\n          \"يناسب اهتمامك بـالنيل\"\n        ],\n        \"score\": 7.0\n      },\n      {\n        \"mode\": \"رحلة أبو سمبل\",\n        \"desc\": \"اطلع قبل الفجر بأتوبيس سياحي (حوالي ٣ ساعات ونص كل اتجاه) أو خد الطيارة القصيرة من أسوان.\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"عشان Abu Simbel في برنامجك\",\n          \"يناسب اهتمامك بـالتاريخ\"\n        ],\n        \"score\": 7.0\n      },\n      {\n        \"mode\": \"فلوكة حول الجزر\",\n        \"desc\": \"لف بالفلوكة حوالين إلفنتين وجزيرة النباتات وقت العصاري.\",\n        \"region\": \"Aswan\",\n        \"why\": [\n          \"يناسب اهتمامك بـالنيل والهدوء\"\n        ],\n        \"score\": 6.0\n      },\n      {\n        \"mode\": \"الوصول لأسوان\",\n        \"desc\": \"طيران من القاهرة، أو قطار من الأقصر (حوالي ٣ ساعات) أو من القاهرة (بالليل).\",\n        \"region\": \"Aswan\",\n        \"why\": [],\n        \"score\": 0.0\n      }\n    ],\n    \"based_on\": [\n      \"الثقافة المحلية\",\n      \"التاريخ\",\n      \"النيل\",\n      \"الهدوء\"\n    ]\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "ar-06-family-cairo",
+      "language": "arabic",
+      "type": "in_scope",
+      "question": "عايز أخرج مع أسرتي يوم في القاهرة، ومعانا أطفال. اقترح برنامج يجمع بين الثقافة والأنشطة الممتعة ويكون مناسب للأطفال، ومن غير أماكن سهر.",
+      "reference_criteria": [
+        "الإجابة بالعربية وتخطط لخروجة يوم واحد في القاهرة.",
+        "تختار أنشطة عائلية ومناسبة للأطفال قدر الإمكان.",
+        "تتجنب أماكن السهر والأنشطة غير المناسبة للأطفال.",
+        "لا تخترع قيود أعمار أو أسعارًا أو مواعيد تشغيل غير مدعومة."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "يا سلام على خطة اليوم الأول في القاهرة الكبرى! هتزور المتحف المصري، ومتحف الفن الإسلامي، وكمان المتحف القبطي. استمتع بيوم مليان تاريخ وثقافة.",
+      "scores": {
+        "relevance": 2,
+        "faithfulness": 5,
+        "correctness": 3,
+        "completeness": 2
+      },
+      "mean_score": 3,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "The answer mentions only three museums and omits any fun or kid‑friendly activities, which were requested, so it only partially addresses the query.",
+        "faithfulness": "All listed attractions (Egyptian Museum, Museum of Islamic Art, Coptic Museum) are present in the trusted itinerary, so the answer is fully supported by the context.",
+        "correctness": "The response is in Arabic, avoids nightlife, and does not add unsupported age limits or prices, satisfying the reference criteria, though it lacks the suggested mix of culture and fun for children.",
+        "completeness": "The answer provides a very brief list without a full day‑plan, timings, or additional child‑friendly activities, thus it is incomplete relative to the request."
+      },
+      "overall_reason": "The answer is faithful and technically correct but falls short in relevance and completeness because it does not offer a balanced, kid‑friendly itinerary as asked.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"ar\",\n  \"search_query\": \"family day trip in Cairo with children cultural and fun activities\",\n  \"interests\": [\n    \"culture\",\n    \"kids\",\n    \"activities\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": null,\n  \"travelers\": \"family\",\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 1,\n          \"name\": \"The Egyptian Museum\",\n          \"start\": \"09:00\",\n          \"end\": \"11:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 4,\n          \"name\": \"Museum of Islamic Art\",\n          \"start\": \"11:20\",\n          \"end\": \"12:50\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 20,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 3,\n          \"name\": \"The Coptic Museum\",\n          \"start\": \"13:20\",\n          \"end\": \"14:50\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 6,\n      \"name\": \"Saqqara\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 2,\n      \"name\": \"National Museum of Egyptian Civilization (NMEC)\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 7,\n      \"name\": \"Dahshur\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "ar-07-budget-cairo",
+      "language": "arabic",
+      "type": "in_scope",
+      "question": "ميزانيتي محدودة ومعايا يوم واحد أستكشف فيه القاهرة. عايز برنامج عملي يركز على الأماكن العامة والثقافة والتاريخ، ولو ذكرت تكلفة غير مؤكدة وضّح إنها تقديرية.",
+      "reference_criteria": [
+        "الإجابة بالعربية وتراعي القاهرة ويومًا واحدًا وميزانية محدودة.",
+        "تفضّل الخيارات العامة أو الأقل تكلفة ذات الطابع الثقافي والتاريخي عند توفرها.",
+        "لا تختلق أسعارًا دقيقة، وتوضح بجلاء أن أي تكلفة غير مؤكدة هي تقدير.",
+        "تظل الخطة عملية ومتوافقة مع قيود المستخدم."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "يا سلام! أول يوم هتستكشف القاهرة الكبرى، وتزور المتحف المصري، ومتحف الفن الإسلامي، وكمان المتحف القبطي. هتستمتع بالتحف التاريخية وتعيش جو مصر الأصلي. يلا بينا نبدأ الرحلة!",
+      "scores": {
+        "relevance": 2,
+        "faithfulness": 2,
+        "correctness": 2,
+        "completeness": 1
+      },
+      "mean_score": 1.75,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "The answer is in Arabic and mentions Cairo attractions, but it is overly brief and does not provide a practical one‑day itinerary as requested.",
+        "faithfulness": "It mentions the three museums that appear in the authoritative itinerary, so it is loosely faithful, but it omits timing, travel details, and the required budget disclaimer.",
+        "correctness": "The response does not satisfy the reference criteria: it lacks cost estimates or the note that any cost is approximate, and it does not present a usable schedule for a limited budget day.",
+        "completeness": "The answer omits essential information such as timings, travel intervals, cost notes, and any alternative low‑cost options, making it incomplete."
+      },
+      "overall_reason": "The answer touches on the right attractions but fails to deliver a practical, budget‑aware one‑day plan and misses required cost disclaimer, resulting in low scores across all dimensions.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"ar\",\n  \"search_query\": \"one day itinerary in Cairo focusing on public places, culture and history\",\n  \"interests\": [\n    \"culture\",\n    \"history\",\n    \"public\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": \"economy\",\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 1,\n          \"name\": \"The Egyptian Museum\",\n          \"start\": \"09:00\",\n          \"end\": \"11:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 4,\n          \"name\": \"Museum of Islamic Art\",\n          \"start\": \"11:20\",\n          \"end\": \"12:50\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 20,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 3,\n          \"name\": \"The Coptic Museum\",\n          \"start\": \"13:20\",\n          \"end\": \"14:50\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 6,\n      \"name\": \"Saqqara\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 2,\n      \"name\": \"National Museum of Egyptian Civilization (NMEC)\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 7,\n      \"name\": \"Dahshur\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    },
+    {
+      "id": "ar-08-islamic-cairo",
+      "language": "arabic",
+      "type": "in_scope",
+      "question": "اعملي برنامج يوم في القاهرة يركز على العمارة الإسلامية والمساجد التاريخية وتراث القاهرة القديمة. أفضل الزيارات الثقافية والمشي في المناطق التاريخية بدل المولات الحديثة.",
+      "reference_criteria": [
+        "الإجابة بالعربية وتخطط ليوم واحد في القاهرة.",
+        "تُعطي الأولوية للعمارة الإسلامية والمساجد التاريخية ومناطق التراث عندما تكون متاحة في خيارات المخطط.",
+        "لا تجعل المولات الحديثة أو الأنشطة غير المرتبطة محور البرنامج.",
+        "لا تفترض مواعيد دخول أو رسومًا أو إمكانية وصول غير مدعومة بالسياق."
+      ],
+      "pipeline_ok": true,
+      "status": "planned",
+      "pipeline_error": null,
+      "answer": "يا سلام على خطة اليوم الأول في القاهرة الكبرى! هتزور المتحف الإسلامي، ومتحف القبطية، وكمان المتحف المصري. استمتع بالتحف التاريخية وجو المكان الرائع!",
+      "scores": {
+        "relevance": 1,
+        "faithfulness": 4,
+        "correctness": 1,
+        "completeness": 1
+      },
+      "mean_score": 1.75,
+      "judge_ok": true,
+      "judge_model": "groq/openai/gpt-oss-120b",
+      "reasons": {
+        "relevance": "The answer does not address the user’s request for a one‑day itinerary focused on Islamic architecture, historic mosques, and old Cairo heritage; it only mentions museums.",
+        "faithfulness": "The mentioned museums (Islamic Art Museum, Coptic Museum, Egyptian Museum) are present in the trusted itinerary, so the statements are supported.",
+        "correctness": "The response violates the reference criteria: it does not prioritize Islamic architecture or mosques, includes museums instead, and adds no walking or heritage focus, thus it is incorrect.",
+        "completeness": "The answer provides only a brief list of three museum visits, lacking a full day schedule, timings, or any walking routes, so it is incomplete."
+      },
+      "overall_reason": "The answer is largely irrelevant and incorrect for the user’s request, despite being factually supported about the museums; it fails to meet the Arabic one‑day plan criteria and omits the required focus on Islamic architecture and historic mosques.",
+      "structured_context": "Parsed intent:\n{\n  \"task\": \"plan_trip\",\n  \"language\": \"ar\",\n  \"search_query\": \"one day program in Cairo focusing on Islamic architecture, historic mosques, and old Cairo heritage\",\n  \"interests\": [\n    \"architecture\",\n    \"mosques\",\n    \"culture\",\n    \"walking\"\n  ],\n  \"region\": \"Cairo\",\n  \"unsupported_region\": null,\n  \"days\": 1,\n  \"budget\": null,\n  \"travelers\": null,\n  \"travel_date\": null,\n  \"visitor_type\": null,\n  \"missing\": []\n}\n\nStructured itinerary (authoritative for this run):\n{\n  \"ok\": true,\n  \"days\": [\n    {\n      \"day\": 1,\n      \"weekday\": null,\n      \"area\": \"Greater Cairo\",\n      \"stops\": [\n        {\n          \"attraction_id\": 4,\n          \"name\": \"Museum of Islamic Art\",\n          \"start\": \"09:00\",\n          \"end\": \"10:30\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": null,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 3,\n          \"name\": \"The Coptic Museum\",\n          \"start\": \"11:00\",\n          \"end\": \"12:30\",\n          \"duration_min\": 90,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        },\n        {\n          \"attraction_id\": 1,\n          \"name\": \"The Egyptian Museum\",\n          \"start\": \"13:00\",\n          \"end\": \"15:00\",\n          \"duration_min\": 120,\n          \"travel_from_previous_min\": 30,\n          \"wait_min\": 0,\n          \"hours_confidence\": \"listed\",\n          \"hours_note\": \"Ticket window closes 16:00.\",\n          \"place_note\": \"\"\n        }\n      ],\n      \"warnings\": [],\n      \"notes\": []\n    }\n  ],\n  \"unscheduled\": [\n    {\n      \"attraction_id\": 2,\n      \"name\": \"National Museum of Egyptian Civilization (NMEC)\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 6,\n      \"name\": \"Saqqara\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    },\n    {\n      \"attraction_id\": 7,\n      \"name\": \"Dahshur\",\n      \"reason\": \"Not scheduled: no room left in the available days (time or stop limit).\"\n    }\n  ],\n  \"warnings\": [\n    \"Travel times are estimates (no live traffic data).\",\n    \"No travel date given: only places open every day of the week were used.\"\n  ],\n  \"recommendations\": {\n    \"hotels\": [],\n    \"transport\": [],\n    \"based_on\": []\n  }\n}\n\nPipeline status: planned"
+    }
+  ],
+  "limitations": [
+    "Scores are LLM-as-judge estimates, not objective proof of factual correctness.",
+    "Faithfulness compares the final reply with the structured plan returned by this run.",
+    "Reference criteria are human-authored; expand them with domain-expert verified facts for stronger correctness evaluation.",
+    "Each case makes live pipeline and judge model calls and may consume API quota."
+  ]
+}
