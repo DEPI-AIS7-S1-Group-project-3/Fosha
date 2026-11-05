@@ -454,11 +454,18 @@ html[dir="rtl"] .btn:hover .arrow { transform: scaleX(-1) translateX(4px); }
   background: var(--white);
   border-inline-start: 2px solid var(--ink);
   transform: translateX(102%);
-  transition: transform .75s var(--ease);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform .75s var(--ease), visibility 0s .75s;
   display: flex; flex-direction: column;
 }
 html[dir="rtl"] .sheet { right: auto; left: 0; transform: translateX(-102%); }
-body.sheet-open .sheet { transform: none; }
+body.sheet-open .sheet {
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform .75s var(--ease);
+}
 
 .sheet-scroll { overflow-y: auto; padding: 26px 32px 40px; flex: 1; }
 .sheet-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }

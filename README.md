@@ -2,6 +2,8 @@
 
 **Egypt, your way.** Fosha (*فسحة*, Egyptian Arabic for "an outing") is an AI travel assistant for Egypt, built as the RehlaGuide DEPI capstone. Tell it, in Arabic or English, where you're going, for how long and what you love ("عايزة اطلع يوم مع صحابي. بورسعيد", "3 days in Luxor, I love temples, we're a couple") and it builds a day-by-day plan that respects opening hours, visit lengths and travel time, suggests where to stay and how to get around, and lets you change the plan by chatting.
 
+> 🌐 **Live Demo:** [fosha.onrender.com](https://fosha.onrender.com) *(first load wakes the free instance in ~30–45s)*
+
 <img width="1440" height="778" alt="Screenshot 2026-10-20 at 8 19 49 PM" src="https://github.com/user-attachments/assets/41c0ca04-66ca-4844-bd91-a9e859c4c9d7" />
 
 **Contents:** [Features](#1-features) · [Screenshots](#2-screenshots) · [Quick start](#3-quick-start) · [Deploying](#deploying-one-web-service) · [How it works](#4-how-it-works) · [Repository](#5-repository-structure) · [API](#6-api) · [Web app](#7-web-app) · [Retrieval](#8-knowledge-base-and-retrieval) · [Agent](#9-agent-and-itinerary-engine) · [Testing](#10-testing) · [Limitations](#11-known-limitations) · [Data & credits](#13-data-sources-and-credits)
@@ -506,7 +508,7 @@ The only file that talks to a language model. Providers are tried in order (`LLM
 uv run pytest -q
 ```
 
-About 140 tests, with every model call and network request faked: data lookups and prices; opening-hours edge cases; travel estimates; the scheduler (an independent checker re-validates every stop); retrieval adapter; intent extraction; the planner pipeline, clarification wording and reply guard; personalised recommendations; online place lookup (parsing, caching, failures) and registration; plan editing; the LLM provider/model fallback; the evaluation metrics and MLflow logging; request monitoring; and the API (chat, cache, analytics, pages).
+163 tests (all passing in under 3 seconds), with every model call and network request faked: data lookups and prices; opening-hours edge cases; travel estimates; the scheduler (an independent checker re-validates every stop); retrieval adapter; intent extraction; the planner pipeline, clarification wording and reply guard; personalised recommendations; online place lookup (parsing, caching, failures) and registration; plan editing; the LLM provider/model fallback; the evaluation metrics and MLflow logging; request monitoring; rate limiting; and the API (chat, cache, analytics, pages).
 
 Not covered automatically: real model calls, real Chroma retrieval and live Wikivoyage data. Check those by running the app.
 
@@ -594,4 +596,8 @@ GitHub Actions (`.github/workflows/`): `ci.yml` validates the evaluation dataset
 - Curated attractions: official sources listed per attraction in `data/raw_attractions.json` (with verification dates).
 - Towns outside the dataset: © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL), [Wikivoyage](https://en.wikivoyage.org) (CC BY-SA), [Wikidata](https://www.wikidata.org) (CC0). Each stop links to its source.
 - Language models: [Groq](https://groq.com) (open models such as gpt-oss-120b), [Google Gemini](https://ai.google.dev) as a backup.
-- Built by the DEPI AIS7 S1 Group 3 team for the DEPI capstone.
+- **Built by DEPI AIS7 S1 Group 3:**
+  - **Noura Shousha**: Product & Frontend Architecture (React/TSX, 3D Canvas Globe, Trip Sheet, Analytics Dashboard, Print Engine, bilingual Arabic/English RTL UX), AI Pipeline extensions (dynamic OSM/Wikivoyage online lookup, multi-day lodging/transport recommendations, response caching & rate limiting).
+  - **Mohamed Elbadawy**: Langfuse Tracing & Observability integration, Agent & Answer Evaluation benchmarks, Multilingual Embeddings (MPNet) & RAG Optimization.
+  - **Esraa Alaa El-Din**: Core Agent Planner & Intent Classification pipeline, Gemini/Groq LLM Fallback architecture, automated test suites, deployment configuration.
+  - **Amr Khaled**: RAG Pipeline Architecture, ChromaDB Vector Store Ingestion, Data Schema & Attraction Knowledge Base curation.

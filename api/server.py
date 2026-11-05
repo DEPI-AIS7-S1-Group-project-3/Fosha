@@ -19,7 +19,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -88,6 +88,49 @@ class ResponseCache:
 
 cache = ResponseCache()
 
+RATE_LIMIT_PER_MINUTE = int(os.environ.get("RATE_LIMIT_PER_MINUTE", "15"))
+
+
+class RateLimiter:
+    """Sliding-window in-memory rate limiter per IP address to protect LLM quota."""
+
+    def __init__(self, max_requests: int = RATE_LIMIT_PER_MINUTE, window_seconds: float = 60.0):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._requests: Dict[str, Any] = {}
+        self._lock = threading.Lock()
+
+    def is_allowed(self, client_ip: str) -> bool:
+        if not client_ip or self.max_requests <= 0:
+            return True
+        now = time.time()
+        with self._lock:
+            timestamps = self._requests.get(client_ip, [])
+            cutoff = now - self.window_seconds
+            timestamps = [t for t in timestamps if t > cutoff]
+            if len(timestamps) >= self.max_requests:
+                self._requests[client_ip] = timestamps
+                return False
+            timestamps.append(now)
+            self._requests[client_ip] = timestamps
+            if len(self._requests) > 2048:
+                self._requests = {ip: ts for ip, ts in self._requests.items() if ts and ts[-1] > cutoff}
+            return True
+
+    def reset(self) -> None:
+        with self._lock:
+            self._requests.clear()
+
+
+limiter = RateLimiter()
+
+
+def _client_ip(req: Request) -> str:
+    forwarded = req.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return req.client.host if req.client else "127.0.0.1"
+
 
 def _enrich(itinerary: Dict[str, Any]) -> Dict[str, Any]:
     """Add what the UI needs to draw stop cards and the route map."""
@@ -131,7 +174,25 @@ def health() -> Dict[str, Any]:
 
 
 @app.post("/api/v1/chat")
-def chat(request: ChatRequest) -> Dict[str, Any]:
+def chat(request: ChatRequest, http_request: Request) -> Dict[str, Any]:
+    client_ip = _client_ip(http_request)
+    if not limiter.is_allowed(client_ip):
+        is_ar = any("\u0600" <= ch <= "\u06ff" for ch in request.message)
+        reply = (
+            "فسحة مشغولة حالياً بكثرة الزوار. يرجى الانتظار دقيقة واحدة ثم المحاولة مرة أخرى!"
+            if is_ar
+            else "Fosha is currently experiencing high demand. Please wait a minute and try again!"
+        )
+        return {
+            "ok": True,
+            "status": "rate_limited",
+            "reply": reply,
+            "language": "ar" if is_ar else "en",
+            "cached": False,
+            "response_ms": 0,
+            "demo": DEMO,
+        }
+
     started = time.perf_counter()
     # Edits depend on the plan sent along, so they are never answered from the cache.
     result = None if request.context else cache.get(request.message)
@@ -146,6 +207,20 @@ def chat(request: ChatRequest) -> Dict[str, Any]:
                 except Exception as exc:  # plan_trip should not raise; this is a last line of defence
                     log.exception("pipeline crashed")
                     result = {"ok": False, "error": f"Unexpected error: {exc}"}
+                if not result.get("ok"):
+                    err = str(result.get("error", "")).lower()
+                    if any(m in err for m in ("429", "rate_limit", "quota", "overloaded", "exhausted", "unavailable", "busy")):
+                        is_ar = any("\u0600" <= ch <= "\u06ff" for ch in request.message)
+                        result = {
+                            "ok": True,
+                            "status": "rate_limited",
+                            "reply": (
+                                "الخدمة تشهد ضغطاً كبيراً على نماذج الذكاء الاصطناعي حالياً. يرجى الانتظار دقيقة والمحاولة مجدداً!"
+                                if is_ar
+                                else "Fosha's AI service is currently at capacity. Please give it a minute and try again!"
+                            ),
+                            "language": "ar" if is_ar else "en",
+                        }
                 summary = metrics.summary()
                 trace.update(
                     metadata={"ok": bool(result.get("ok")), "status": result.get("status"),

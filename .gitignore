@@ -27,6 +27,8 @@ npm-debug.log*
 .idea/
 .claude/
 *.pdf
+*.mov
+*.mp4
 
 # Design documents and UI archives
 [Dd]esign.md

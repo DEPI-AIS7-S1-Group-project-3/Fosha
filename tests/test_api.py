@@ -54,3 +54,20 @@ def test_pages_are_served(client):
         res = client.get(path)
         assert res.status_code == 200 and 'id="root"' in res.text
 
+
+def test_rate_limiter_protects_chat(client, monkeypatch):
+    test_limiter = server.RateLimiter(max_requests=2, window_seconds=60)
+    monkeypatch.setattr(server, "limiter", test_limiter)
+    res1 = client.post("/api/v1/chat", json={"message": "1 day in Cairo"}).json()
+    assert res1["status"] != "rate_limited"
+    res2 = client.post("/api/v1/chat", json={"message": "1 day in Alexandria"}).json()
+    assert res2["status"] != "rate_limited"
+    res3 = client.post("/api/v1/chat", json={"message": "1 day in Giza"}).json()
+    assert res3["status"] == "rate_limited"
+    assert "Fosha is currently experiencing high demand" in res3["reply"]
+
+    res_ar = client.post("/api/v1/chat", json={"message": "يوم في الأقصر"}).json()
+    assert res_ar["status"] == "rate_limited"
+    assert "فسحة مشغولة حالياً" in res_ar["reply"]
+
+
